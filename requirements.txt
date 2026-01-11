@@ -111,3 +111,5 @@ websocket-client==1.8.0
 widgetsnbextension==4.0.14
 wsproto==1.2.0
 whitenoise
+dj-database-url
+psycopg2-binary
