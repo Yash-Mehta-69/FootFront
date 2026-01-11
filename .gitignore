@@ -10,3 +10,4 @@ venv/
 .idea/
 node_modules/
 *.log
+.vercel
