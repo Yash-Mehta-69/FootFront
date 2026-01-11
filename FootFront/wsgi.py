@@ -25,13 +25,21 @@ if 'VERCEL' in os.environ: # Only run on Vercel
         print("Running migrations...")
         call_command('migrate', interactive=False)
         
-        fixture_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'initial_data.json')
-        print(f"Looking for fixture at: {fixture_path}")
-        print(f"Current CWD: {os.getcwd()}")
-        try:
-             print(f"Root dir contents: {os.listdir(os.getcwd())}")
-        except:
-             pass
+        # Try multiple potential locations
+        possible_paths = [
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'initial_data.json'),
+            os.path.join(os.getcwd(), 'initial_data.json'),
+            'initial_data.json'
+        ]
+        
+        fixture_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                fixture_path = path
+                break
+                
+        print(f"Searched paths: {possible_paths}")
+        print(f"Found at: {fixture_path}")
 
         if os.path.exists(fixture_path):
             print(f"Loading data from {fixture_path}...")
