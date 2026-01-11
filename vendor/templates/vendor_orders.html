@@ -1,0 +1,86 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Orders | Vendor Panel{% endblock %}
+
+{% block header_title %}Order Management{% endblock %}
+{% block breadcrumb %}Orders{% endblock %}
+
+{% block vendor_content %}
+<div class="custom-card">
+    <div class="card-header-custom" style="align-items: center; flex-wrap: wrap; gap: 15px;">
+        <h5 class="card-title-custom">All Orders</h5>
+        <div class="btn-group" role="group" style="box-shadow: none;">
+            <button type="button" class="btn btn-outline-primary active"
+                style="border-radius: 20px 0 0 20px;">All</button>
+            <button type="button" class="btn btn-outline-primary">Pending</button>
+            <button type="button" class="btn btn-outline-primary">Completed</button>
+            <button type="button" class="btn btn-outline-primary"
+                style="border-radius: 0 20px 20px 0;">Cancelled</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name</th>
+                    <th>Date Ordered</th>
+                    <th>Total Amount</th>
+                    <th>Payment Status</th>
+                    <th>Order Status</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Mock Data -->
+                <tr>
+                    <td style="font-weight: 700;">#ORD-5521</td>
+                    <td>Michael Scott</td>
+                    <td>2 min ago</td>
+                    <td>$250.00</td>
+                    <td>
+                        <span class="badge-soft-success">Paid</span>
+                    </td>
+                    <td>
+                        <span class="badge-soft-warning">Processing</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="btn-primary-custom" style="padding: 5px 15px; font-size: 12px;">Manage</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 700;">#ORD-5520</td>
+                    <td>Pam Beesly</td>
+                    <td>1 hour ago</td>
+                    <td>$120.50</td>
+                    <td>
+                        <span class="badge-soft-success">Paid</span>
+                    </td>
+                    <td>
+                        <span class="badge-soft-primary">Shipped</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="btn-primary-custom" style="padding: 5px 15px; font-size: 12px;">Manage</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 700;">#ORD-5519</td>
+                    <td>Jim Halpert</td>
+                    <td>Yesterday</td>
+                    <td>$55.00</td>
+                    <td>
+                        <span class="badge-soft-danger">Unpaid</span>
+                    </td>
+                    <td>
+                        <span class="badge-soft-secondary">Pending</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="btn-primary-custom" style="padding: 5px 15px; font-size: 12px;">Manage</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

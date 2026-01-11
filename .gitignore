@@ -1,0 +1,12 @@
+firebase-config.json
+__pycache__/
+*.pyc
+db.sqlite3
+.env
+.venv/
+env/
+venv/
+.vscode/
+.idea/
+node_modules/
+*.log

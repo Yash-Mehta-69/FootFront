@@ -1,0 +1,127 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        padding-top: 150px;
+        padding-bottom: 150px; /* Added spacing */
+        min-height: 100vh;
+        /* Transparent to show grid */
+    }
+
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        border-bottom: 2px solid var(--color-accent); /* Tech accent */
+        padding-bottom: 2rem;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 3fr;
+        gap: 3rem;
+    }
+
+    @media (max-width: 900px) {
+        .profile-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .profile-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .account-data-grid {
+            grid-template-columns: 1fr !important;
+        }
+        
+        /* Force word break to prevent overflow */
+        .force-break {
+            word-break: break-all;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container container">
+    <div class="profile-header">
+        <div>
+            <span class="text-accent" style="letter-spacing: 2px; font-size: 0.9rem;">// SYSTEM.USER_DASHBOARD</span>
+            <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: clamp(2rem, 8vw, 3rem); color: white; margin: 0;">
+                {{ user.first_name|default:"UNKNOWN_USER" }}
+            </h1>
+        </div>
+        <div>
+            <a href="{% url 'logout' %}" class="btn-primary" style="font-size: 0.9rem;">DISCONNECT</a>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Tech Menu (Glass Sidebar style) -->
+        <aside class="glass-sidebar" style="height: auto; padding: 1rem; position: relative; top: 0;">
+            <a href="#" class="dashboard-menu-item active">Overview</a>
+            <a href="{% url 'cart_detail' %}" class="dashboard-menu-item">My Bag</a>
+            <a href="{% url 'wishlist_detail' %}" class="dashboard-menu-item">Wishlist</a>
+            <a href="#" class="dashboard-menu-item">Orders</a>
+            <a href="#" class="dashboard-menu-item">Settings</a>
+            
+            <div style="margin-top: 2rem; padding: 1rem; border-top: 1px dashed rgba(255,255,255,0.1); color: #555; font-size: 0.7rem; font-family: monospace;">
+                ID: {{ user.id|stringformat:"04d" }}<br>
+                LEVEL: GEN_Z_ELITE
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="dashboard-content">
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="glass-panel text-center">
+                        <div style="font-size: 3rem; color: var(--color-accent); margin-bottom: 1rem;">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <h3 class="stat-value">ELITE</h3>
+                        <p class="stat-label">Membership Tier</p>
+                        <p style="color: #666; font-size: 0.8rem;">Joined: {{ user.date_joined|date:"M Y" }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="glass-panel text-center">
+                        <div style="font-size: 3rem; color: var(--color-secondary); margin-bottom: 1rem;">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <h3 class="stat-value">0</h3>
+                        <p class="stat-label">Active Orders</p>
+                        <a href="{% url 'shop' %}" class="text-accent" style="font-size: 0.8rem; text-decoration: underline;">INITIATE NEW ORDER ></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="glass-panel mt-4">
+                <h3 class="text-accent mb-4" style="font-family: var(--font-heading);">ACCOUNT DATA</h3>
+                <div class="account-data-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div style="min-width: 0; overflow-wrap: break-word;">
+                        <span class="stat-label d-block mb-1">Email Address</span>
+                        <div class="force-break" style="font-family: monospace; color: white;">{{ user.email }}</div>
+                    </div>
+                    <div>
+                        <span class="stat-label d-block mb-1">Status</span>
+                        <div style="color: #0f0; text-shadow: 0 0 10px #0f0;">• ONLINE</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

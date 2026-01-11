@@ -1,0 +1,129 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Product Details | Vendor Panel{% endblock %}
+
+{% block header_title %}Product Details{% endblock %}
+{% block breadcrumb %}Products / View{% endblock %}
+
+{% block vendor_content %}
+<div class="row">
+    <!-- Product Overview -->
+    <div class="col-lg-8">
+        <div class="custom-card mb-4">
+            <div class="row">
+                <div class="col-md-5">
+                    <div style="background: #eee; border-radius: 15px; height: 300px; width: 100%;"></div>
+                </div>
+                <div class="col-md-7">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary mb-2">Sneakers</span>
+                            <h3 style="font-weight: 700; color: var(--text-main);">Nike Air Max 90</h3>
+                            <p class="text-muted mb-4">SKU: NK-AM90-001</p>
+                        </div>
+                        <span class="badge bg-success bg-opacity-10 text-success"
+                            style="font-size: 14px; padding: 8px 12px;">Active</span>
+                    </div>
+
+                    <h2 class="mb-4" style="color: var(--primary-color); font-weight: 800;">$129.00 <small
+                            class="text-muted text-decoration-line-through fs-6 ms-2">$149.00</small></h2>
+
+                    <p style="color: var(--text-secondary);">Classic sneaker with excellent cushioning and timeless
+                        style. Perfect for daily wear and sports activities.</p>
+
+                    <div class="mt-4">
+                        <a href="{% url 'vendor_edit_product' %}" class="btn btn-primary-custom me-2"><i
+                                class="fas fa-edit me-2"></i> Edit Product</a>
+                        <button class="btn btn-outline-secondary" style="border-radius: 10px; padding: 10px 20px;"><i
+                                class="fas fa-eye me-2"></i> Preview</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description Tab -->
+        <div class="custom-card">
+            <div class="card-header-custom border-bottom pb-2">
+                <h5 class="card-title-custom">Description & Attributes</h5>
+            </div>
+            <div class="pt-3">
+                <p style="color: var(--text-secondary);">
+                    Full description of the product goes here. Including details about materials, usage, care
+                    instructions, etc.
+                </p>
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <h6 style="color: var(--text-main); font-weight: 600;">Color</h6>
+                        <p class="text-muted">White/Black</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 style="color: var(--text-main); font-weight: 600;">Size</h6>
+                        <p class="text-muted">US 7, 8, 9, 10, 11</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 style="color: var(--text-main); font-weight: 600;">Material</h6>
+                        <p class="text-muted">Leather, Mesh</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Side -->
+    <div class="col-lg-4">
+        <div class="custom-card mb-4">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Performance</h5>
+            </div>
+            <div class="d-flex align-items-center mb-4">
+                <div
+                    style="width: 50px; height: 50px; border-radius: 10px; background: rgba(5, 205, 153, 0.1); display: flex; align-items: center; justify-content: center; color: #05cd99; margin-right: 15px;">
+                    <i class="fas fa-shopping-bag fa-lg"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-weight: 700; color: var(--text-main);">1,245</h4>
+                    <small class="text-muted">Total Sales</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center mb-4">
+                <div
+                    style="width: 50px; height: 50px; border-radius: 10px; background: rgba(67, 24, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--primary-color); margin-right: 15px;">
+                    <i class="fas fa-eye fa-lg"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-weight: 700; color: var(--text-main);">8,550</h4>
+                    <small class="text-muted">Total Views</small>
+                </div>
+            </div>
+            <div class="d-flex align-items-center">
+                <div
+                    style="width: 50px; height: 50px; border-radius: 10px; background: rgba(255, 181, 71, 0.1); display: flex; align-items: center; justify-content: center; color: #ffb547; margin-right: 15px;">
+                    <i class="fas fa-star fa-lg"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-weight: 700; color: var(--text-main);">4.8</h4>
+                    <small class="text-muted">Average Rating</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Stock Status</h5>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span style="font-weight: 600; font-size: 14px; color: var(--text-main);">In Stock</span>
+                    <span style="font-weight: 600; font-size: 14px; color: var(--primary-color);">45/100</span>
+                </div>
+                <div class="progress" style="height: 8px; border-radius: 4px; background-color: var(--border-color);">
+                    <div class="progress-bar" role="progressbar"
+                        style="width: 45%; background-color: var(--primary-color);" aria-valuenow="45" aria-valuemin="0"
+                        aria-valuemax="100"></div>
+                </div>
+            </div>
+            <p class="text-muted small">Low stock warning set at 10 units.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

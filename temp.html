@@ -1,0 +1,1393 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FootFront | Gen Z Edition</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Oswald:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Third Party CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Retaining necessary legacy CSS for now, but overriding with style.css -->
+    <link rel="stylesheet" type="text/css" href="/static/assets1/css/bootstrap.css">
+
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- 3D Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+
+    
+<style>
+    /* 3D Hero Styles */
+    .hero-wrapper {
+        height: 100vh;
+        width: 100%;
+        background-color: var(--color-bg);
+        overflow: hidden;
+        position: relative;
+        perspective: 1000px; /* Depth */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Moving Grid Background */
+    .hero-grid {
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background-image: 
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+        animation: gridMove 20s linear infinite;
+        z-index: 0;
+    }
+
+    @keyframes gridMove {
+        0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
+        100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); }
+    }
+
+    /* The 3D Scene Container */
+    .scene-container {
+        position: relative;
+        width: 80vw;
+        height: 80vh;
+        transform-style: preserve-3d; /* Key for 3D nested elements */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Layer: Text Behind */
+    .hero-big-text {
+        position: absolute;
+        font-size: 18vw;
+        font-family: var(--font-heading);
+        color: white;
+        text-shadow: 0 0 20px rgba(255,255,255,0.1);
+        white-space: nowrap;
+        transform: translateZ(-20px); /* Slightly behind shoe */
+        pointer-events: none;
+        z-index: 5; /* In front of blobs */
+        mix-blend-mode: overlay;
+    }
+
+    /* Layer: Abstract Shapes (Blobs) */
+    .floating-shape {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.3; /* More subtle */
+        z-index: 1; /* Behind text */
+        transform-style: preserve-3d;
+    }
+
+    .shape-1 {
+        width: 400px;
+        height: 400px;
+        background: var(--color-accent);
+        top: 10%;
+        left: 10%;
+        transform: translateZ(-100px);
+    }
+
+    .shape-2 {
+        width: 350px;
+        height: 350px;
+        background: var(--color-secondary);
+        bottom: 10%;
+        right: 10%;
+        transform: translateZ(-150px);
+    }
+
+    /* Layer: The Main Shoe (Hero) */
+    .hero-shoe-container {
+        position: relative;
+        z-index: 20; /* Frontmost */
+        transform: translateZ(50px); /* Pop out */
+        filter: drop-shadow(0 30px 50px rgba(0,0,0,0.8));
+    }
+
+    .hero-shoe-img {
+        width: 50vw;
+        max-width: 800px;
+        transform: rotate(-15deg);
+        transition: transform 0.1s ease-out; /* Smooth hover */
+    }
+
+    /* Layer: Tagline Overlay */
+    .tagline-badge {
+        position: absolute;
+        top: 60%;
+        right: 10%;
+        background: rgba(10, 10, 10, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 1.5rem 2.5rem;
+        transform: translateZ(100px); /* Pop out more */
+        border-radius: 12px;
+        z-index: 25;
+    }
+
+    .tagline-text {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--color-accent);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin: 0;
+        line-height: 1;
+    }
+
+    .tagline-sub {
+        font-size: 0.9rem;
+        color: #ccc;
+        margin-top: 5px;
+        text-align: right;
+        display: block;
+    }
+
+    /* Floating Mini Sneakers */
+    .floater {
+        position: absolute;
+        z-index: 15;
+        animation: float 4s ease-in-out infinite;
+        opacity: 0.8;
+        pointer-events: none;
+    }
+    
+    .mini-kick {
+        width: 120px;
+        height: auto;
+        filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+    }
+
+    .f-1 { top: 15%; right: 25%; transform: translateZ(60px) rotate(15deg); animation-delay: 0s; }
+    .f-2 { bottom: 20%; left: 15%; transform: translateZ(80px) rotate(-10deg); animation-delay: 1.5s; }
+    .f-3 { top: 30%; left: 5%; transform: translateZ(30px) rotate(45deg); animation-delay: 2.5s; width: 80px; }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0) translateZ(var(--z, 0)) rotate(var(--r, 0)); }
+        50% { transform: translateY(-30px) translateZ(var(--z, 0)) rotate(var(--r, 5deg)); }
+    }
+
+    /* Manifesto Section */
+    .manifesto-section {
+        background: var(--color-bg);
+        padding: 8rem 2rem;
+        border-top: 1px solid var(--color-light-gray);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .manifesto-title {
+        font-family: var(--font-heading);
+        font-size: 6vw;
+        line-height: 0.9;
+        text-transform: uppercase;
+        color: transparent;
+        -webkit-text-stroke: 1px white;
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .manifesto-text {
+        font-size: 1.8rem;
+        color: #ddd;
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+        margin-bottom: 5rem;
+        line-height: 1.4;
+    }
+
+    .community-stats {
+        display: flex;
+        justify-content: center;
+        gap: 6rem;
+        flex-wrap: wrap;
+    }
+
+    .stat-box {
+        text-align: center;
+    }
+
+    .stat-num {
+        display: block;
+        font-size: 4rem;
+        font-weight: bold;
+        color: var(--color-accent);
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    /* Bento / Magazine Featured Section */
+    .featured-section {
+        padding: var(--spacing-xl) 0;
+        background-color: var(--color-bg);
+        position: relative;
+    }
+
+    .bento-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: 400px 400px;
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 992px) {
+        .bento-grid {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto;
+        }
+    }
+
+    .bento-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: border-color 0.3s ease;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .bento-item:hover {
+        border-color: var(--color-accent);
+    }
+
+    .bento-large {
+        grid-row: span 2;
+        background-image: url('https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2670&auto=format&fit=crop');
+    }
+
+    .bento-small-1 {
+        background-image: url('https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=2650&auto=format&fit=crop');
+    }
+
+    .bento-small-2 {
+        background-image: url('https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1974&auto=format&fit=crop');
+    }
+
+    .bento-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 2rem;
+        transition: background 0.3s ease;
+    }
+
+    .bento-item:hover .bento-overlay {
+        background: linear-gradient(to top, rgba(0,0,0,1), rgba(204, 255, 0, 0.1));
+    }
+
+    .bento-tag {
+        background: var(--color-secondary);
+        color: white;
+        padding: 0.2rem 0.8rem;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: bold;
+        align-self: flex-start;
+        margin-bottom: 0.5rem;
+        border-radius: 4px;
+    }
+
+    .bento-title {
+        font-size: 3rem;
+        line-height: 0.9;
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+
+    .bento-link {
+        color: var(--color-accent);
+        text-transform: uppercase;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    /* Scrolling Glitch Divider */
+    .scrolling-divider {
+        height: 60px;
+        background: var(--color-accent);
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        border-bottom: 5px solid black;
+        border-top: 5px solid black;
+    }
+
+    .divider-text {
+        white-space: nowrap;
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        font-weight: 800;
+        color: black;
+        animation: scrollLeft 10s linear infinite;
+        padding-left: 2rem;
+    }
+
+    @keyframes scrollLeft {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    /* Newsletter */
+    .newsletter-section {
+        padding: 8rem 2rem;
+        text-align: center;
+        background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+    }
+
+    .newsletter-input-group {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        max-width: 500px;
+        margin: 2rem auto 0;
+    }
+
+    .newsletter-input {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 1rem;
+        color: white;
+        flex: 1;
+        border-radius: 8px;
+    }
+
+    .btn-submit {
+        background: var(--color-accent);
+        color: black;
+        border: none;
+        padding: 1rem 2rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: transform 0.2s ease;
+    }
+
+    .btn-submit:hover {
+        transform: scale(1.05);
+    }
+</style>
+<style>
+/* Existing CSS below (Marquee, Trending, etc...) */
+    .marquee-container {
+        padding: var(--spacing-lg) 0;
+        background: var(--color-accent);
+        color: var(--color-bg);
+        overflow: hidden;
+        white-space: nowrap;
+        transform: rotate(-2deg) scale(1.05); /* Jaunty angle */
+        z-index: 5;
+        position: relative;
+        border-top: 5px solid black;
+        border-bottom: 5px solid black;
+    }
+
+    .marquee-content {
+        display: inline-flex;
+        animation: marquee 20s linear infinite;
+        font-family: var(--font-heading);
+        font-size: 5rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .marquee-item {
+        padding: 0 4rem;
+    }
+
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    /* Trending Grid */
+    .trending-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem; /* Increased Gap */
+        padding: 4rem 1rem;
+    }
+
+    .product-card {
+        position: relative;
+        background: #111;
+        border: 1px solid rgba(255,255,255,0.05); /* Subtle border */
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--color-accent); /* Glow border on hover */
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        filter: grayscale(100%);
+        transition: filter 0.4s ease, transform 0.4s ease;
+    }
+
+    .product-card:hover .product-image {
+        filter: grayscale(0%);
+        transform: scale(1.05);
+    }
+
+    .product-info {
+        padding: 1.5rem;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(to top, rgba(0,0,0,1), transparent);
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .product-card:hover .product-info {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    
+    .product-action-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: var(--color-accent);
+        color: black;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transform: scale(0);
+        transition: all 0.3s ease;
+        z-index: 5;
+    }
+    
+    .product-card:hover .product-action-icon {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* Category Section */
+    .category-section {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .category-item {
+        border-bottom: 1px solid var(--color-light-gray);
+        padding: var(--spacing-md) 0;
+        transition: padding 0.3s ease, background 0.3s ease;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .category-item:hover {
+        padding-left: var(--spacing-md);
+        background: var(--color-light-gray);
+    }
+
+    .category-name {
+        font-size: 5vw;
+        text-transform: uppercase;
+        font-family: var(--font-heading);
+        -webkit-text-stroke: 1px transparent;
+        transition: -webkit-text-stroke 0.3s;
+    }
+    
+    .category-item:hover .category-name {
+        color: var(--color-secondary); /* Pink hover for categories */
+        -webkit-text-stroke: 1px white;
+    }
+
+    .category-img-reveal {
+        position: absolute;
+        top: 50%;
+        right: 15%;
+        width: 400px;
+        height: 250px;
+        background-size: cover;
+        background-position: center;
+        border-radius: 8px;
+        opacity: 0;
+        transform: translateY(-50%) rotate(10deg) scale(0.8);
+        pointer-events: none;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        z-index: 10;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .category-item:hover .category-img-reveal {
+        opacity: 1;
+        transform: translateY(-50%) rotate(0deg) scale(1);
+    }
+</style>
+
+</head>
+
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- Navigation -->
+    
+
+<style>
+    /* Tech Navbar - Floating Glass Pill */
+    .tech-nav {
+        position: fixed;
+        top: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 1200px;
+        padding: 0.8rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        
+        /* Glass Effect */
+        background: rgba(15, 15, 15, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 100px; /* Pill shape */
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Scrolled State: Compressed & Darker */
+    .tech-nav.scrolled {
+        top: 1rem;
+        padding: 0.6rem 2rem;
+        background: rgba(5, 5, 5, 0.85);
+        border-color: rgba(255, 255, 255, 0.15);
+        width: 95%; /* Slightly wider */
+    }
+
+    /* Logo Styling */
+    .nav-logo-text {
+        font-family: var(--font-heading);
+        font-weight: 700;
+        font-size: 1.4rem;
+        letter-spacing: 1px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .logo-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--color-accent);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--color-accent);
+    }
+
+    /* Navigation Links */
+    .nav-links {
+        display: flex;
+        gap: 2.5rem;
+        list-style: none;
+        margin: 0;
+    }
+
+    .nav-link-item a {
+        font-family: 'Courier New', monospace; /* Tech feel */
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+        position: relative;
+        padding: 0 0.2rem;
+        letter-spacing: 0.5px;
+        transition: color 0.3s ease;
+    }
+
+    /* Bracket Hover Effect */
+    .nav-link-item a::before,
+    .nav-link-item a::after {
+        position: absolute;
+        opacity: 0;
+        color: var(--color-accent);
+        transition: all 0.3s ease;
+        transform: translateX(0);
+    }
+
+    .nav-link-item a::before {
+        content: '[';
+        left: -10px;
+    }
+
+    .nav-link-item a::after {
+        content: ']';
+        right: -10px;
+    }
+
+    .nav-link-item a:hover {
+        color: white;
+    }
+
+    .nav-link-item a:hover::before {
+        opacity: 1;
+        transform: translateX(5px);
+        left: -15px;
+    }
+
+    .nav-link-item a:hover::after {
+        opacity: 1;
+        transform: translateX(-5px);
+        right: -15px;
+    }
+
+    /* Icons */
+    .nav-icons {
+        display: flex;
+        gap: 1.2rem;
+        align-items: center;
+    }
+
+    .icon-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        cursor: pointer; /* Ensure interaction */
+        transition: all 0.3s ease;
+    }
+
+    .icon-btn:hover {
+        background: var(--color-accent);
+        color: black;
+        border-color: var(--color-accent);
+        transform: scale(1.1);
+    }
+
+    /* Mobile Hide */
+    @media (max-width: 768px) {
+        .nav-links { display: none; }
+        .tech-nav { width: 95%; top: 1rem; padding: 0.8rem 1.5rem; }
+    }
+</style>
+
+<nav class="tech-nav" id="main-nav">
+    <div class="nav-logo">
+        <a href="/" class="nav-logo-text">
+            FOOTFRONT <span class="logo-dot"></span>
+        </a>
+    </div>
+
+    <!-- Desktop Menu -->
+    <ul class="nav-links d-none d-md-flex">
+        <li class="nav-link-item"><a href="/">Home</a></li>
+        <li class="nav-link-item"><a href="/shop/">Shop</a></li>
+        <li class="nav-link-item"><a href="/shop/?category=new-drops">Drops</a></li>
+        <li class="nav-link-item"><a href="#">Blog</a></li>
+        <li class="nav-link-item"><a href="#">Support</a></li>
+    </ul>
+
+    <div class="nav-icons">
+        <button class="icon-btn search-trigger"><i class="fas fa-search"></i></button>
+        <a href="/cart/" class="icon-btn"><i class="fas fa-shopping-bag"></i></a>
+        
+        
+            <a href="/profile/" class="icon-btn" title="Profile"><i class="fas fa-user"></i></a>
+            <a href="/logout/" class="icon-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        
+    </div>
+</nav>
+
+<script>
+    // Simple sticky nav script
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('main-nav');
+        if (window.scrollY > 50) {
+            nav.classList.add('scrolled');
+        } else {
+            nav.classList.remove('scrolled');
+        }
+    });
+</script>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        
+
+
+<!-- 1. Hero Section -->
+<!-- <section class="hero-wrapper" id="hero-scene">
+    <div class="hero-grid"></div>
+    <div class="scene-container" id="tilt-container">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="hero-big-text">FOOTFRONT</div>
+        <div class="floater f-1" style="--z: 60px; --r: 15deg;"><img src="https://cdn-icons-png.flaticon.com/512/2589/2589903.png" class="mini-kick" style="filter: invert(1);"></div>
+        <div class="floater f-2" style="--z: 80px; --r: -10deg;"><img src="https://cdn-icons-png.flaticon.com/512/776/776263.png" class="mini-kick" style="filter: invert(1);"></div>
+        <div class="hero-shoe-container">
+             <img src="https://png.pngtree.com/png-vector/20231230/ourmid/pngtree-green-sneakers-sports-shoes-png-image_11400276.png" class="hero-shoe-img" alt="Hero Kick">
+        </div>
+        <div class="tagline-badge">
+            <h2 class="tagline-text">From Clicks.<br>To Kicks.</h2>
+            <span class="tagline-sub">Vol. 2026 // Gen Z Edition</span>
+        </div>
+    </div> 
+</section> -->
+
+<!-- 1. Hero Section (3D Model Centerpiece) -->
+<section class="hero-section" style="position: relative; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1a1a 0%, #000 70%);">
+    
+    <!-- Background Grid Effect -->
+    <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.5;"></div>
+
+    <div class="container d-flex flex-column align-items-center justify-content-center" style="position: relative; z-index: 2; padding-top: 8rem;">
+        
+        <!-- Tech HUD Elements -->
+        <div class="tech-ring ring-1"></div>
+        <div class="tech-ring ring-2"></div>
+        <div class="tech-specs">
+            <div class="spec-line">MOD: IGNIS_V2</div>
+            <div class="spec-line">COORDS: 34.0522° N</div>
+            <div class="spec-line" style="color: var(--color-accent);">STATUS: ONLINE</div>
+        </div>
+
+        <!-- Big Text Behind -->
+        <h1 class="hero-title" style="font-size: 15vw; line-height: 0.8; text-transform: uppercase; font-family: var(--font-heading); color: rgba(255,255,255,0.05); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto;">
+             <span class="interactive-letter">F</span><span class="interactive-letter">O</span><span class="interactive-letter">O</span><span class="interactive-letter">T</span><span class="interactive-letter">F</span><span class="interactive-letter">R</span><span class="interactive-letter">O</span><span class="interactive-letter">N</span><span class="interactive-letter">T</span>
+        </h1>
+
+        <!-- The 3D Sneaker (Interactive Model) -->
+        <model-viewer 
+             src="/static/davidicus_ignis_sneaker_rtfktchallenge.glb" 
+             alt="A 3D model of a customized sneaker" 
+             camera-controls 
+             auto-rotate 
+             rotation-per-second="60deg"
+             exposure="1.2"
+             shadow-intensity="1" 
+             shadow-softness="0.5"
+             environment-image="neutral"
+             touch-action="pan-y" 
+             class="hero-model-viewer"
+             disable-zoom>
+        </model-viewer>
+
+        <!-- Call to Action -->
+        <div style="margin-top: -50px; text-align: center; position: relative;">
+            <h2 class="text-white mb-4" style="font-size: 3rem; text-shadow: 0 10px 20px black;">FUTURE STEP</h2>
+            <a href="/shop/" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem; box-shadow: 0 0 30px var(--color-accent);">COPP NOW</a>
+        </div>
+    </div>
+</section>
+
+<!-- Grey Marquee -->
+<div class="marquee-gray">
+    <div class="divider-text" style="animation: marquee 30s linear infinite;">
+        FREE SHIPPING ON ALL ORDERS OVER $150  •  NEW DROPS EVERY FRIDAY  •  JOIN THE 50K+ STRONG COMMUNITY  •  AUTHENTICITY GUARANTEED  •  FREE SHIPPING ON ALL ORDERS OVER $150  •  
+    </div>
+</div>
+
+<!-- 2. Featured Drops -->
+<section class="container section-padding" style="position: relative; z-index: 2;">
+    <h2 class="section-title-large">FEATURED DROPS</h2>
+    <div class="bento-grid">
+        <div class="bento-item bento-large">
+            <a href="/shop/" class="bento-overlay">
+                <span class="bento-tag">Highlight</span>
+                <h3 class="bento-title">THE<br>REBOOT</h3>
+                <span class="bento-link">Shop Collection <i class="fas fa-arrow-right"></i></span>
+            </a>
+        </div>
+        <div class="bento-item bento-small-1">
+            <a href="/shop/" class="bento-overlay">
+                <span class="bento-tag">New</span>
+                <h3 class="bento-title">Cyber<br>Punk</h3>
+            </a>
+        </div>
+        <div class="bento-item bento-small-2">
+            <a href="/shop/" class="bento-overlay">
+                <span class="bento-tag">Exclusive</span>
+                <h3 class="bento-title">Retro<br>Future</h3>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 3. Cross Marquee (Resized) -->
+<div class="cross-marquee-wrapper">
+    <div class="cross-marquee-strip strip-1">
+        <div class="marquee-track">
+            <span class="marquee-content">LIMITED EDITION // WORLDWIDE SHIPPING // LIMITED EDITION // WORLDWIDE SHIPPING // LIMITED EDITION // WORLDWIDE SHIPPING //</span>
+            <span class="marquee-content">LIMITED EDITION // WORLDWIDE SHIPPING // LIMITED EDITION // WORLDWIDE SHIPPING // LIMITED EDITION // WORLDWIDE SHIPPING //</span>
+        </div>
+    </div>
+    <div class="cross-marquee-strip strip-2">
+        <div class="marquee-track">
+            <span class="marquee-content">DON'T SLEEP // FRESH KICKS DAILY // DON'T SLEEP // FRESH KICKS DAILY // DON'T SLEEP // FRESH KICKS DAILY //</span>
+            <span class="marquee-content">DON'T SLEEP // FRESH KICKS DAILY // DON'T SLEEP // FRESH KICKS DAILY // DON'T SLEEP // FRESH KICKS DAILY //</span>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Trending Products (Guaranteed Render) -->
+<section class="container section-padding" style="padding-top: 4rem;">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <h2 class="section-title-large" style="text-align: left;">TRENDING NOW</h2>
+        <a href="/shop/" class="btn-primary">View All</a>
+    </div>
+
+    <div class="trending-grid">
+        <!-- HARDCODED BACKUP CARD 1 (Guaranteed to show) -->
+        <div class="product-card">
+            <a href="#" style="display:block; text-decoration:none;">
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2670&auto=format&fit=crop" class="product-image" alt="Fallback">
+                <div class="product-info">
+                   <h3>Nike Air Max</h3>
+                   <p>Running</p>
+                   <div class="product-actions">
+                       <span class="price-tag">$180</span>
+                       <div class="btn-card-action"><i class="fas fa-arrow-right"></i></div>
+                   </div>
+                </div>
+            </a>
+       </div>
+
+        <!-- REAL DJANGO LOOP -->
+        
+        <div class="product-card">
+            <a href="/product-detail/?id=1" style="display:block; text-decoration:none;"> 
+                
+                    <img src="/media/photos/products/download.png" class="product-image" alt="Nike Air Jordans">
+                
+                <div class="product-info">
+                    <h3>Nike Air Jordans</h3>
+                    <p>Sneakers</p>
+                    <div class="product-actions">
+                        <span class="price-tag">$</span>
+                        <div class="btn-card-action"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="product-card">
+            <a href="/product-detail/?id=2" style="display:block; text-decoration:none;"> 
+                
+                    <img src="/media/photos/products/shopping_c_pr.png" class="product-image" alt="Chelasea Boots">
+                
+                <div class="product-info">
+                    <h3>Chelasea Boots</h3>
+                    <p>Chelsea</p>
+                    <div class="product-actions">
+                        <span class="price-tag">$</span>
+                        <div class="btn-card-action"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+    </div>
+</section>
+
+<!-- 5. Shop By Vibe (Theme A: Tech) -->
+<section class="container section-padding bg-charcoal-grid" style="clip-path: polygon(0 5%, 100% 0, 100% 95%, 0 100%); padding: 6rem 0;">
+    <div class="container">
+        <h2 class="section-title-large">SHOP BY VIBE</h2>
+        
+        <div class="vibe-grid">
+            
+            <a href="/shop/?category=sneakers" class="vibe-card">
+                
+                    <img src="/media/categories/shopping.png" class="vibe-img" alt="Sneakers">
+                
+                <div class="vibe-overlay">
+                    <h3 class="vibe-title">Sneakers</h3>
+                </div>
+            </a>
+            
+            <a href="/shop/?category=chelsea" class="vibe-card">
+                
+                    <img src="/media/categories/shopping_chelsea.png" class="vibe-img" alt="Chelsea">
+                
+                <div class="vibe-overlay">
+                    <h3 class="vibe-title">Chelsea</h3>
+                </div>
+            </a>
+            
+        </div>
+        
+        <style>
+            .vibe-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1.5rem;
+            }
+            .vibe-card {
+                position: relative;
+                height: 300px;
+                border-radius: 16px;
+                overflow: hidden;
+                display: block;
+            }
+            .vibe-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.5s ease;
+            }
+            .vibe-overlay {
+                position: absolute;
+                inset: 0;
+                background: rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.3s ease;
+            }
+            .vibe-title {
+                font-size: 2rem;
+                color: white;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                border: 2px solid white;
+                padding: 0.5rem 1.5rem;
+                transition: all 0.3s ease;
+            }
+            .vibe-card:hover .vibe-img {
+                transform: scale(1.1);
+            }
+            .vibe-card:hover .vibe-overlay {
+                background: rgba(0,0,0,0.5);
+            }
+            .vibe-card:hover .vibe-title {
+                background: white;
+                color: black;
+            }
+        </style>
+    </div>
+</section>
+
+<!-- 6. Creating the Community (Manifesto) -->
+<section class="manifesto-section" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=2670&auto=format&fit=crop'); background-attachment: fixed; background-size: cover;">
+    <div class="container">
+        <h2 class="manifesto-title hover-reveal-text">Creating the Community</h2>
+        <p class="manifesto-text">
+            We are not just a store. We are a movement. Transforming the footwear shopping experience one drop at a time.
+            Join the revolution of style, comfort, and pure aesthetic.
+        </p>
+        <div class="community-stats">
+            <div class="stat-box"><span class="stat-num">50K+</span><span class="stat-label">Members</span></div>
+            <div class="stat-box"><span class="stat-num">1.2M</span><span class="stat-label">Kicks</span></div>
+            <div class="stat-box"><span class="stat-num">24/7</span><span class="stat-label">Support</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- 7. All Products Section (Theme B: Void) -->
+<section class="container section-padding bg-noise-black">
+    <h2 class="section-title-large">FRESH KICKS</h2>
+    <div class="trending-grid">
+        
+        <div class="product-card">
+            <a href="/product-detail/?id=1" style="display:block; text-decoration:none;"> 
+                
+                    <img src="/media/photos/products/download.png" class="product-image" alt="Nike Air Jordans">
+                
+                <div class="product-info">
+                    <h3>Nike Air Jordans</h3>
+                    <p>Sneakers</p>
+                    <div class="product-actions">
+                        <span class="price-tag">$</span>
+                        <div class="btn-card-action"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="product-card">
+            <a href="/product-detail/?id=2" style="display:block; text-decoration:none;"> 
+                
+                    <img src="/media/photos/products/shopping_c_pr.png" class="product-image" alt="Chelasea Boots">
+                
+                <div class="product-info">
+                    <h3>Chelasea Boots</h3>
+                    <p>Chelsea</p>
+                    <div class="product-actions">
+                        <span class="price-tag">$</span>
+                        <div class="btn-card-action"><i class="fas fa-arrow-right"></i></div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+    </div>
+    <div class="text-center mt-5">
+        <a href="/shop/" class="btn-primary" style="padding: 1rem 3rem;">View Entire Store</a>
+    </div>
+</section>
+
+<!-- 8. Why Choose Us (Theme A: Tech) -->
+<section class="container section-padding bg-charcoal-grid" style="padding: 6rem 0; clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%);">
+    <h2 class="section-title-large">WHY SQUAD WITH US?</h2>
+    <div class="d-flex flex-wrap justify-content-center gap-5 text-center">
+        <div style="flex: 1; min-width: 250px;">
+            <i class="fas fa-shipping-fast text-accent fa-3x mb-3"></i>
+            <h4 class="text-white">Lightning Shipping</h4>
+            <p class="text-gray">Get your drips faster than you can say "Sheesh".</p>
+        </div>
+        <div style="flex: 1; min-width: 250px;">
+            <i class="fas fa-check-circle text-accent fa-3x mb-3"></i>
+            <h4 class="text-white">100% Authentic</h4>
+            <p class="text-gray">Verified by our experts. No fakes, ever.</p>
+        </div>
+        <div style="flex: 1; min-width: 250px;">
+            <i class="fas fa-undo text-accent fa-3x mb-3"></i>
+            <h4 class="text-white">Easy Returns</h4>
+            <p class="text-gray">Didn't fit the vibe? Send it back, no questions asked.</p>
+        </div>
+        <div style="flex: 1; min-width: 250px;">
+            <i class="fas fa-lock text-accent fa-3x mb-3"></i>
+            <h4 class="text-white">Secure Drops</h4>
+            <p class="text-gray">Bot-proof checkout so real ones get the win.</p>
+        </div>
+    </div>
+</section>
+
+<!-- 9. Reviews Section (Theme B: Void) -->
+<section class="container section-padding mb-5 bg-noise-black">
+    <h2 class="section-title-large">HYPE FROM THE FAM</h2>
+    <div class="d-flex overflow-auto" style="padding-bottom: 2rem;">
+        <!-- Review 1 -->
+        <div class="review-card">
+            <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+            <p class="text-white mb-3">"Legit the best place to cop kicks. The UI is insane and shipping was crazy fast."</p>
+            <div class="d-flex align-items-center gap-2">
+                <div class="avatar">A</div>
+                <span class="text-white font-weight-bold">Alex K.</span>
+            </div>
+        </div>
+        <!-- Review 2 -->
+        <div class="review-card">
+            <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+            <p class="text-white mb-3">"Finally a site that actually looks good on mobile. Got my Jordans in 2 days."</p>
+            <div class="d-flex align-items-center gap-2">
+                <div class="avatar" style="background:#ff0099;">S</div>
+                <span class="text-white font-weight-bold">Sarah J.</span>
+            </div>
+        </div>
+        <!-- Review 3 -->
+        <div class="review-card">
+            <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+            <p class="text-white mb-3">"Customer support helped me choose the right size. Top tier service."</p>
+            <div class="d-flex align-items-center gap-2">
+                <div class="avatar" style="background:#3333ff;">M</div>
+                <span class="text-white font-weight-bold">Mike T.</span>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        .review-card {
+            background: rgba(255,255,255,0.05);
+            padding: 2rem;
+            border-radius: 12px;
+            min-width: 300px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+        .review-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-accent);
+        }
+        .review-card {
+            margin-right: 2rem;
+        }
+        .review-card:last-child {
+            margin-right: 0;
+        }
+        .avatar {
+            width: 40px; 
+            height: 40px; 
+            background: #333; 
+            border-radius: 50%; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</section>
+
+
+    </main>
+
+    <!-- Footer -->
+    
+<style>
+    .big-footer {
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        padding: var(--spacing-xl) 0;
+        border-top: 1px solid var(--color-light-gray);
+    }
+
+    .footer-big-text {
+        font-family: var(--font-heading);
+        font-size: 12vw;
+        line-height: 0.8;
+        text-align: center;
+        text-transform: uppercase;
+        color: var(--color-gray);
+        margin-bottom: var(--spacing-lg);
+        user-select: none;
+    }
+
+    .footer-links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-lg);
+        padding: 0 var(--spacing-md);
+    }
+
+    .footer-col h4 {
+        margin-bottom: var(--spacing-sm);
+        color: var(--color-accent);
+    }
+
+    .footer-col ul {
+        list-style: none;
+    }
+
+    .footer-col li {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .footer-col a:hover {
+        color: var(--color-secondary);
+        text-decoration: underline;
+    }
+
+    .footer-bottom-genz {
+        text-align: center;
+        margin-top: var(--spacing-lg);
+        font-size: 0.8rem;
+        color: #666;
+    }
+</style>
+
+<footer class="big-footer">
+    <div class="footer-big-text">
+        <span class="interactive-letter">F</span><span class="interactive-letter">O</span><span class="interactive-letter">O</span><span class="interactive-letter">T</span><span class="interactive-letter">F</span><span class="interactive-letter">R</span><span class="interactive-letter">O</span><span class="interactive-letter">N</span><span class="interactive-letter">T</span>
+    </div>
+    
+    <div class="container footer-links-grid">
+        <div class="footer-col">
+            <h4>Explore</h4>
+            <ul>
+                <li><a href="#">New Arrivals</a></li>
+                <li><a href="#">Best Sellers</a></li>
+                <li><a href="#">Trending</a></li>
+                <li><a href="#">Gift Cards</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-col">
+            <h4>Support</h4>
+            <ul>
+                <li><a href="#">Help Center</a></li>
+                <li><a href="#">Returns</a></li>
+                <li><a href="#">Shipping</a></li>
+                <li><a href="#">Contact Us</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <ul>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Cookie Policy</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-col">
+            <h4>Socials</h4>
+            <div class="social-icons">
+                <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-btn"><i class="fab fa-tiktok"></i></a>
+                <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-btn"><i class="fab fa-discord"></i></a>
+            </div>
+            <style>
+                .social-icons { display: flex; gap: 1rem; }
+                .social-btn {
+                    width: 50px; height: 50px;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 1.2rem;
+                    transition: all 0.3s ease;
+                    color: white;
+                }
+                .social-btn:hover {
+                    background: var(--color-secondary);
+                    border-color: var(--color-secondary);
+                    transform: translateY(-5px) rotate(10deg);
+                    box-shadow: 0 0 15px var(--color-secondary);
+                }
+            </style>
+        </div>
+    </div>
+
+    <div class="footer-bottom-genz">
+        &copy; <script>document.write(new Date().getFullYear());</script> FootFront. All Rights Reserved. Stay Fresh.
+    </div>
+</footer>
+
+    <!-- Core Scripts -->
+    <script src="/static/assets1/js/vendor/jquery-2.2.4.min.js"></script>
+    <script src="/static/assets1/js/vendor/bootstrap.min.js"></script>
+
+    <!-- Animation & Smooth Scroll -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+    <!-- Main JS -->
+    <script src="/static/js/main.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyDxesQO_NEnivibGD34CszpnzAYxnvgVDk",
+            authDomain: "footfront-ae7a3.firebaseapp.com",
+            projectId: "footfront-ae7a3",
+            storageBucket: "footfront-ae7a3.appspot.com",
+            messagingSenderId: "826331475580",
+            appId: "1:826331475580:web:93059b132186958043a3f9",
+            measurementId: "G-ZGL0WFDMER"
+        };
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+    </script>
+    
+<script>
+    // 3D Tilt Effect for Hero
+    const scene = document.getElementById('tilt-container');
+    const heroWrapper = document.getElementById('hero-scene');
+
+    if (heroWrapper && scene) {
+        heroWrapper.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2; // -1 to 1
+            const y = (e.clientY / window.innerHeight - 0.5) * 2; // -1 to 1
+
+            // Rotate Scene
+            gsap.to(scene, {
+                rotateX: -y * 15, // Tilt up/down
+                rotateY: x * 15,  // Tilt left/right
+                duration: 0.5,
+                ease: 'power2.out'
+            });
+
+            // Parallax individual elements
+            gsap.to('.hero-shoe-img', {
+                x: x * 30,
+                y: y * 30,
+                rotate: -15 + (x * 5),
+                duration: 0.5
+            });
+
+            gsap.to('.hero-big-text', {
+                x: -x * 20,
+                y: -y * 20,
+                duration: 0.5
+            });
+            
+            gsap.to('.floating-shape', {
+                x: x * 40,
+                y: y * 40,
+                duration: 0.8
+            });
+        });
+
+        // Reset on leave
+        heroWrapper.addEventListener('mouseleave', () => {
+            gsap.to(scene, { rotateX: 0, rotateY: 0, duration: 1 });
+            gsap.to('.hero-shoe-img', { x: 0, y: 0, rotate: -15, duration: 1 });
+            gsap.to('.hero-big-text', { x: 0, y: 0, duration: 1 });
+        });
+    }
+
+    // Existing Animation Code
+    // Trending Cards Stagger REMOVED to fix visibility issues
+    // Cards will now be static and always visible
+
+    // Manifesto Text Reveal
+    gsap.from('.manifesto-text', {
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        scrollTrigger: {
+            trigger: '.manifesto-section',
+            start: 'top 70%'
+        }
+    });
+</script>
+
+</body>
+</html>

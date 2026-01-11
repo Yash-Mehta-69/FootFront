@@ -1,0 +1,171 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Minimal overrides for auth layout */
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 150px;
+        padding-bottom: 150px; /* Added spacing */
+        position: relative;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    @media (max-width: 576px) {
+        .auth-glass-panel {
+            padding: 1.5rem !important;
+        }
+    }
+    
+    .row-group {
+        display: flex;
+        gap: 1rem;
+    }
+    .row-group .form-group {
+        flex: 1;
+    }
+
+    @media (max-width: 576px) {
+        .row-group {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="glass-panel auth-glass-panel" style="width: 100%; max-width: 500px; position: relative; z-index: 2;">
+        <div class="text-center mb-4">
+            <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 10vw, 3rem); margin: 0; line-height: 1;">JOIN SQUAD</h2>
+            <div style="width: 50px; height: 3px; background: var(--color-accent); margin: 0.5rem auto;"></div>
+            <p style="color: #888; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Create Signal ID</p>
+        </div>
+        
+        <form id="registerForm" novalidate onsubmit="startRegAnimation(event)">
+            <div class="row-group mb-3">
+                <div class="form-group">
+                    <input type="text" class="tech-input" id="firstName" name="firstName" placeholder="FIRST NAME" required>
+                </div>
+                <div class="form-group">
+                    <input type="text" class="tech-input" id="lastName" name="lastName" placeholder="LAST NAME">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <input type="email" class="tech-input" id="email" name="email" placeholder="EMAIL ADDRESS" required>
+            </div>
+            
+            <div class="mb-3">
+                <input type="tel" class="tech-input" id="phone" name="phone" placeholder="PHONE NUMBER" required>
+            </div>
+
+            <div class="mb-3">
+                <input type="password" class="tech-input" id="password" name="password" placeholder="PASSWORD" required>
+            </div>
+            
+            <div class="mb-4">
+                <input type="password" class="tech-input" id="confirmPassword" name="confirmPassword" placeholder="CONFIRM PASSWORD" required>
+            </div>
+            
+            <button type="submit" id="regBtn" class="btn-primary" style="width: 100%;">INITIALIZE ACCOUNT</button>
+        </form>
+
+        <div id="register-message" style="color: var(--color-secondary); text-align: center; margin-top: 1rem; font-family: monospace;"></div>
+
+        <div class="mt-4 text-center">
+            <p class="mb-2" style="font-size: 0.9rem; color: #666;">ALREADY CONNECTED?</p>
+            <a href="{% url 'login' %}" style="color: var(--color-accent); text-transform: uppercase; font-weight: bold; font-size: 0.9rem;">LOGIN TERMINAL ></a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function startRegAnimation(e) {
+        const btn = document.getElementById('regBtn');
+        const originalText = "PROCESSING";
+        btn.disabled = true;
+        btn.style.opacity = "0.8";
+        btn.innerText = originalText;
+        
+        let dots = 0;
+        setInterval(() => {
+            dots = (dots + 1) % 4;
+            let dotStr = "";
+            for(let i=0; i<dots; i++) dotStr += ".";
+            btn.innerText = originalText + dotStr;
+        }, 500);
+    }
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // GSAP Entry Animation
+    gsap.from(".auth-card", {
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+    });
+
+    // Registration Logic (Keeping original functional logic)
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const firstName = document.getElementById('firstName').value;
+        const lastName = document.getElementById('lastName').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const messageDiv = document.getElementById('register-message');
+        messageDiv.innerText = '';
+
+        if (password !== confirmPassword) {
+            messageDiv.innerText = 'Passwords do not match.';
+            return;
+        }
+
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                var user = userCredential.user;
+                user.getIdToken().then(function(idToken) {
+                    fetch("{% url 'register' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            idToken: idToken,
+                            firstName: firstName,
+                            lastName: lastName,
+                            phone: phone
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            messageDiv.innerText = 'Registration failed: ' + data.message;
+                            user.delete();
+                        }
+                    })
+                    .catch((error) => {
+                        messageDiv.innerText = 'An error occurred during registration.';
+                        user.delete();
+                    });
+                });
+            })
+            .catch((error) => {
+                messageDiv.innerText = 'Firebase registration failed: ' + error.message;
+            });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .wishlist-container {
+        padding-top: 150px;
+        min-height: 100vh;
+        /* Transparent */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wishlist-container container">
+    <div class="d-flex align-items-center mb-5">
+        <h1 class="text-accent" style="font-family: var(--font-heading); font-size: 4rem; margin: 0;">WISHLIST</h1>
+        <span class="ms-4 text-muted" style="font-family: monospace;">// SAVED ITEMS</span>
+    </div>
+    
+    <div class="glass-grid">
+        {% for item in items %}
+        <div class="glass-card">
+            <div class="glass-card-image-wrapper">
+                 {% if item.product_variant.image %}
+                    <img src="{{ item.product_variant.image.url }}" class="glass-card-img" alt="Product">
+                {% else %}
+                     <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
+                {% endif %}
+                <div class="glass-badge">SAVED</div>
+            </div>
+            <div>
+                <a href="{% url 'product_detail' %}?id={{ item.product_variant.product.id }}">
+                    <h4 class="glass-card-title">{{ item.product_variant.product.name }}</h4>
+                </a>
+                <div class="glass-card-footer">
+                    <span class="glass-card-price">${{ item.product_variant.price }}</span>
+                    <!-- Could add remove action here -->
+                    <a href="{% url 'product_detail' %}?id={{ item.product_variant.product.id }}" class="glass-btn">VIEW</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; padding: 4rem; text-align: center; border: 1px dashed rgba(255,255,255,0.1);">
+            <h3 class="text-muted">NO SAVED ITEMS</h3>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

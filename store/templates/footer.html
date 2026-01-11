@@ -1,0 +1,121 @@
+
+<style>
+    .big-footer {
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        padding: var(--spacing-xl) 0;
+        border-top: 1px solid var(--color-light-gray);
+    }
+
+    .footer-big-text {
+        font-family: var(--font-heading);
+        font-size: 12vw;
+        line-height: 0.8;
+        text-align: center;
+        text-transform: uppercase;
+        color: var(--color-gray);
+        margin-bottom: var(--spacing-lg);
+        user-select: none;
+    }
+
+    .footer-links-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-lg);
+        padding: 0 var(--spacing-md);
+    }
+
+    .footer-col h4 {
+        margin-bottom: var(--spacing-sm);
+        color: var(--color-accent);
+    }
+
+    .footer-col ul {
+        list-style: none;
+    }
+
+    .footer-col li {
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .footer-col a:hover {
+        color: var(--color-secondary);
+        text-decoration: underline;
+    }
+
+    .footer-bottom-genz {
+        text-align: center;
+        margin-top: var(--spacing-lg);
+        font-size: 0.8rem;
+        color: #666;
+    }
+</style>
+
+<footer class="big-footer">
+    <div class="footer-big-text">
+        <span class="interactive-letter">F</span><span class="interactive-letter">O</span><span class="interactive-letter">O</span><span class="interactive-letter">T</span><span class="interactive-letter">F</span><span class="interactive-letter">R</span><span class="interactive-letter">O</span><span class="interactive-letter">N</span><span class="interactive-letter">T</span>
+    </div>
+    
+    <div class="container footer-links-grid">
+        <div class="footer-col">
+            <h4>Explore</h4>
+            <ul>
+                <li><a href="#">New Arrivals</a></li>
+                <li><a href="#">Best Sellers</a></li>
+                <li><a href="#">Trending</a></li>
+                <li><a href="#">Gift Cards</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-col">
+            <h4>Support</h4>
+            <ul>
+                <li><a href="#">Help Center</a></li>
+                <li><a href="#">Returns</a></li>
+                <li><a href="#">Shipping</a></li>
+                <li><a href="#">Contact Us</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <ul>
+                <li><a href="#">Privacy Policy</a></li>
+                <li><a href="#">Terms of Service</a></li>
+                <li><a href="#">Cookie Policy</a></li>
+            </ul>
+        </div>
+        
+        <div class="footer-col">
+            <h4>Socials</h4>
+            <div class="social-icons">
+                <a href="#" class="social-btn"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-btn"><i class="fab fa-tiktok"></i></a>
+                <a href="#" class="social-btn"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-btn"><i class="fab fa-discord"></i></a>
+            </div>
+            <style>
+                .social-icons { display: flex; gap: 1rem; }
+                .social-btn {
+                    width: 50px; height: 50px;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    font-size: 1.2rem;
+                    transition: all 0.3s ease;
+                    color: white;
+                }
+                .social-btn:hover {
+                    background: var(--color-secondary);
+                    border-color: var(--color-secondary);
+                    transform: translateY(-5px) rotate(10deg);
+                    box-shadow: 0 0 15px var(--color-secondary);
+                }
+            </style>
+        </div>
+    </div>
+
+    <div class="footer-bottom-genz">
+        &copy; <script>document.write(new Date().getFullYear());</script> FootFront. All Rights Reserved. Stay Fresh.
+    </div>
+</footer>

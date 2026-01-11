@@ -1,0 +1,748 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .shop-container {
+        display: flex;
+        padding-top: 100px;
+        min-height: 100vh;
+        background-color: var(--color-bg);
+    }
+
+    /* Sidebar Filter */
+    .filter-sidebar {
+        width: 250px;
+        padding: 2rem;
+        border-right: 1px solid var(--color-light-gray);
+        height: calc(100vh - 100px);
+        position: sticky;
+        top: 100px;
+        display: none; /* Mobile first hidden, or adjust for desktop */
+    }
+
+    @media (min-width: 992px) {
+        .filter-sidebar {
+            display: block;
+        }
+    }
+
+    .filter-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--color-accent);
+    }
+
+    .filter-list {
+        list-style: none;
+    }
+
+    .filter-item a {
+        display: block;
+        padding: 0.5rem 0;
+        color: var(--color-text);
+        transition: color 0.3s ease;
+    }
+
+    .filter-item a:hover {
+        color: var(--color-accent);
+        padding-left: 10px;
+    }
+
+    /* Product Grid */
+    .shop-content {
+        flex: 1;
+        padding: 2rem;
+    }
+
+    .shop-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap; /* Allow wrapping */
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .shop-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .tech-search-container {
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search-box input {
+            width: 100%;
+        }
+    }
+
+    .shop-title {
+        font-family: var(--font-heading);
+        line-height: 1;
+        font-size: clamp(3rem, 10vw, 5rem); /* Responsive fluid typography */
+    }
+
+    @media (max-width: 576px) {
+        .shop-title {
+            font-size: 3rem !important;
+        }
+    }
+
+    .search-box input {
+        background: transparent;
+        border: 1px solid var(--color-gray);
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        width: 300px;
+    }
+
+    .search-box input:focus {
+        border-color: var(--color-accent);
+        outline: none;
+    }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+    
+    @media (max-width: 576px) {
+        .product-grid {
+            grid-template-columns: 1fr; /* Single column on very small screens */
+            gap: 1.5rem;
+        }
+    }
+
+    /* Reusing Product Card from Index but refining */
+    .product-card {
+        background: var(--color-gray);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.4s ease;
+        position: relative;
+    }
+
+    .product-image-wrapper {
+        height: 350px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-card:hover .product-image {
+        transform: scale(1.1);
+    }
+
+    .product-details {
+        padding: 1.5rem;
+        background: rgba(0,0,0,0.8);
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-details {
+        transform: translateY(0);
+    }
+
+    .product-name {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-price {
+        color: var(--color-accent);
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+</style>
+<style>
+    /* Mobile Filter Styles */
+    .mobile-filter-toggle {
+        display: none;
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: var(--color-accent);
+        color: black;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        align-items: center;
+        justify-content: center;
+        z-index: 990;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        border: none;
+        cursor: pointer;
+    }
+
+    @media (max-width: 992px) {
+        .mobile-filter-toggle {
+            display: flex;
+        }
+
+        .filter-sidebar {
+            display: block; /* Override none */
+            position: fixed;
+            top: 0;
+            left: -100%; /* Hidden */
+            width: 85%;
+            max-width: 350px;
+            height: 100vh;
+            background: rgba(10, 10, 10, 0.98);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            z-index: 1100;
+            transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            padding-top: 4rem; /* Space for close btn */
+        }
+
+        .filter-sidebar.active {
+            left: 0;
+            box-shadow: 100vw 0 0 rgba(0,0,0,0.5); /* Dim backdrop hack */
+        }
+        
+        .filter-close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shop-container">
+    <!-- Mobile Filter Toggle -->
+    <button class="mobile-filter-toggle" onclick="toggleFilterSidebar()">
+        <i class="fas fa-filter" style="font-size: 1.2rem;"></i>
+    </button>
+
+    <!-- Filter Backdrop -->
+    <div id="filterBackdrop" class="filter-backdrop" onclick="toggleFilterSidebar()"></div>
+
+    <!-- Filter Sidebar (Glass) -->
+    <aside class="glass-sidebar filter-sidebar" id="filterSidebar">
+        <button class="filter-close-btn d-lg-none" onclick="toggleFilterSidebar()"><i class="fas fa-times"></i></button>
+        <h3 class="filter-title text-accent mb-5" style="font-family: var(--font-heading); letter-spacing: 1px;">FILTERS</h3>
+        
+        <form id="filterForm" action="{% url 'shop' %}" method="GET">
+            {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
+            {% if request.GET.sort %}<input type="hidden" name="sort" value="{{ request.GET.sort }}">{% endif %}
+            
+            <!-- Category Filter -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Categories</h5>
+                    <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="filter-content">
+                    <ul class="filter-list" style="list-style: none; padding: 0;">
+                        <li class="filter-item">
+                            <a href="?{% if request.GET.q %}q={{request.GET.q}}&{% endif %}category=" class="{% if not request.GET.category %}active{% endif %}">
+                                // ALL DROPS
+                            </a>
+                        </li>
+                        {% for cat in categories %}
+                        <li class="filter-item">
+                            <a href="?{% if request.GET.q %}q={{request.GET.q}}&{% endif %}category={{ cat.slug }}" class="{% if request.GET.category == cat.slug %}active{% endif %}">
+                                // {{ cat.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if request.GET.category %}
+                    <input type="hidden" name="category" value="{{ request.GET.category }}">
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Gender Filter -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Gender</h5>
+                    <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="filter-content">
+                    <ul class="filter-list" style="list-style: none; padding: 0;">
+                        <li class="filter-item">
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'gender' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}gender=" class="{% if not request.GET.gender %}active{% endif %}">
+                                // ALL
+                            </a>
+                        </li>
+                        {% for code, name in genders %}
+                        <li class="filter-item">
+                            <a href="?{% for key, value in request.GET.items %}{% if key != 'gender' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}gender={{ code }}" class="{% if request.GET.gender == code %}active{% endif %}">
+                                // {{ name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if request.GET.gender %}
+                    <input type="hidden" name="gender" value="{{ request.GET.gender }}">
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Price Filter (Dual Slider) -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Price Range</h5>
+                    <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="filter-content">
+                    <!-- Number Inputs (Synced) -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <input type="number" id="minPriceInput" name="min_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.min_price|default:'0' }}" min="0" max="1000">
+                        <span class="text-white" style="font-size: 0.8rem;">-</span>
+                        <input type="number" id="maxPriceInput" name="max_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.max_price|default:'1000' }}" min="0" max="1000">
+                    </div>
+
+                    <!-- Slider Component -->
+                    <div class="slider-container">
+                        <div class="slider-track"></div>
+                        <div class="slider-track-highlight" id="sliderHighlight"></div>
+                        <input type="range" id="minRange" min="0" max="1000" value="{{ request.GET.min_price|default:'0' }}" class="range-input">
+                        <input type="range" id="maxRange" min="0" max="1000" value="{{ request.GET.max_price|default:'1000' }}" class="range-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Filter -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Color</h5>
+                    <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="filter-content">
+                    <div class="d-flex flex-wrap">
+                        {% for color in colors %}
+                        <label class="color-swatch" style="cursor: pointer;">
+                            <input type="radio" name="color" value="{{ color.name }}" {% if request.GET.color == color.name %}checked{% endif %} style="display:none;" onchange="this.form.submit()">
+                            <span style="display:block; width: 25px; height: 25px; background-color: {{ color.hex_code }}; border-radius: 50%; border: 1px solid #555; box-shadow: {% if request.GET.color == color.name %}0 0 0 2px var(--color-accent){% endif %};"></span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Size Filter -->
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Size</h5>
+                    <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </div>
+                <div class="filter-content">
+                    <div class="d-flex flex-wrap">
+                        {% for size in sizes %}
+                        <label class="size-swatch" style="cursor: pointer;">
+                            <input type="radio" name="size" value="{{ size.size_label }}" {% if request.GET.size == size.size_label %}checked{% endif %} style="display:none;" onchange="this.form.submit()">
+                            <span class="size-box {% if request.GET.size == size.size_label %}active{% endif %}">{{ size.size_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-primary w-100 py-2 mt-4" style="font-size: 0.9rem;">APPLY FILTERS</button>
+            {% if request.GET.min_price or request.GET.max_price or request.GET.color or request.GET.size %}
+            <a href="{% url 'shop' %}" class="d-block text-center mt-3 text-uppercase" style="color: #666; font-size: 0.8rem; letter-spacing: 1px;">CLEAR ALL FILTERS</a>
+            {% endif %}
+        </form>
+
+        <!-- Decoration -->
+        <div style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <div style="font-family: 'Courier New', monospace; font-size: 0.7rem; color: #555;">
+                SYS.STATUS: ONLINE<br>
+                GRID.OPACITY: 100%<br>
+                VER: 2026.1
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="shop-content">
+        <div class="shop-header">
+            <div>
+                <h1 class="shop-title glitch-text" style="margin: 0; text-transform: uppercase; color: white;">SHOP</h1>
+                <p style="color: #888; margin-top: 0.5rem;">EXPLORE THE COLLECTION</p>
+            </div>
+            
+            <div class="tech-search-container d-flex" style="gap: 1rem;">
+                <!-- Sorting -->
+                <form action="{% url 'shop' %}" method="GET" class="d-flex align-items-center sort-form">
+                     {% for key, value in request.GET.items %}
+                        {% if key != 'sort' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endif %}
+                    {% endfor %}
+                    <!-- Custom Hidden Input -->
+                    <input type="hidden" name="sort" id="sortInput" value="{{ request.GET.sort|default:'newest' }}">
+
+                    <!-- Custom Dropdown Trigger -->
+                    <div class="custom-dropdown" id="sortDropdown">
+                        <div class="dropdown-trigger">
+                            <span id="sortLabel">
+                                {% if request.GET.sort == 'price_asc' %}PRICE: LOW TO HIGH
+                                {% elif request.GET.sort == 'price_desc' %}PRICE: HIGH TO LOW
+                                {% else %}NEWEST ARRIVALS{% endif %}
+                            </span>
+                            <svg class="dropdown-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                        </div>
+                        <div class="dropdown-options">
+                            <div class="dropdown-option {% if request.GET.sort == 'newest' or not request.GET.sort %}selected{% endif %}" data-value="newest">NEWEST ARRIVALS</div>
+                            <div class="dropdown-option {% if request.GET.sort == 'price_asc' %}selected{% endif %}" data-value="price_asc">PRICE: LOW TO HIGH</div>
+                            <div class="dropdown-option {% if request.GET.sort == 'price_desc' %}selected{% endif %}" data-value="price_desc">PRICE: HIGH TO LOW</div>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Search -->
+                <form class="tech-search-box" action="{% url 'shop' %}" method="GET">
+                    <input type="text" name="q" placeholder="SEARCH DATABASE..." value="{{ request.GET.q }}">
+                </form>
+            </div>
+        </div>
+
+<style>
+    /* Swatch Styles */
+    .size-box {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 35px;
+        height: 35px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: white;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+    .size-box.active, .size-box:hover {
+        background: var(--color-accent);
+        color: black;
+        border-color: var(--color-accent);
+    }
+    
+    /* Filter Backdrop */
+    .filter-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        z-index: 2999; /* Just below sidebar */
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .filter-backdrop.active {
+        display: block;
+        opacity: 1;
+    }
+</style>
+
+        <!-- Glass Grid for Products -->
+        <div class="glass-grid">
+            {% for product in products %}
+            <div class="glass-card">
+                <div class="glass-card-image-wrapper">
+                    {% if product.product_image %}
+                        <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2670&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
+                    {% endif %}
+                    <div class="glass-badge">NEW</div>
+                </div>
+                <div>
+                    <a href="{% url 'product_detail' %}?id={{ product.id }}">
+                        <h4 class="glass-card-title">{{ product.name }}</h4>
+                    </a>
+                    <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">
+                        {% if product.category %}{{ product.category.name }}{% else %}Sneakers{% endif %}
+                    </p>
+                    <div class="glass-card-footer">
+                        <span class="glass-card-price">${{ product.price }}</span>
+                        <a href="{% url 'product_detail' %}?id={{ product.id }}" class="glass-btn">
+                            Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12" style="grid-column: 1 / -1; padding: 4rem; text-align: center; border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;">
+                <h3 style="color: #666;">NO RESULTS FOUND</h3>
+                <p style="color: #444;">Try adjusting your search filters.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if products.has_other_pages %}
+        <div class="pagination-container">
+            <div class="tech-pagination">
+                {% if products.has_previous %}
+                    <a href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-arrow">
+                        <i class="fas fa-chevron-left"></i> PREV
+                    </a>
+                {% endif %}
+
+                {% for num in products.paginator.page_range %}
+                    {% if products.number == num %}
+                        <span class="page-link active">{{ num }}</span>
+                    {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+                        <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if products.has_next %}
+                    <a href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-arrow">
+                        NEXT <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Inline overrides for Layout to ensure grid visibility */
+    .shop-container {
+        display: flex;
+        padding-top: 80px; /* Nav height */
+        min-height: 100vh;
+        background-color: transparent !important; /* CRITICAL: Reveal global grid */
+        position: relative;
+        z-index: 2;
+    }
+    
+    .shop-content {
+        flex: 1;
+        padding: 2rem 4rem;
+    }
+
+    /* Mobile specific styles */
+    @media (max-width: 992px) {
+        /* Sidebar Visibility Logic */
+        .filter-sidebar {
+            display: block !important; /* Override any hidden state */
+            position: fixed;
+            top: 0;
+            left: -100%; /* Hidden by default off-screen */
+            width: 85%;
+            height: 100vh;
+            z-index: 100000 !important; /* ULTRA HIGH to beat navbar */
+            transition: left 0.3s ease;
+            background: rgba(10, 10, 10, 0.98);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding-top: 120px; /* Clear the navbar completely */
+        }
+
+        .filter-sidebar.active {
+            left: 0 !important; /* Slide in */
+            box-shadow: 10px 0 30px rgba(0,0,0,0.8);
+        }
+
+        .shop-content {
+            padding: 2rem 1.5rem; /* Better padding */
+        }
+        
+        .tech-search-container {
+            flex-direction: column !important;
+            width: 100%;
+            gap: 1rem !important;
+        }
+        
+       .sort-form, .tech-search-box {
+            width: 100% !important;
+        }
+    }
+    
+    /* Filter Backdrop Override */
+    .filter-backdrop {
+        z-index: 99999 !important; /* Just below 100000 */
+    }
+
+        .custom-dropdown, .dropdown-trigger {
+            width: 100% !important;
+        }
+        
+        .tech-search-box input {
+            width: 100% !important;
+        }
+    }
+
+    /* Force container constraint on mobile */
+    @media (max-width: 576px) {
+        .shop-content {
+            width: 100% !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+            padding-right: 0 !important;
+        }
+        
+        div.container {
+            padding-right: 15px !important;
+            padding-left: 15px !important;
+            max-width: 100vw !important;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const minRange = document.getElementById('minRange');
+        const maxRange = document.getElementById('maxRange');
+        const minInput = document.getElementById('minPriceInput');
+        const maxInput = document.getElementById('maxPriceInput');
+        const highlight = document.getElementById('sliderHighlight');
+        const maxVal = parseInt(maxRange.max);
+        const minGap = 0;
+
+        function updateSlider() {
+            let min = parseInt(minRange.value);
+            let max = parseInt(maxRange.value);
+
+            if (max - min < minGap) {
+                if (this === minRange) {
+                    minRange.value = max - minGap;
+                } else {
+                    maxRange.value = min + minGap;
+                }
+            }
+            
+            // Visual Updates
+            highlight.style.left = (minRange.value / maxVal) * 100 + "%";
+            highlight.style.width = ((maxRange.value - minRange.value) / maxVal) * 100 + "%";
+            
+            // Input Updates
+            minInput.value = minRange.value;
+            maxInput.value = maxRange.value;
+        }
+
+        function updateInput() {
+             let min = parseInt(minInput.value);
+             let max = parseInt(maxInput.value);
+             
+             if (max < min) {
+                 // Basic swap/correction logic if user types dumb stuff
+                 // For now just clamp
+                 max = min; 
+                 maxInput.value = min;
+             }
+
+             if (min < 0) minInput.value = 0;
+             if (max > maxVal) maxInput.value = maxVal;
+
+             minRange.value = minInput.value;
+             maxRange.value = maxInput.value;
+
+             highlight.style.left = (minRange.value / maxVal) * 100 + "%";
+             highlight.style.width = ((maxRange.value - minRange.value) / maxVal) * 100 + "%";
+        }
+
+        minRange.addEventListener('input', updateSlider);
+        maxRange.addEventListener('input', updateSlider);
+        minInput.addEventListener('input', updateInput);
+        maxInput.addEventListener('input', updateInput);
+
+        // Init
+        updateSlider();
+
+        // --- Custom Dropdown Logic ---
+        const dropdown = document.getElementById('sortDropdown');
+        const trigger = dropdown.querySelector('.dropdown-trigger');
+        const options = dropdown.querySelectorAll('.dropdown-option');
+        const input = document.getElementById('sortInput');
+        
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+
+        options.forEach(option => {
+            option.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+                input.value = value;
+                // Submit Form
+                this.closest('form').submit();
+            });
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // --- Collapsible Sidebar Logic ---
+        const filterHeaders = document.querySelectorAll('.filter-header');
+        
+        filterHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                this.parentElement.classList.toggle('active');
+            });
+        });
+    });
+
+    function toggleFilterSidebar() {
+        const sidebar = document.getElementById('filterSidebar');
+        const backdrop = document.getElementById('filterBackdrop');
+        sidebar.classList.toggle('active');
+        backdrop.classList.toggle('active');
+        
+        // Prevent body scroll
+        if (sidebar.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+</script>
+
+<style>
+    /* Force container constraint on mobile */
+    @media (max-width: 576px) {
+        .shop-content {
+            width: 100% !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+            padding-right: 0 !important;
+        }
+        
+        div.container {
+            padding-right: 15px !important;
+            padding-left: 15px !important;
+            max-width: 100vw !important;
+        }
+    }
+</style>
+{% endblock %}

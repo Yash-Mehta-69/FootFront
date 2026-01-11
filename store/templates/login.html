@@ -1,0 +1,126 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Minimal overrides for auth layout */
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 150px;
+        padding-bottom: 150px; /* Added spacing */
+        position: relative;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    @media (max-width: 576px) {
+        .auth-glass-panel {
+            padding: 1.5rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="glass-panel auth-glass-panel" style="width: 100%; max-width: 450px; position: relative; z-index: 2;">
+        <div class="text-center mb-4">
+            <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 10vw, 3rem); margin: 0; line-height: 1;">LOGIN</h2>
+            <div style="width: 50px; height: 3px; background: var(--color-accent); margin: 0.5rem auto;"></div>
+            <p style="color: #888; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Access Terminal</p>
+        </div>
+        
+        <form id="loginForm" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                <input type="email" class="tech-input" id="email" name="email" placeholder="ENTER EMAIL" required>
+            </div>
+            <div class="mb-4">
+                <input type="password" class="tech-input" id="password" name="password" placeholder="ENTER PASSWORD" required>
+            </div>
+            
+            <button type="submit" id="authBtn" class="btn-primary" style="width: 100%;">AUTHENTICATE</button>
+        </form>
+
+        <div id="login-message" style="color: var(--color-secondary); text-align: center; margin-top: 1rem; font-family: monospace;"></div>
+
+        <div class="mt-4 text-center">
+            <p class="mb-2" style="font-size: 0.9rem; color: #666;">NEW USER?</p>
+            <a href="{% url 'register' %}" style="color: var(--color-accent); text-transform: uppercase; font-weight: bold; font-size: 0.9rem;">INITIATE REGISTRATION ></a>
+            <div class="mt-2">
+                <a href="{% url 'forgot_password' %}" style="color: #666; font-size: 0.8rem; text-decoration: none;">Forgot Creds?</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // GSAP Entry Animation
+    gsap.from(".auth-card", { // Note: class might need to match glass-panel if reused or specific
+        y: 50,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out"
+    });
+
+    // Login Logic (Keeping original functionality)
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // --- Loading Animation Start ---
+        const btn = document.getElementById('authBtn');
+        const originalText = "AUTHENTICATING";
+        btn.disabled = true;
+        btn.style.opacity = "0.8";
+        btn.innerText = originalText;
+        
+        let dots = 0;
+        const animInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            let dotStr = "";
+            for(let i=0; i<dots; i++) dotStr += ".";
+            btn.innerText = originalText + dotStr;
+        }, 500);
+        // -------------------------------
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const messageDiv = document.getElementById('login-message');
+        messageDiv.innerText = '';
+
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                var user = userCredential.user;
+                user.getIdToken().then(function(idToken) {
+                    fetch("{% url 'login' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ idToken: idToken }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            messageDiv.innerText = 'Login failed: ' + data.message;
+                        }
+                    })
+                    .catch((error) => {
+                        messageDiv.innerText = 'An error occurred during login.';
+                    });
+                });
+            })
+            .catch((error) => {
+                messageDiv.innerText = 'Firebase login failed: ' + error.message;
+            });
+    });
+</script>
+{% endblock %}

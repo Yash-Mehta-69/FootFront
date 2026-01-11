@@ -1,0 +1,171 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .cart-container {
+        padding-top: 150px;
+        min-height: 100vh;
+        /* Transparent for grid */
+    }
+
+    .cart-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 3rem;
+    }
+
+    @media(max-width: 900px) {
+        .cart-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Cart Rows as Glass Panels */
+    .cart-row {
+        display: flex;
+        align-items: center;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        transition: border-color 0.3s ease;
+    }
+    
+    .cart-row:hover {
+        border-color: var(--color-accent);
+    }
+
+    .cart-thumb {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        margin-right: 2rem;
+    }
+
+    .cart-details {
+        flex: 1;
+    }
+
+    .cart-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+
+    .cart-meta {
+        color: #888;
+        font-size: 0.9rem;
+        font-family: monospace;
+        letter-spacing: 1px;
+    }
+
+    .cart-price {
+        font-weight: bold;
+        color: var(--color-accent);
+        font-size: 1.2rem;
+        display: block;
+        margin-top: 0.5rem;
+    }
+    
+    .summary-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px dashed rgba(255,255,255,0.2);
+        padding: 2rem;
+        position: sticky;
+        top: 150px;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+    }
+    
+    .summary-total {
+        font-size: 2rem;
+        font-family: var(--font-heading);
+        color: var(--color-accent);
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 1rem;
+        margin-top: 2rem;
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cart-container container">
+    <div class="d-flex align-items-center mb-5">
+        <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: 4rem; color: white; margin: 0;">YOUR BAG</h1>
+        <span class="ms-4 text-muted" style="font-family: monospace;">// {{ items|length }} ITEMS DETECTED</span>
+    </div>
+
+    <div class="cart-grid">
+        <div class="cart-list">
+            {% for item in items %}
+            <div class="cart-row">
+                {% if item.product_variant.image %}
+                    <img src="{{ item.product_variant.image.url }}" class="cart-thumb" alt="Product">
+                {% else %}
+                     <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop" class="cart-thumb" alt="Shoe">
+                {% endif %}
+                
+                <div class="cart-details">
+                    <h3 class="cart-title">{{ item.product_variant.product.name }}</h3>
+                    <div class="cart-meta">
+                        SIZE: {{ item.product_variant.size }} <br> 
+                        COLOR: {{ item.product_variant.color }}
+                    </div>
+                    <span class="cart-price">${{ item.product_variant.price }}</span>
+                </div>
+
+                <div class="text-end">
+                    <div class="mb-2 text-white">QTY: {{ item.quantity }}</div>
+                    <a href="{% url 'remove_from_cart' item.id %}" style="color: var(--color-secondary); font-size: 0.8rem; text-decoration: underline;">REMOVE</a>
+                </div>
+            </div>
+            {% empty %}
+            <div style="padding: 4rem; text-align: center; border: 1px dashed rgba(255,255,255,0.1);">
+                <h3 class="text-muted">BAG IS EMPTY</h3>
+                <a href="{% url 'shop' %}" class="btn-primary mt-3">INITIATE SHOPPING</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="summary-card">
+            <h3 class="mb-4 text-white" style="font-family: var(--font-heading);">ORDER SUMMARY</h3>
+            <div class="summary-row">
+                <span class="text-muted">SUBTOTAL</span>
+                <span class="text-white">${{ total }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="text-muted">SHIPPING</span>
+                <span class="text-white">CALCULATED NEXT</span>
+            </div>
+            <div class="summary-total">
+                <span>TOTAL</span>
+                <span>${{ total }}</span>
+            </div>
+            
+            {% if items %}
+            <button class="btn-primary w-100 mt-4" onclick="window.location.href='/cart/checkout'">PROCEED TO TERMINAL</button>
+            {% else %}
+            <button class="btn-primary w-100 mt-4" disabled style="opacity: 0.5; cursor: not-allowed;">BAG EMPTY</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

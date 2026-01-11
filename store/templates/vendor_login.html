@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Panel Login</title>
+    {% load static %}
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        /* Overrides since we are not extending base */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-panel" style="width: 100%; max-width: 400px; border-color: var(--color-secondary);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="font-family: 'Oswald', sans-serif; font-size: 2rem; color: white;">SELLER PORTAL</h2>
+        <div style="width: 40px; height: 2px; background: var(--color-secondary); margin: 0.5rem auto;"></div>
+    </div>
+    
+    <form method="POST" action="{% url 'vendor_login' %}">
+        {% csrf_token %}
+        <div style="margin-bottom: 1rem;">
+            <input type="text" class="tech-input" id="username" name="username" placeholder="VENDOR ID" required>
+        </div>
+        <div style="margin-bottom: 2rem;">
+            <input type="password" class="tech-input" id="password" name="password" placeholder="ACCESS KEY" required>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; background-color: var(--color-secondary);">ENTER MARKET</button>
+    </form>
+    
+    <div style="text-align: center; margin-top: 2rem; color: #666; font-size: 0.8rem; font-family: monospace;">
+        &copy; FOOTFRONT SYSTEM
+    </div>
+</div>
+
+</body>
+</html>

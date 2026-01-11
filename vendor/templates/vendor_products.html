@@ -1,0 +1,96 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}My Products | Vendor Panel{% endblock %}
+
+{% block header_title %}My Products{% endblock %}
+{% block breadcrumb %}Products{% endblock %}
+
+{% block vendor_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">Product List</h5>
+        <a href="{% url 'add_product' %}" class="btn-primary-custom" style="text-decoration: none;"><i
+                class="fas fa-plus"></i> Add New Product</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Mock Data -->
+                <tr>
+                    <td>
+                        <div style="width: 50px; height: 50px; background: #eee; border-radius: 10px;"></div>
+                    </td>
+                    <td>
+                        <a href="{% url 'vendor_product_detail' %}"
+                            style="color: var(--text-main); text-decoration: none;">Nike Air Max 90</a>
+                    </td>
+                    <td>Sneakers</td>
+                    <td>$129.00</td>
+                    <td>45</td>
+                    <td>
+                        <span class="status-badge status-active">
+                            <i class="fas fa-check-circle" style="font-size: 10px;"></i> Active
+                        </span>
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{% url 'vendor_edit_product' %}" class="text-primary-custom"
+                            style="background: transparent; border: none; cursor: pointer; margin-right: 10px; display: inline-block;"
+                            title="Edit"><i class="fas fa-edit"></i></a>
+                        <button class="text-danger-custom"
+                            style="border: none; background: transparent; cursor: pointer;" title="Delete"><i
+                                class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div style="width: 50px; height: 50px; background: #eee; border-radius: 10px;"></div>
+                    </td>
+                    <td>Adidas Stan Smith</td>
+                    <td>Casual</td>
+                    <td>$89.00</td>
+                    <td>20</td>
+                    <td>
+                        <span class="status-badge status-active">
+                            <i class="fas fa-check-circle" style="font-size: 10px;"></i> Active
+                        </span>
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="text-primary-custom"
+                            style="border: none; background: transparent; cursor: pointer; margin-right: 10px;"
+                            title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="text-danger-custom"
+                            style="border: none; background: transparent; cursor: pointer;" title="Delete"><i
+                                class="fas fa-trash-alt"></i></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+        <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Showing 1 to 2 of 2 entries</p>
+        <nav>
+            <ul class="pagination mb-0">
+                <li class="page-item disabled"><a class="page-link page-link-custom" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link page-link-custom" href="#">1</a>
+                </li>
+                <li class="page-item"><a class="page-link page-link-custom" href="#">2</a></li>
+                <li class="page-item"><a class="page-link page-link-custom" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}
