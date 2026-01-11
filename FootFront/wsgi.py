@@ -26,9 +26,20 @@ if 'VERCEL' in os.environ: # Only run on Vercel
         call_command('migrate', interactive=False)
         
         fixture_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'initial_data.json')
+        print(f"Looking for fixture at: {fixture_path}")
+        print(f"Current CWD: {os.getcwd()}")
+        try:
+             print(f"Root dir contents: {os.listdir(os.getcwd())}")
+        except:
+             pass
+
         if os.path.exists(fixture_path):
             print(f"Loading data from {fixture_path}...")
             call_command('loaddata', fixture_path)
             print("Data loaded.")
+        else:
+            print("Fixture file NOT FOUND!")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Error during Vercel DB init: {e}")
