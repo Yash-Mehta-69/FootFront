@@ -9,3 +9,4 @@ requests==2.32.4
 whitenoise
 dj-database-url
 psycopg2-binary
+python-dotenv
