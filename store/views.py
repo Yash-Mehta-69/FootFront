@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+import os
 import firebase_admin
 from firebase_admin import credentials, auth
 from django.conf import settings
