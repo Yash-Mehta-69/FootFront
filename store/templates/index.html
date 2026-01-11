@@ -234,7 +234,17 @@
     @media (max-width: 992px) {
         .bento-grid {
             grid-template-columns: 1fr;
-            grid-template-rows: repeat(3, 300px); /* Explicit height for rows on mobile */
+            grid-template-rows: auto; /* Allow auto height */
+            gap: 2rem;
+        }
+        
+        .bento-large {
+            grid-row: auto; /* Reset usage */
+            height: 400px; /* Explicit height for mobile beauty */
+        }
+        
+        .bento-small-1, .bento-small-2 {
+            height: 300px;
         }
     }
 
@@ -571,7 +581,7 @@
     <!-- Background Grid Effect -->
     <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.5;"></div>
 
-    <div class="container d-flex flex-column align-items-center justify-content-center" style="position: relative; z-index: 2;">
+    <div class="container d-flex flex-column align-items-center justify-content-center" style="position: relative; z-index: 2; height: 100%;">
         
         <!-- Tech HUD Elements -->
         <div class="tech-ring ring-1"></div>
@@ -583,7 +593,7 @@
         </div>
 
         <!-- Big Text Behind -->
-        <h1 class="hero-title" style="font-size: clamp(4rem, 15vw, 12rem); line-height: 0.8; text-transform: uppercase; font-family: var(--font-heading); color: rgba(255,255,255,0.05); white-space: nowrap; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto;">
+        <h1 class="hero-title" style="font-size: clamp(3rem, 12vw, 12rem); line-height: 0.8; text-transform: uppercase; font-family: var(--font-heading); color: rgba(255,255,255,0.05); white-space: nowrap; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; width: 100%; text-align: center;">
              <span class="interactive-letter">F</span><span class="interactive-letter">O</span><span class="interactive-letter">O</span><span class="interactive-letter">T</span><span class="interactive-letter">F</span><span class="interactive-letter">R</span><span class="interactive-letter">O</span><span class="interactive-letter">N</span><span class="interactive-letter">T</span>
         </h1>
 
@@ -600,12 +610,13 @@
              environment-image="neutral"
              touch-action="pan-y" 
              class="hero-model-viewer"
-             disable-zoom>
+             disable-zoom
+             style="height: 45vh; margin-top: -10vh;">
         </model-viewer>
 
         <!-- Call to Action -->
-        <div style="margin-top: -50px; text-align: center; position: relative;">
-            <h2 class="text-white mb-4" style="font-size: 3rem; text-shadow: 0 10px 20px black;">FUTURE STEP</h2>
+        <div style="margin-top: -20px; text-align: center; position: relative;">
+            <h2 class="text-white mb-4" style="font-size: clamp(2rem, 5vw, 3rem); text-shadow: 0 10px 20px black;">FUTURE STEP</h2>
             <a href="{% url 'shop' %}" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem; box-shadow: 0 0 30px var(--color-accent);">COPP NOW</a>
         </div>
     </div>
@@ -788,7 +799,7 @@
 <!-- 6. Creating the Community (Manifesto) -->
 <section class="manifesto-section" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=2670&auto=format&fit=crop'); background-attachment: fixed; background-size: cover;">
     <div class="container">
-        <h2 class="manifesto-title hover-reveal-text">Creating the Community</h2>
+        <h2 class="manifesto-title hover-reveal-text" style="font-size: clamp(3rem, 8vw, 6rem);">Creating the Community</h2>
         <p class="manifesto-text">
             We are not just a store. We are a movement. Transforming the footwear shopping experience one drop at a time.
             Join the revolution of style, comfort, and pure aesthetic.
