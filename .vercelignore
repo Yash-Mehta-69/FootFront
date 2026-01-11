@@ -1,0 +1,10 @@
+static/model/
+*.sqlite3
+.git
+.venv
+venv
+env
+__pycache__
+*.pyc
+Documentation.pdf
+temp.html
