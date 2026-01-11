@@ -8,6 +8,9 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
+import dotenv
+
+dotenv.load_dotenv()
 
 from django.core.wsgi import get_wsgi_application
 
@@ -21,6 +24,10 @@ except Exception as e:
     traceback.print_exc()
     # Create a dummy WSGI app that prints the error
     def application(environ, start_response):
+        # Print to console for local debugging
+        print(f"WSGI Startup Error: {e}")
+        traceback.print_exc()
+        
         status = '500 Internal Server Error'
         error_msg = f"Startup Error: {str(e)}\n\n{traceback.format_exc()}"
         response_headers = [('Content-type', 'text/plain')]
