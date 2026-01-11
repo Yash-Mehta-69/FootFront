@@ -54,7 +54,17 @@ def initialize_firebase():
     try:
         firebase_admin.get_app()
     except ValueError:
-        cred = credentials.Certificate(settings.FIREBASE_ADMIN_CONFIG)
+        # Check for environment variable first
+        firebase_config_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
+        
+        if firebase_config_json:
+            import json
+            cred_dict = json.loads(firebase_config_json)
+            cred = credentials.Certificate(cred_dict)
+        else:
+            # Fallback to file (will fail in production if file missing)
+            cred = credentials.Certificate(settings.FIREBASE_ADMIN_CONFIG)
+            
         firebase_admin.initialize_app(cred)
 
 # Create your views here.
