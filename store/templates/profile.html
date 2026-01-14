@@ -59,7 +59,7 @@
     <div class="profile-header">
         <div>
             <span class="text-accent" style="letter-spacing: 2px; font-size: 0.9rem;">// SYSTEM.USER_DASHBOARD</span>
-            <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: clamp(2rem, 8vw, 3rem); color: white; margin: 0;">
+            <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: clamp(2rem, 8vw, 3rem); color: var(--color-text); margin: 0;">
                 {{ user.first_name|default:"UNKNOWN_USER" }}
             </h1>
         </div>
@@ -70,18 +70,7 @@
 
     <div class="dashboard-grid">
         <!-- Tech Menu (Glass Sidebar style) -->
-        <aside class="glass-sidebar" style="height: auto; padding: 1rem; position: relative; top: 0;">
-            <a href="#" class="dashboard-menu-item active">Overview</a>
-            <a href="{% url 'cart_detail' %}" class="dashboard-menu-item">My Bag</a>
-            <a href="{% url 'wishlist_detail' %}" class="dashboard-menu-item">Wishlist</a>
-            <a href="#" class="dashboard-menu-item">Orders</a>
-            <a href="#" class="dashboard-menu-item">Settings</a>
-            
-            <div style="margin-top: 2rem; padding: 1rem; border-top: 1px dashed rgba(255,255,255,0.1); color: #555; font-size: 0.7rem; font-family: monospace;">
-                ID: {{ user.id|stringformat:"04d" }}<br>
-                LEVEL: GEN_Z_ELITE
-            </div>
-        </aside>
+        {% include 'includes/profile_sidebar.html' with active_page='profile' %}
 
         <!-- Main Content Area -->
         <main class="dashboard-content">
@@ -103,7 +92,7 @@
                         </div>
                         <h3 class="stat-value">0</h3>
                         <p class="stat-label">Active Orders</p>
-                        <a href="{% url 'shop' %}" class="text-accent" style="font-size: 0.8rem; text-decoration: underline;">INITIATE NEW ORDER ></a>
+                        <a href="{% url 'order_list' %}" class="text-accent" style="font-size: 0.8rem; text-decoration: underline;">INITIATE NEW ORDER ></a>
                     </div>
                 </div>
             </div>
@@ -113,7 +102,7 @@
                 <div class="account-data-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                     <div style="min-width: 0; overflow-wrap: break-word;">
                         <span class="stat-label d-block mb-1">Email Address</span>
-                        <div class="force-break" style="font-family: monospace; color: white;">{{ user.email }}</div>
+                        <div class="force-break" style="font-family: monospace; color: var(--color-text);">{{ user.email }}</div>
                     </div>
                     <div>
                         <span class="stat-label d-block mb-1">Status</span>

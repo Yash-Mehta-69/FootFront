@@ -1,0 +1,105 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Help & Support | Vendor Panel{% endblock %}
+
+{% block header_title %}Help & Support{% endblock %}
+{% block breadcrumb %}Help{% endblock %}
+
+{% block vendor_content %}
+<div class="row">
+    <!-- Contact Admin Section -->
+    <div class="col-lg-6 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Contact Admin</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted mb-4">
+                    Need assistance with your account, orders, or payments? 
+                    Directly contact the admin team using the details below.
+                </p>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-soft-primary rounded-circle p-3 me-3 text-primary-custom" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-envelope fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Email Support</small>
+                        <h6 class="mb-0">support@footfront.com</h6>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-soft-success rounded-circle p-3 me-3 text-success" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-phone-alt fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">Phone Support</small>
+                        <h6 class="mb-0">+91 98765 43210</h6>
+                        <small class="text-muted">Mon-Fri, 9AM - 6PM</small>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="bg-soft-success rounded-circle p-3 me-3 text-success" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fab fa-whatsapp fa-lg"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 11px;">WhatsApp</small>
+                        <h6 class="mb-0">+91 98765 43210</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ / Important Info -->
+    <div class="col-lg-6 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Common Questions</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="accordion" id="helpAccordion">
+                    <div class="accordion-item border-0 mb-3" style="background-color: var(--bg-main); border-radius: 8px;">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button collapsed shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                <strong>How do I change my shop address?</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-muted pt-0">
+                                You cannot change sensitive details directly. Please contact admin support with your new address proof to get it updated.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item border-0 mb-3" style="background-color: var(--bg-main); border-radius: 8px;">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                <strong>When are payouts processed?</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-muted pt-0">
+                                Payouts are processed every Wednesday for orders delivered in the previous week.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item border-0" style="background-color: var(--bg-main); border-radius: 8px;">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                <strong>Can I delete a product?</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-muted pt-0">
+                                Yes, you can deactivate products from the Products page. To permanently delete, please contact support.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Contact Page Specific Styles */
+    .contact-wrapper {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding-top: 6rem; /* Header clearance */
+        position: relative;
+    }
+
+    .contact-content {
+        position: relative;
+        z-index: 1; /* Ensure content is above grid */
+        display: flex;
+        flex-grow: 1; 
+    }
+
+    .contact-split-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        flex-grow: 1;
+        min-height: 80vh;
+        width: 100%;
+    }
+
+    /* Left Side - Info */
+    .contact-info-side {
+        background: rgba(var(--color-bg-rgb, 10, 10, 10), 0.8); /* Fallback */
+        background: linear-gradient(to right, var(--color-bg), rgba(0,0,0,0)); /* Fade out to right */
+        padding: 5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+    }
+
+    .contact-title {
+        font-family: var(--font-heading);
+        font-size: clamp(4rem, 8vw, 8rem);
+        line-height: 0.9;
+        text-transform: uppercase;
+        margin-bottom: 2rem;
+        color: var(--color-text);
+        position: relative;
+    }
+    
+    .contact-title span {
+        display: block;
+        color: transparent;
+        -webkit-text-stroke: 1px var(--color-text);
+        transition: all 0.3s ease;
+    }
+    
+    .contact-title:hover span {
+        color: var(--color-accent);
+        -webkit-text-stroke: 0px transparent;
+        text-shadow: var(--text-glow);
+        transform: translateX(10px);
+    }
+
+    .contact-details {
+        margin-top: 3rem;
+        font-size: 1.2rem;
+        color: var(--color-text-muted);
+    }
+
+    .contact-detail-item {
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1.5rem;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .contact-detail-item:hover {
+        background: var(--glass-bg);
+        border-color: var(--glass-border);
+        transform: translateX(10px);
+    }
+    
+    .contact-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--btn-bg);
+        color: var(--color-accent);
+        border: 1px solid var(--btn-border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .contact-detail-item:hover .contact-icon {
+        background: var(--color-accent);
+        color: black;
+        box-shadow: 0 0 15px rgba(204, 255, 0, 0.4);
+    }
+    
+    .social-grid {
+        display: flex;
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .social-link {
+        width: 60px;
+        height: 60px;
+        border: 1px solid var(--color-border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-text);
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+        background: var(--glass-bg);
+    }
+
+    .social-link:hover {
+        background: var(--color-accent);
+        color: black;
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
+        transform: translateY(-5px) rotate(10deg);
+    }
+
+    /* Right Side - Form */
+    .contact-form-side {
+        padding: 5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+    }
+
+    /* Exact Match to Help Page Container */
+    .form-container {
+        width: 100%;
+        max-width: 650px; 
+        margin: 0 auto;
+        background: var(--card-bg, rgba(255, 255, 255, 0.05)); /* Default to glass/theme var */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--color-border, rgba(0,0,0,0.1));
+        padding: 4rem;
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg, 0 20px 50px rgba(0,0,0,0.1));
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.8rem;
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        font-family: var(--font-heading); /* Match tech look */
+    }
+
+    /* Using Global Tech Input from style.css */
+    /* .form-control removed in favor of .tech-input */
+
+    .btn-send-message {
+        background: var(--color-accent);
+        color: black;
+        width: 100%;
+        padding: 1.2rem;
+        border: none;
+        border-radius: 4px; /* Tech borders */
+        clip-path: polygon(5% 0, 100% 0, 100% 80%, 95% 100%, 0 100%, 0 20%); /* Tech Shape */
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+        cursor: pointer;
+        letter-spacing: 1px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        margin-top: 1rem;
+        font-family: var(--font-heading);
+    }
+
+    .btn-send-message:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-glow-hover, 0 15px 30px rgba(204, 255, 0, 0.4));
+        filter: brightness(1.1);
+        background: var(--color-secondary);
+        color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .contact-content {
+            flex-direction: column;
+        }
+
+        
+        .contact-split-layout {
+            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-info-side, .contact-form-side {
+            padding: 3rem 1.5rem;
+            border-right: none;
+            width: 100%;
+        }
+        
+        .contact-title {
+            font-size: 3.5rem;
+            text-align: center;
+        }
+
+        .contact-details {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .social-grid {
+            justify-content: center;
+        }
+        
+        .form-container {
+            padding: 2rem;
+        }
+    }
+</style>
+
+<div class="contact-wrapper">
+    <!-- Global Grid Background Removed to fix double grid issue -->
+    
+    <div class="contact-content">
+        <div class="contact-split-layout">
+            
+            <!-- Info Side -->
+            <div class="contact-info-side">
+                <div class="contact-title">
+                    GET IN <span>TOUCH</span>
+                </div>
+                
+                <div style="text-align: left; max-width: 500px; margin: 0 auto 0 0;">
+                     <p style="font-size: 1.2rem; color: var(--color-text-muted); padding-left: 5px; border-left: 3px solid var(--color-accent); line-height: 1.6;">
+                        Have a project in mind or just want to verify some kicks? Drop us a line. We reply faster than a hype drop sells out.
+                    </p>
+                </div>
+    
+                <div class="contact-details">
+                    <div class="contact-detail-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <small style="display:block; text-transform:uppercase; font-size:0.7rem; letter-spacing: 1px; color: var(--color-text-muted);">Email Us</small>
+                            <span style="font-weight: 600; font-size: 1.2rem;">hello@footfront.com</span>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-detail-item">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <small style="display:block; text-transform:uppercase; font-size:0.7rem; letter-spacing: 1px; color: var(--color-text-muted);">Call Us</small>
+                            <span style="font-weight: 600; font-size: 1.2rem;">+1 (555) 999-8888</span>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="social-grid">
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-discord"></i></a>
+                </div>
+            </div>
+    
+            <!-- Form Side -->
+            <div class="contact-form-side">
+                <div class="form-container">
+                    <h3 style="font-family: var(--font-heading); text-transform: uppercase; margin-bottom: 2rem; font-size: 2.5rem; color: var(--color-text); text-align: center;">Send a Message</h3>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-success" style="margin-bottom: 2rem; padding: 1rem; border-radius: 8px; border: 1px solid var(--color-accent); color: var(--color-accent); background: rgba(204,255,0,0.1); display: flex; align-items: center; gap: 1rem;">
+                                <i class="fas fa-check-circle"></i> {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" name="name" class="tech-input" placeholder="ENTER YOUR NAME" required>
+                        </div>
+    
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" class="tech-input" placeholder="ENTER YOUR EMAIL" required>
+                        </div>
+    
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea name="message" class="tech-input" rows="4" placeholder="HOW CAN WE HELP?" required style="resize:none; height:auto; min-height:120px;"></textarea>
+                        </div>
+    
+                        <button type="submit" class="btn-send-message">Send Message</button>
+                    </form>
+                </div>
+            </div>
+    
+        </div>
+    </div>
+</div>
+{% endblock %}

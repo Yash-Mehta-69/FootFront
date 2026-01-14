@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .vendor-header-container {
+        padding-top: 160px; /* Increased for better clearance */
+        padding-bottom: 4rem;
+        background: radial-gradient(circle at top center, rgba(30,30,30,0.8) 0%, transparent 70%);
+        border-bottom: 1px dashed rgba(255,255,255,0.05);
+    }
+
+    .vendor-profile {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .vendor-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 2px solid var(--color-accent);
+        object-fit: cover;
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.2);
+    }
+
+    .vendor-info h1 {
+        font-family: var(--font-heading);
+        font-size: 3.5rem;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        color: var(--color-text);
+        text-transform: uppercase;
+    }
+
+    .vendor-badge {
+        display: inline-block;
+        background: var(--color-accent);
+        color: black;
+        padding: 0.25rem 0.5rem;
+        font-family: var(--font-heading);
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-right: 0.5rem;
+        clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+    }
+
+    .vendor-stat {
+        display: inline-block;
+        margin-right: 1.5rem;
+        font-family: monospace;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+    }
+
+    .vendor-stat strong {
+        color: var(--color-text);
+    }
+
+    /* Reusing Shop Grid Styles */
+    .shop-container {
+        display: flex;
+        min-height: 100vh;
+        background-color: transparent;
+    }
+
+    .shop-content {
+        flex: 1;
+        padding: 2rem 0;
+    }
+
+    @media (max-width: 768px) {
+        .vendor-header-container {
+            text-align: center;
+        }
+        .vendor-profile {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+
+    /* Light Mode Overrides */
+    [data-theme="light"] .vendor-header-container {
+        background: radial-gradient(circle at top center, rgba(240,240,240,0.9) 0%, rgba(255,255,255,0) 80%);
+        border-bottom: 1px dashed rgba(0,0,0,0.1);
+    }
+
+    [data-theme="light"] .vendor-profile {
+        background: rgba(255, 255, 255, 0.65) !important;
+        border-color: rgba(0,0,0,0.1) !important;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+    }
+
+    [data-theme="light"] .text-white,
+    [data-theme="light"] .vendor-stat strong {
+        color: #0a0a0a !important;
+    }
+
+    [data-theme="light"] .btn-outline-light {
+        color: #0a0a0a;
+        border-color: rgba(0,0,0,0.2);
+    }
+    [data-theme="light"] .btn-outline-light:hover {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        color: white;
+    }
+    
+    [data-theme="light"] .border-secondary {
+        border-color: rgba(0,0,0,0.1) !important;
+    }
+    
+    [data-theme="light"] div[style*="background: rgba(255,255,255,0.1)"] {
+        background: rgba(0,0,0,0.1) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Vendor Header -->
+<div class="vendor-header-container">
+    <div class="container">
+        <!-- Page Header Label -->
+        <div class="mb-5 text-center text-md-start">
+            <span class="text-accent" style="font-family: var(--font-heading); letter-spacing: 2px; text-transform: uppercase; font-size: 0.9rem;">
+                <i class="fas fa-store me-2"></i> Official Vendor Store
+            </span>
+            <div style="height: 1px; width: 50px; background: var(--color-accent); margin-top: 10px;"></div>
+        </div>
+
+        <div class="vendor-profile glass-panel p-4 p-md-5" style="border: 1px solid var(--glass-border); border-radius: 20px; background: rgba(0,0,0,0.4);">
+            <div class="d-flex flex-column flex-md-row align-items-center gap-4 w-100">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=300&auto=format&fit=crop" class="vendor-avatar" alt="Vendor Avatar" style="width: 140px; height: 140px; border-width: 3px;" loading="lazy">
+                    <div class="position-absolute bottom-0 end-0 bg-black rounded-circle p-2 border border-secondary" style="--bs-bg-opacity: 1;">
+                        <i class="fas fa-check-circle text-accent" style="font-size: 1.2rem;"></i>
+                    </div>
+                </div>
+                
+                <div class="vendor-info text-center text-md-start flex-grow-1">
+                    <div class="mb-2 d-flex gap-2 justify-content-center justify-content-md-start flex-wrap">
+                        <span class="vendor-badge">VERIFIED SELLER</span>
+                        <span class="vendor-badge" style="background: transparent; border: 1px solid var(--color-accent); color: var(--color-accent);">PRO TIER</span>
+                    </div>
+                    <h1 class="glitch-text mb-3" style="font-size: clamp(2.5rem, 5vw, 4rem);">NEXUS SUPPLY CO.</h1>
+                    <p style="color: var(--color-text-muted); max-width: 600px; margin-bottom: 1.5rem; line-height: 1.6;">
+                        Premium athletic wear and limited edition drops. Sourcing the rarest kicks from across the grid since 2024. All items authenticated by our expert team.
+                    </p>
+                    
+                    <div class="d-flex gap-4 justify-content-center justify-content-md-start border-top border-secondary pt-3 mt-3 d-inline-flex">
+                        <div class="text-center text-md-start">
+                            <div class="h3 mb-0 text-white" style="font-family: var(--font-heading);">4.9</div>
+                            <small class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Rating</small>
+                        </div>
+                        <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                        <div class="text-center text-md-start">
+                            <div class="h3 mb-0 text-white" style="font-family: var(--font-heading);">1.2K</div>
+                            <small class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Sold</small>
+                        </div>
+                        <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
+                        <div class="text-center text-md-start">
+                            <div class="h3 mb-0 text-white" style="font-family: var(--font-heading);">98%</div>
+                            <small class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Positive</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="d-flex flex-column gap-3 mt-3 mt-md-0">
+                    <button class="btn btn-outline-light px-4 py-2" style="border-radius: 30px; min-width: 140px;">
+                        <i class="far fa-heart me-2"></i> Follow
+                    </button>
+                    <button class="btn btn-outline-light px-4 py-2" style="border-radius: 30px; min-width: 140px;">
+                        <i class="far fa-envelope me-2"></i> Contact
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="shop-container">
+        <div class="shop-content">
+            <!-- Filter/Sort Header Mockup -->
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span class="text-accent" style="font-family: var(--font-heading); font-size: 1.2rem;">// VENDOR INVENTORY</span>
+                <div class="d-flex gap-3">
+                    <span style="font-family: monospace; color: #666;">SORT BY: NEWEST</span>
+                </div>
+            </div>
+
+            <!-- Static Product Grid -->
+            <div class="glass-grid">
+                <!-- Mock Product 1 -->
+                <div class="glass-card">
+                    <div class="glass-card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
+                        <div class="glass-badge">NEW DROP</div>
+                    </div>
+                    <div>
+                        <a href="#">
+                            <h4 class="glass-card-title">Cyber Runner X1</h4>
+                        </a>
+                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">RUNNING</p>
+                        <div class="glass-card-footer">
+                            <span class="glass-card-price">$189.00</span>
+                            <a href="#" class="glass-btn">Details</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mock Product 2 -->
+                <div class="glass-card">
+                    <div class="glass-card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
+                    </div>
+                    <div>
+                        <a href="#">
+                            <h4 class="glass-card-title">Neon Force Low</h4>
+                        </a>
+                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">LIFESTYLE</p>
+                        <div class="glass-card-footer">
+                            <span class="glass-card-price">$145.00</span>
+                            <a href="#" class="glass-btn">Details</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mock Product 3 -->
+                <div class="glass-card">
+                    <div class="glass-card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
+                        <div class="glass-badge" style="background: var(--color-secondary); color: white;">HOT</div>
+                    </div>
+                    <div>
+                        <a href="#">
+                            <h4 class="glass-card-title">Urban Drift Pro</h4>
+                        </a>
+                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">SKATE</p>
+                        <div class="glass-card-footer">
+                            <span class="glass-card-price">$120.00</span>
+                            <a href="#" class="glass-btn">Details</a>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Mock Product 4 -->
+                 <div class="glass-card">
+                    <div class="glass-card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
+                    </div>
+                    <div>
+                        <a href="#">
+                            <h4 class="glass-card-title">Vortex High-Top</h4>
+                        </a>
+                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">BASKETBALL</p>
+                        <div class="glass-card-footer">
+                            <span class="glass-card-price">$210.00</span>
+                            <a href="#" class="glass-btn">Details</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mock Product 5 -->
+                <div class="glass-card">
+                    <div class="glass-card-image-wrapper">
+                        <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
+                    </div>
+                    <div>
+                        <a href="#">
+                            <h4 class="glass-card-title">Quantum Leap</h4>
+                        </a>
+                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">TRAINING</p>
+                        <div class="glass-card-footer">
+                            <span class="glass-card-price">$165.00</span>
+                            <a href="#" class="glass-btn">Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination Mock -->
+            <div class="pagination-container">
+                <div class="tech-pagination">
+                    <span class="page-link active">1</span>
+                    <a href="#" class="page-link">2</a>
+                    <a href="#" class="page-link">3</a>
+                    <a href="#" class="page-arrow">NEXT <i class="fas fa-chevron-right"></i></a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

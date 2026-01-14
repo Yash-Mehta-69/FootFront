@@ -1,350 +1,964 @@
-
 {% extends 'base.html' %}
 {% load static %}
 
+
 {% block extra_css %}
+<!-- Specific styles for Product Detail that extend global styles -->
 <style>
-    .pd-container {
-        padding-top: 100px;
-        min-height: 100vh;
-        display: flex;
-        flex-wrap: wrap;
-        /* Transparent for grid */
-    }
+    /* --- Layout & Tech Background --- */
+    /* Increased padding to prevent navbar overlap */
+    /* .pd-page-wrapper {
+        padding-top: 120px; Increased to 220px for clear visibility
+    } */
 
-    .pd-media {
-        flex: 1;
-        min-width: 50%;
-        height: calc(100vh - 100px);
-        position: sticky;
-        top: 100px;
-        /* No background, allowing grid */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-    }
-
-    .pd-image {
-        max-width: 80%;
-        max-height: 80%;
-        object-fit: contain;
-        transform: rotate(-15deg);
-        filter: drop-shadow(0 30px 50px rgba(0,0,0,0.5));
-        transition: transform 0.5s ease;
-        z-index: 2;
-    }
-    
-    .pd-media:hover .pd-image {
-        transform: rotate(0deg) scale(1.1);
-    }
-
-    /* Tech Ring Decoration behind shoe */
-    .pd-tech-ring {
-        position: absolute;
-        width: 500px;
-        height: 500px;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 50%;
-        z-index: 1;
-        animation: spin-slow 20s linear infinite;
-    }
-
-    .pd-info {
-        flex: 1;
-        min-width: 300px;
-        padding: 4rem;
+    .pd-media-container {
+        position: relative;
+        height: 100%;
+        min-height: 500px;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        background: rgba(0,0,0,0.2); /* Slight darken for text readability */
-        backdrop-filter: blur(5px);
+        align-items: center;
     }
 
-    .pd-category {
-        color: var(--color-accent);
-        text-transform: uppercase;
-        font-weight: 600;
-        margin-bottom: 1rem;
-        letter-spacing: 2px;
-        font-size: 0.9rem;
-    }
-
-    .pd-title {
-        font-family: var(--font-heading);
-        font-size: clamp(2.5rem, 8vw, 5rem);
-        line-height: 0.9;
-        margin-bottom: 2rem;
-        text-transform: uppercase;
-        color: white;
-    }
-
-    .pd-description {
-        color: #aaa;
-        font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 3rem;
-        max-width: 600px;
-        border-left: 2px solid var(--color-light-gray);
-        padding-left: 1.5rem;
-    }
-
-    /* Variant Selectors */
-    .variant-section {
-        margin-bottom: 3rem;
-    }
-
-    .variant-label {
-        display: block;
-        margin-bottom: 1rem;
-        font-weight: 600;
-        color: #fff;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    .size-grid {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .size-option {
-        width: 60px;
-        height: 60px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        color: white;
+    /* Main Image */
+    .pd-main-image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 450px;
         display: flex;
         justify-content: center;
         align-items: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-family: var(--font-heading);
-        font-size: 1.2rem;
-        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        z-index: 2;
+    }
+    
+    .pd-image {
+        max-width: 90%;
+        max-height: 400px;
+        object-fit: contain;
+        transform: rotate(-15deg);
+        filter: drop-shadow(0 30px 50px rgba(0,0,0,0.5));
+        transition: all 0.5s ease;
+    }
+    .pd-image.changing {
+        opacity: 0;
+        transform: rotate(-15deg) scale(0.9);
+    }
+    
+    .pd-media-container:hover .pd-image {
+        transform: rotate(0deg) scale(1.05);
     }
 
-    .size-option:hover, .size-option.active {
-        background: var(--color-accent);
-        color: black;
+    /* Thumbnail Gallery */
+    .pd-thumbnails {
+        display: flex;
+        gap: 12px;
+        margin-top: 2rem;
+        z-index: 3;
+        overflow-x: auto;
+        padding: 10px;
+        max-width: 100%;
+    }
+    .pd-thumb {
+        width: 70px;
+        height: 70px;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        object-fit: contain;
+    }
+    .pd-thumb:hover, .pd-thumb.active {
         border-color: var(--color-accent);
+        box-shadow: 0 0 15px rgba(204, 255, 0, 0.2);
         transform: translateY(-5px);
     }
 
-    .action-bar {
-        margin-top: auto;
-        padding-top: 2rem;
-        border-top: 1px dashed rgba(255,255,255,0.2);
+    /* Tech Ring */
+    .pd-tech-ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 500px;
+        height: 500px;
+        border: 1px dashed var(--hud-ring-color, rgba(255,255,255,0.1));
+        border-radius: 50%;
+        z-index: 1;
+        animation: spin-slow 30s linear infinite;
+        pointer-events: none;
+    }
+    .pd-tech-ring::after {
+        content: '';
+        position: absolute;
+        inset: -20px;
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 50%;
+    }
+
+    /* --- Info Section --- */
+    .pd-info {
+        padding: 2.5rem;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius-card, 16px);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+    /* Decorator Line */
+    .pd-info::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: linear-gradient(to bottom, var(--color-accent), transparent);
+    }
+
+    .pd-category-link {
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 2px;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+    .pd-category-link:hover { color: var(--color-accent); }
+
+    .pd-title {
+        font-family: var(--font-heading);
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 1.1;
+        margin: 0.5rem 0 1rem;
+        color: var(--color-text);
+        text-transform: uppercase;
+    }
+
+    .pd-price-box {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .pd-price {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        color: var(--color-accent);
+        font-weight: 700;
+    }
+
+    /* --- Controls --- */
+    .control-label {
+        color: var(--color-text);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .control-value { color: var(--color-accent); margin-left: auto;}
+
+    /* Color Swatches */
+    .pd-colors {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+    }
+    .color-swatch {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--glass-border);
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.active { transform: scale(1.1); box-shadow: 0 0 10px rgba(0,0,0,0.5); border-color: var(--color-accent); }
+    .color-swatch.disabled { opacity: 0.1; pointer-events: none; filter: grayscale(1); }
+
+    /* Tech Sizes */
+    .pd-sizes {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 10px;
+        margin-bottom: 1.5rem;
+    }
+    .size-btn {
+        height: 45px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--glass-border);
+        color: var(--color-text);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: var(--font-heading);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        /* Tech corner cut */
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    }
+    .size-btn:hover:not(.disabled) {
+        border-color: var(--color-accent);
+        background: rgba(204, 255, 0, 0.05);
+        color: var(--color-accent);
+    }
+    .size-btn.active {
+        background: var(--color-accent);
+        color: #000;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 15px rgba(204, 255, 0, 0.3);
+    }
+    .size-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        background: rgba(0,0,0,0.2);
+        border-style: dashed;
+    }
+
+    /* Quantity & Actions */
+    .action-row {
+        display: grid;
+        grid-template-columns: 120px 1fr auto;
+        gap: 15px;
+        margin-top: 2rem;
+    }
+    
+    .qty-selector {
+        display: flex;
+        height: 55px;
+        border: 1px solid var(--glass-border);
+        border-radius: 8px; /* Fallback */
+        overflow: hidden;
+    }
+    .qty-btn {
+        width: 35px;
+        background: rgba(255,255,255,0.05);
+        border: none;
+        color: var(--color-text);
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .qty-btn:hover { background: rgba(255,255,255,0.1); }
+    .qty-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--color-text);
+        text-align: center;
+        font-weight: 600;
+        width: 100%;
+    }
+    .qty-input:focus { outline: none; }
+
+    .btn-add-cart {
+        height: 55px;
+        background: var(--color-bg);
+        color: var(--color-accent);
+        border: 1px solid var(--color-accent);
+        font-family: var(--font-heading);
+        text-transform: uppercase;
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.3s;
+        /* Dynamic clip path */
+        clip-path: polygon(15px 0, 100% 0, 100% 100%, 0 100%, 0 15px);
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    .btn-add-cart:hover:not(:disabled) {
+        background: var(--color-accent);
+        color: #000;
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.4);
+    }
+    .btn-add-cart:disabled {
+        border-color: var(--glass-border);
+        color: var(--color-text-muted);
+        cursor: not-allowed;
+        background: rgba(255,255,255,0.02);
+    }
+
+    .btn-wishlist {
+        height: 55px;
+        width: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--glass-border);
+        background: transparent;
+        color: var(--color-text);
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .btn-wishlist:hover {
+        border-color: #ff4757;
+        color: #ff4757;
+    }
+
+    /* Vendor Card */
+    .vendor-card {
+        margin-top: 2rem;
+        padding: 1.2rem;
+        border-top: 1px dashed var(--glass-border);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .vendor-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 2px solid var(--color-accent);
+        object-fit: cover;
+    }
+    .vendor-info h6 {
+        margin: 0;
+        color: var(--color-text);
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+    }
+    .vendor-info p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+    }
+    .btn-visit-shop {
+        margin-left: auto;
+        padding: 6px 16px;
+        font-size: 0.8rem;
+        border: 1px solid var(--glass-border);
+        background: transparent;
+        color: var(--color-text);
+        border-radius: 20px;
+        transition: all 0.3s;
+    }
+    .btn-visit-shop:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+    }
+
+    /* --- Details Cards Section --- */
+    .details-cards-section {
+        margin-top: 4rem;
+    }
+    /* Updated for separate Light Theme Background */
+    .details-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        padding: 2rem;
+        height: 100%;
+        border-radius: 12px;
+        transition: transform 0.3s;
+    }
+    
+    /* Specific styling for Light Theme Cards */
+    [data-theme="light"] .details-card {
+        background: #f1f2f6; /* Distinct Greyish BG for Light Mode */
+        border: 1px solid #dcdde1;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    /* Fallback if data-theme isn't used */
+    body.light-theme .details-card {
+        background: #f1f2f6;
+        border: 1px solid #dcdde1;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .details-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--color-accent);
+    }
+    .details-card h4 {
+        font-family: var(--font-heading);
+        color: var(--color-accent);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* --- Reviews Section --- */
+    .reviews-section {
+        margin-top: 4rem;
+        padding-top: 3rem;
+        border-top: 1px solid var(--glass-border);
+    }
+    .review-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 2rem;
     }
-
-    .price-tag {
+    .review-stats {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .big-rating {
         font-size: 3rem;
-        font-family: var(--font-heading);
-        color: white;
+        font-weight: 700;
+        color: var(--color-accent);
         line-height: 1;
     }
-
-    @keyframes spin-slow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+    
+    .review-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
     }
     
-    @media (max-width: 992px) {
-        .pd-container {
-            flex-direction: column;
-        }
-
-        .pd-media {
-            height: 50vh;
-            min-height: 400px; /* Minimal height for image */
-            position: relative;
-            top: 0;
-            min-width: 100%;
-        }
-        
-        /* Fix Overflowing Ring */
-        .pd-tech-ring {
-            width: 300px; /* Smaller ring */
-            height: 300px;
-        }
-
-        .pd-info {
-            padding: 2rem 1.5rem;
-            min-width: 100%;
-        }
-        
-        .action-bar {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 1.5rem;
-            text-align: center;
-        }
-        
-        .action-bar > div {
-            margin-bottom: 1rem;
-        }
-        
-        .btn-primary {
-            width: 100%;
-        }
+    /* Review Card Styling with Theme awareness */
+    .review-card {
+        background: rgba(255,255,255,0.03); 
+        border: 1px solid var(--glass-border);
+        padding: 1.5rem;
+        transition: transform 0.3s;
+        border-radius: 12px;
     }
     
-    @media (max-width: 350px) {
-        .pd-media {
-            min-height: 300px;
-        }
-        .pd-title {
-            font-size: 2rem;
-        }
-        .price-tag {
-            font-size: 2.5rem;
-        }
+    /* Light Theme Review Card - Distinct BG */
+    [data-theme="light"] .review-card {
+        background: #f8f9fa; /* Off-white */
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    body.light-theme .review-card {
+        background: #f8f9fa; 
+        border: 1px solid #e0e0e0;
+    }
+    
+    .review-card:hover { 
+        transform: translateY(-5px); 
+        background: var(--glass-bg-hover, rgba(255,255,255,0.05));
+    }
+    [data-theme="light"] .review-card:hover {
+         background: #ffffff;
+         border-color: var(--color-accent);
+    }
+    
+    /* Animations */
+    @keyframes spin-slow { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+    /* Modal Styles */
+    .tech-modal {
+        background: rgba(10, 10, 10, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+    }
+    
+    @media (max-width: 991px) {
+        .pd-page-wrapper { padding-top: 120px; }
+        .pd-media-container { min-height: 400px; margin-bottom: 2rem; }
+        .pd-image { max-height: 300px; }
+        .action-row { grid-template-columns: 1fr 1fr; }
+        .btn-wishlist { grid-column: 2; width: 100%; }
+        .qty-selector { grid-column: 1; }
+        .btn-add-cart { grid-column: 1 / -1; order: 3; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-{% if product %}
-<div class="pd-container">
-    <div class="pd-media">
-        <div class="pd-tech-ring"></div>
-        {% if product.product_image %}
-            <img src="{{ product.product_image.url }}" class="pd-image" alt="{{ product.name }}">
-        {% else %}
-            <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop" class="pd-image" alt="Shoe">
-        {% endif %}
-    </div>
-    
-    <div class="pd-info">
-        <div>
-            <span class="pd-category">// {{ product.category.name }}</span>
-            <h1 class="pd-title">{{ product.name }}</h1>
-        </div>
+<div class="pd-page-wrapper section-padding">
+    <div class="container">
         
-        <p class="pd-description">{{ product.description }}</p>
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4" style="margin-top: 1.5rem; position: relative; z-index: 10;">
+            <ol class="breadcrumb bg-transparent p-0 m-0">
+                <li class="breadcrumb-item"><a href="{% url 'shop' %}" class="pd-category-link">Shop</a></li>
+                {% if product.category %}
+                <li class="breadcrumb-item"><a href="{% url 'shop' %}?category={{ product.category.slug }}" class="pd-category-link">{{ product.category.name }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active text-muted" aria-current="page">{{ product.name }}</li>
+            </ol>
+        </nav>
 
-        <!-- Variants (Mockup for UI, needs JS logic to switch) -->
-        <div class="variant-section">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="variant-label mb-0">Select Size configuration</span>
-                <button class="btn btn-link p-0 text-accent" style="font-size: 0.8rem; text-decoration: none;" onclick="toggleSizeChart()">
-                    <i class="fas fa-ruler-combined me-1"></i> SIZE GUIDE
+        <div class="row g-5">
+            <!-- LEFT: Media Gallery -->
+            <div class="col-lg-7">
+                <div class="pd-media-container">
+                    <div class="pd-tech-ring"></div>
+                    
+                    <div class="pd-main-image-wrapper">
+                        {% if product.product_image %}
+                            <img id="main-image" src="{{ product.product_image.url }}" class="pd-image" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="text-muted text-center">
+                                <i class="fas fa-image fa-4x mb-3"></i><br>No Image Available
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Thumbnails (Main + Variants) -->
+                    <div class="pd-thumbnails" id="thumbnail-container">
+                         <!-- Main Image Thumb -->
+                         {% if product.product_image %}
+                         <img src="{{ product.product_image.url }}" class="pd-thumb active" onclick="switchImage(this.src)">
+                         {% endif %}
+                         
+                         <!-- Variant Images (Unique Only) -->
+                         {% for variant in variants %}
+                            {% if variant.image and variant.image.url != product.product_image.url %}
+                             <img src="{{ variant.image.url }}" class="pd-thumb" onclick="switchImage(this.src)" data-variant-id="{{ variant.id }}">
+                            {% endif %}
+                         {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Product Info -->
+            <div class="col-lg-5">
+                <div class="pd-info">
+                    <span class="pd-category">
+                        {% if product.is_trending %}<span class="badge bg-danger me-2">TRENDING</span>{% endif %}
+                        {{ product.get_gender_display }}
+                    </span>
+                    
+                    <h1 class="pd-title">{{ product.name }}</h1>
+
+                    <div class="pd-price-box">
+                        <span class="pd-price" id="display-price">₹{{ product.price }}</span>
+                    </div>
+
+                    <!-- Short Description (Snippet) -->
+                    <p class="text-muted-theme mb-4 description-text">
+                        {{ product.description|truncatewords:20 }}
+                    </p>
+
+                    <!-- Add to Cart Form -->
+                    <form method="POST" action="{% url 'add_to_cart' product.id %}" id="add-to-cart-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="selected-variant-id" id="selected-variant-input">
+                        
+                        <!-- Color Section -->
+                        {% if available_colors %}
+                        <div class="mb-4">
+                            <div class="control-label">
+                                Color <span class="control-value" id="color-label">Select Color</span>
+                            </div>
+                            <div class="pd-colors">
+                                {% for color in available_colors %}
+                                <div class="color-swatch" 
+                                     data-color="{{ color.name }}" 
+                                     style="background-color: {{ color.hex_code }};"
+                                     title="{{ color.name }}"
+                                     onclick="selectColor('{{ color.name }}')">
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Size Section -->
+                        {% if available_sizes %}
+                        <div class="mb-4">
+                            <div class="control-label">
+                                Size <span class="control-value" id="size-label">Select Size</span>
+                            </div>
+                            <div class="pd-sizes">
+                                {% for size in available_sizes %}
+                                <div class="size-btn" 
+                                     data-size="{{ size.size_label }}"
+                                     onclick="selectSize('{{ size.size_label }}')">
+                                    {{ size.size_label }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div id="stock-feedback" class="mb-3" style="min-height: 24px;"></div>
+
+                        <!-- Actions -->
+                        <div class="action-row">
+                            <!-- Quantity -->
+                            <div class="qty-selector">
+                                <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
+                                <input type="number" name="quantity" id="qty-input" class="qty-input" value="1" min="1" max="5">
+                                <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
+                            </div>
+
+                            <!-- Cart Button -->
+                            <button type="submit" id="add-btn" class="btn-add-cart" disabled>
+                                <span>SELECT OPTIONS</span> <i class="fas fa-shopping-bag"></i>
+                            </button>
+
+                            <!-- Wishlist -->
+                            <button type="button" class="btn-wishlist" title="Add to Wishlist">
+                                <i class="far fa-heart fa-lg"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Vendor Card -->
+                    <div class="vendor-card">
+                        {% if product.vendor.profile_picture %}
+                            <img src="{{ product.vendor.profile_picture.url }}" class="vendor-avatar" alt="Vendor">
+                        {% else %}
+                            <div class="vendor-avatar d-flex align-items-center justify-content-center bg-dark text-accent">
+                                <i class="fas fa-store"></i>
+                            </div>
+                        {% endif %}
+                        <div class="vendor-info">
+                            <p>Sold By Official Vendor</p>
+                            <h6>{{ product.vendor.shopName }}</h6>
+                        </div>
+                        <a href="{% url 'vendor_shop' %}" class="btn-visit-shop">Visit Shop</a> 
+                        <!-- Note: Adjust view_shop URL arg as needed, usually vendor slug or user id -->
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Product Details Cards (Between Info and Reviews) -->
+        <div class="details-cards-section">
+            <h3 class="section-title mb-4" style="font-family: var(--font-heading); text-transform:uppercase;">Product Details</h3>
+            <div class="row g-4">
+                <!-- Card 1: Description -->
+                <div class="col-md-4">
+                    <div class="details-card">
+                        <h4><i class="fas fa-info-circle"></i> Description</h4>
+                        <p class="text-muted-theme">
+                            {{ product.description }}
+                            <br><br>
+                            This {{ product.get_gender_display }}'s product is designed for ultimate comfort and style. Perfect for daily wear or specific athletic activities.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Card 2: Material & Specification (Static/Dummy if model missing) -->
+                <div class="col-md-4">
+                    <div class="details-card">
+                        <h4><i class="fas fa-layer-group"></i> Specifications</h4>
+                        <ul class="list-unstyled text-muted-theme">
+                            <li class="mb-2"><strong>Category:</strong> {{ product.category.name }}</li>
+                            <li class="mb-2"><strong>Gender:</strong> {{ product.get_gender_display }}</li>
+                            <li class="mb-2"><strong>Vendor:</strong> {{ product.vendor.shopName }}</li>
+                            <!-- Placeholder for Material -->
+                            <li class="mb-2"><strong>Material:</strong> Premium Synthetic/Mesh</li> 
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Card 3: Shipping & Warranty -->
+                <div class="col-md-4">
+                    <div class="details-card">
+                        <h4><i class="fas fa-truck"></i> Delivery & Care</h4>
+                        <ul class="list-unstyled text-muted-theme">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Free Shipping on orders over ₹999</li>
+                            <li class="mb-2"><i class="fas fa-undo text-info me-2"></i> 7 Day Replacement Policy</li>
+                            <li class="mb-2"><i class="fas fa-shield-alt text-warning me-2"></i> 100% Authentic Product</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS SECTION -->
+        <div class="reviews-section">
+            <div class="review-header">
+                <div class="review-stats">
+                   <div class="d-flex flex-column">
+                    <div class="big-rating">4.8</div>
+                    </div>
+                    <div>
+                        <div class="text-warning">
+                             <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <small class="text-muted-theme">Based on {{ product.review_set.count }} reviews</small>
+                    </div>
+                </div>
+                <!-- Review Button -->
+                {% if user.is_authenticated %}
+                <button class="btn btn-outline-light text-theme border-theme" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                    <i class="fas fa-pen me-2"></i> Write a Review
                 </button>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-light text-theme border-theme">Login to Review</a>
+                {% endif %}
             </div>
-            
-            <div class="size-grid">
-                <div class="size-option">7</div>
-                <div class="size-option">8</div>
-                <div class="size-option active">9</div>
-                <div class="size-option">10</div>
-                <div class="size-option">11</div>
-                <div class="size-option">12</div>
+
+            <div class="review-grid">
+                <!-- Dynamic Reviews -->
+                {% for review in product.review_set.all %}
+                <div class="review-card">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white" style="width:30px;height:30px; font-size: 0.8rem;">
+                                {{ review.customer.user.first_name|first|default:"U" }}
+                            </div>
+                            <h6 class="mb-0 text-theme">{{ review.customer.user.first_name|default:"User" }}</h6>
+                        </div>
+                        <small class="text-muted-theme">{{ review.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    <div class="text-warning mb-2 small">
+                         {% for i in "12345"|make_list %}
+                            <i class="{% if forloop.counter <= review.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                         {% endfor %}
+                    </div>
+                    <p class="text-muted-theme mb-0">"{{ review.comment }}"</p>
+                </div>
+                {% endfor %}
+
+                <!-- STATIC DEMO REVIEWS (As Requested) -->
+                <div class="review-card">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width:30px;height:30px; font-size: 0.8rem;">
+                                A
+                            </div>
+                            <h6 class="mb-0 text-theme">Alex M.</h6>
+                        </div>
+                        <small class="text-muted-theme">2 days ago</small>
+                    </div>
+                    <div class="text-warning mb-2 small">
+                         <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-muted-theme mb-0">"Absolutely love the design! Fits perfectly and looks even better in person. The tech vibe is real."</p>
+                </div>
+
+                <div class="review-card">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-info rounded-circle d-flex align-items-center justify-content-center text-white" style="width:30px;height:30px; font-size: 0.8rem;">
+                                S
+                            </div>
+                            <h6 class="mb-0 text-theme">Sarah J.</h6>
+                        </div>
+                        <small class="text-muted-theme">1 week ago</small>
+                    </div>
+                    <div class="text-warning mb-2 small">
+                         <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
+                    </div>
+                    <p class="text-muted-theme mb-0">"Great quality materials. Delivery was super fast. Highly recommend checking the size guide though."</p>
+                </div>
+                
+                <div class="review-card">
+                    <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center text-white" style="width:30px;height:30px; font-size: 0.8rem;">
+                                R
+                            </div>
+                            <h6 class="mb-0 text-theme">Rohan K.</h6>
+                        </div>
+                        <small class="text-muted-theme">3 weeks ago</small>
+                    </div>
+                    <div class="text-warning mb-2 small">
+                         <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                    <p class="text-muted-theme mb-0">"Best sneakers I've bought this year. The cushioning is next level. 10/10 would buy again."</p>
+                </div>
+
             </div>
         </div>
 
-        <div class="action-bar">
-            <!-- Price placeholder - needs dynamic update from variant -->
-            <div>
-                <span class="d-block text-muted" style="font-size: 0.8rem; letter-spacing: 1px;">CURRENT PRICE</span>
-                <span class="price-tag">${{ product.price }}</span>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content tech-modal">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">Write a Review</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
-            <button class="btn-primary" style="padding: 1.5rem 3rem; font-size: 1.2rem;">ADD TO CART</button>
+            <div class="modal-body">
+                <form action="#" method="POST"> <!-- Placeholder Action -->
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted-theme">Rating</label>
+                        <div class="d-flex gap-2">
+                            <!-- Simple star rating input visual -->
+                            <i class="far fa-star text-warning fa-lg" style="cursor:pointer"></i>
+                            <i class="far fa-star text-warning fa-lg" style="cursor:pointer"></i>
+                            <i class="far fa-star text-warning fa-lg" style="cursor:pointer"></i>
+                            <i class="far fa-star text-warning fa-lg" style="cursor:pointer"></i>
+                            <i class="far fa-star text-warning fa-lg" style="cursor:pointer"></i>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted-theme">Your Review</label>
+                        <textarea class="form-control bg-transparent text-white" rows="4" placeholder="Tell us what you think..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-add-cart w-100 py-2" style="height:auto;">
+                        Submit Review
+                    </button>
+                    <p class="text-center mt-2 small text-muted">Backend integration pending.</p>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Size Chart Modal -->
-<div id="sizeChartModal" class="glass-modal">
-    <div class="glass-modal-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 style="font-family: var(--font-heading); margin: 0;">SIZE REFERENCE PROTOCOL</h3>
-            <button class="icon-btn" onclick="toggleSizeChart()" style="border: none; background: transparent;"><i class="fas fa-times"></i></button>
-        </div>
-        
-        <div class="table-responsive">
-            <table class="table text-white" style="border-color: rgba(255,255,255,0.1);">
-                <thead>
-                    <tr style="border-bottom: 2px solid var(--color-accent);">
-                        <th>US</th>
-                        <th>UK</th>
-                        <th>EU</th>
-                        <th>CM</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>7</td><td>6</td><td>40</td><td>25</td></tr>
-                    <tr><td>8</td><td>7</td><td>41</td><td>26</td></tr>
-                    <tr><td>9</td><td>8</td><td>42.5</td><td>27</td></tr>
-                    <tr><td>10</td><td>9</td><td>44</td><td>28</td></tr>
-                    <tr><td>11</td><td>10</td><td>45</td><td>29</td></tr>
-                    <tr><td>12</td><td>11</td><td>46</td><td>30</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <p class="text-muted mt-3" style="font-size: 0.8rem;">* Measurements are approximate based on standard scanning.</p>
-    </div>
-</div>
-
-<style>
-    .glass-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.8);
-        backdrop-filter: blur(5px);
-        z-index: 2000;
-        display: none;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .glass-modal.active {
-        display: flex;
-        opacity: 1;
-    }
-    
-    .glass-modal-content {
-        background: #1a1a1a;
-        border: 1px solid var(--glass-border);
-        padding: 3rem;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 500px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        transform: scale(0.9);
-        transition: transform 0.3s ease;
-    }
-    
-    .glass-modal.active .glass-modal-content {
-        transform: scale(1);
-    }
-</style>
+<!-- Variant Data -->
+<script id="variant-data" type="application/json">
+[
+    {% for v in variants %}
+    {
+        "id": "{{ v.id }}",
+        "color": "{{ v.color.name }}",
+        "size": "{{ v.size.size_label }}",
+        "price": "{{ v.price }}",
+        "stock": {{ v.stock }},
+        "image": "{% if v.image %}{{ v.image.url }}{% else %}#{% endif %}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
 
 <script>
-    function toggleSizeChart() {
-        const modal = document.getElementById('sizeChartModal');
-        if (modal.classList.contains('active')) {
-            modal.classList.remove('active');
-            setTimeout(() => modal.style.display = 'none', 300); // Wait for fade
-        } else {
-            modal.style.display = 'flex';
-            // slight delay to allow display flex to apply before opacity transition
-            requestAnimationFrame(() => modal.classList.add('active'));
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Navbar Padding Fix ---
+        // Basic padding added via CSS, but ensure dynamic adjustment if needed
+        const navbar = document.querySelector('.navbar');
+        const pageWrapper = document.querySelector('.pd-page-wrapper');
+        if (navbar && pageWrapper) {
+            const navHeight = navbar.offsetHeight;
+            pageWrapper.style.paddingTop = (navHeight + 20) + 'px';
         }
-    }
+
+        const variantDataEl = document.getElementById('variant-data');
+        if (!variantDataEl) return;
+
+        const allVariants = JSON.parse(variantDataEl.textContent);
+        let selectedColor = null;
+        let selectedSize = null;
+
+        const colorOpts = document.querySelectorAll('.color-swatch');
+        const sizeOpts = document.querySelectorAll('.size-btn');
+        const displayPrice = document.getElementById('display-price');
+        const addBtn = document.getElementById('add-btn');
+        const variantInput = document.getElementById('selected-variant-input');
+        const mainImage = document.getElementById('main-image');
+        const colorLabel = document.getElementById('color-label');
+        const sizeLabel = document.getElementById('size-label');
+        const stockFeedback = document.getElementById('stock-feedback');
+
+        // Initial Logic
+        if (colorOpts.length === 1) selectColor(colorOpts[0].dataset.color);
+
+        // --- Functions ---
+        window.selectColor = function(color) {
+            selectedColor = (selectedColor === color) ? null : color; // Toggle
+            
+            // Validate Size Selection with new color
+            if (selectedSize && !isVariantAvailable(selectedColor, selectedSize)) {
+                selectedSize = null;
+            }
+            updateUI();
+        }
+
+        window.selectSize = function(size) {
+            selectedSize = (selectedSize === size) ? null : size; // Toggle
+            updateUI();
+        }
+        
+        window.switchImage = function(src) {
+            if(!mainImage) return;
+            mainImage.classList.add('changing');
+            setTimeout(() => {
+                mainImage.src = src;
+                mainImage.classList.remove('changing');
+            }, 300);
+            
+            // Update active state on thumbs
+            document.querySelectorAll('.pd-thumb').forEach(img => {
+                img.classList.toggle('active', img.src === src);
+            });
+        }
+        
+        window.updateQty = function(change) {
+            const input = document.getElementById('qty-input');
+            let val = parseInt(input.value) + change;
+            if(val < 1) val = 1;
+            if(val > 10) val = 10;
+            input.value = val;
+        }
+
+        function isVariantAvailable(color, size) {
+            return allVariants.some(v => v.color === color && v.size === size);
+        }
+        
+        function getVariant(color, size) {
+             return allVariants.find(v => v.color === color && v.size === size);
+        }
+
+        function updateUI() {
+            // Update Colors
+            colorOpts.forEach(opt => {
+                const c = opt.dataset.color;
+                opt.classList.toggle('active', c === selectedColor);
+                
+                // Dim if not compatible with selected size
+                if (selectedSize) {
+                     const valid = allVariants.some(v => v.color === c && v.size === selectedSize);
+                     opt.classList.toggle('disabled', !valid);
+                } else {
+                    opt.classList.remove('disabled');
+                }
+            });
+            colorLabel.textContent = selectedColor || 'Select Color';
+            colorLabel.style.color = selectedColor ? 'var(--color-accent)' : 'var(--color-text-muted)';
+
+            // Update Sizes
+            sizeOpts.forEach(opt => {
+                const s = opt.dataset.size;
+                opt.classList.toggle('active', s === selectedSize);
+                
+                if (selectedColor) {
+                    const valid = allVariants.some(v => v.color === selectedColor && v.size === s);
+                    opt.classList.toggle('disabled', !valid);
+                } else {
+                    opt.classList.remove('disabled');
+                }
+            });
+            sizeLabel.textContent = selectedSize || 'Select Size';
+            sizeLabel.style.color = selectedSize ? 'var(--color-accent)' : 'var(--color-text-muted)';
+
+            // Master Status
+            if (selectedColor && selectedSize) {
+                const variant = getVariant(selectedColor, selectedSize);
+                if (variant) {
+                    displayPrice.textContent = `₹${variant.price}`;
+                    variantInput.value = variant.id;
+                    
+                    // Auto-switch image if variant has specific one
+                    if (variant.image && variant.image !== '#') {
+                        switchImage(variant.image);
+                    }
+
+                    if (variant.stock > 0) {
+                        addBtn.disabled = false;
+                        addBtn.innerHTML = `ADD TO CART <i class="fas fa-shopping-bag"></i>`;
+                        stockFeedback.innerHTML = `<span class="text-accent"><i class="fas fa-check-circle"></i> In Stock (${variant.stock} available)</span>`;
+                        
+                        // Set max quantity
+                        document.getElementById('qty-input').max = variant.stock;
+                    } else {
+                        addBtn.disabled = true;
+                        addBtn.innerHTML = `OUT OF STOCK`;
+                        stockFeedback.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle"></i> Sold Out</span>`;
+                    }
+                }
+            } else {
+                addBtn.disabled = true;
+                addBtn.innerHTML = `SELECT OPTIONS`;
+                stockFeedback.innerHTML = ``;
+            }
+        }
+        
+    });
 </script>
-{% else %}
-<div style="padding-top: 200px; text-align: center; height: 100vh;">
-    <h2 class="text-white">PRODUCT_NOT_FOUND</h2>
-</div>
-{% endif %}
 {% endblock %}

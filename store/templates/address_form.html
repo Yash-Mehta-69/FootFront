@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .address-form-container {
+        padding-top: 150px;
+        padding-bottom: 150px;
+        min-height: 100vh;
+        max-width: 800px;
+    }
+
+    .form-header {
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--color-accent);
+        padding-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+        font-family: var(--font-heading);
+        font-size: 0.9rem;
+    }
+    
+    .form-control {
+         width: 100%;
+        padding: 0.8rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.3);
+        color: var(--text-color);
+        font-family: monospace;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
+    }
+    
+    .submit-btn {
+        background: var(--color-accent);
+        color: black;
+        border: none;
+        padding: 1rem 3rem;
+        font-family: var(--font-heading);
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        transition: all 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .cancel-btn {
+        background: transparent;
+        border: 1px solid rgba(128, 128, 128, 0.5);
+        color: var(--text-color);
+        padding: 1rem 2rem;
+        font-family: var(--font-heading);
+        cursor: pointer;
+        margin-left: 1rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .cancel-btn:hover {
+         background: rgba(128, 128, 128, 0.1);
+         color: var(--text-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="address-form-container container">
+    <div class="glass-panel p-5">
+        <div class="form-header">
+            <span class="text-accent" style="letter-spacing: 2px; font-size: 0.9rem;">// SYSTEM.ADDRESS_ENTRY</span>
+            <h1 style="font-family: var(--font-heading); margin: 0;">
+                {% if form.instance.pk %}EDIT ADDRESS{% else %}NEW ADDRESS{% endif %}
+            </h1>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">ADDRESS LINE 1</label>
+                {{ form.address_line1 }}
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">ADDRESS LINE 2 (OPTIONAL)</label>
+                {{ form.address_line2 }}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label class="form-label">CITY</label>
+                    {{ form.city }}
+                </div>
+                <div class="col-md-6 form-group">
+                    <label class="form-label">STATE</label>
+                    {{ form.state }}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">POSTAL CODE</label>
+                 {{ form.postal_code }}
+            </div>
+
+            <div class="mt-5">
+                <button type="submit" class="submit-btn">
+                    {% if form.instance.pk %}UPDATE ADDRESS{% else %}SAVE ADDRESS{% endif %}
+                </button>
+                <a href="{% url 'address_list' %}" class="cancel-btn">CANCEL</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

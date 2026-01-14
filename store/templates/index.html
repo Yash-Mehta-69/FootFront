@@ -160,6 +160,20 @@
         50% { transform: translateY(-30px) translateZ(var(--z, 0)) rotate(var(--r, 5deg)); }
     }
 
+    .hero-section {
+        background: var(--hero-bg-gradient) !important;
+        transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+
+    [data-theme="light"] .floating-shape {
+        opacity: 0.15;
+    }
+
+    [data-theme="light"] .hero-title {
+        text-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
     /* Manifesto Section */
     .manifesto-section {
         background: var(--color-bg);
@@ -182,7 +196,7 @@
 
     .manifesto-text {
         font-size: 1.8rem;
-        color: #ddd;
+        color: var(--color-text-muted);
         max-width: 900px;
         margin: 0 auto;
         text-align: center;
@@ -264,15 +278,15 @@
 
     .bento-large {
         grid-row: span 2;
-        background-image: url('https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2670&auto=format&fit=crop');
+        background-image: url('https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=1000&auto=format&fit=crop');
     }
 
     .bento-small-1 {
-        background-image: url('https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=2650&auto=format&fit=crop');
+        background-image: url('https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=600&auto=format&fit=crop');
     }
 
     .bento-small-2 {
-        background-image: url('https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1974&auto=format&fit=crop');
+        background-image: url('https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=600&auto=format&fit=crop');
     }
 
     .bento-overlay {
@@ -350,7 +364,7 @@
     .newsletter-section {
         padding: 8rem 2rem;
         text-align: center;
-        background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+        background: var(--color-bg-secondary);
     }
 
     .newsletter-input-group {
@@ -362,10 +376,10 @@
     }
 
     .newsletter-input {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
         padding: 1rem;
-        color: white;
+        color: var(--input-text);
         flex: 1;
         border-radius: 8px;
     }
@@ -575,11 +589,12 @@
     </div> 
 </section> -->
 
+
 <!-- 1. Hero Section (3D Model Centerpiece) -->
-<section class="hero-section" style="position: relative; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1a1a 0%, #000 70%);">
+<section class="hero-section bg-theme-hero" style="position: relative; min-height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center;">
     
     <!-- Background Grid Effect -->
-    <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px); background-size: 50px 50px; opacity: 0.5;"></div>
+    <div style="position: absolute; inset: 0; background-image: var(--hero-overlay-grid); background-size: 50px 50px; opacity: 0.6; pointer-events: none;"></div>
 
     <div class="container d-flex flex-column align-items-center justify-content-center" style="position: relative; z-index: 2; height: 100%;">
         
@@ -593,7 +608,7 @@
         </div>
 
         <!-- Big Text Behind -->
-        <h1 class="hero-title" style="font-size: clamp(3rem, 12vw, 12rem); line-height: 0.8; text-transform: uppercase; font-family: var(--font-heading); color: rgba(255,255,255,0.05); white-space: nowrap; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; width: 100%; text-align: center;">
+        <h1 class="hero-title" style="font-size: clamp(3rem, 12vw, 12rem); line-height: 0.8; text-transform: uppercase; font-family: var(--font-heading); color: var(--hero-text-large); white-space: nowrap; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); pointer-events: auto; width: 100%; text-align: center;">
              <span class="interactive-letter">F</span><span class="interactive-letter">O</span><span class="interactive-letter">O</span><span class="interactive-letter">T</span><span class="interactive-letter">F</span><span class="interactive-letter">R</span><span class="interactive-letter">O</span><span class="interactive-letter">N</span><span class="interactive-letter">T</span>
         </h1>
 
@@ -604,20 +619,20 @@
              camera-controls 
              auto-rotate 
              rotation-per-second="60deg"
-             exposure="1.2"
-             shadow-intensity="1" 
-             shadow-softness="0.5"
+             exposure="1.0"
+             shadow-intensity="1.5" 
+             shadow-softness="0.8"
              environment-image="neutral"
              touch-action="pan-y" 
              class="hero-model-viewer"
              disable-zoom
-             style="height: 45vh; margin-top: -10vh;">
+             style="height: 50vh; margin-top: -5vh;">
         </model-viewer>
 
         <!-- Call to Action -->
-        <div style="margin-top: -20px; text-align: center; position: relative;">
-            <h2 class="text-white mb-4" style="font-size: clamp(2rem, 5vw, 3rem); text-shadow: 0 10px 20px black;">FUTURE STEP</h2>
-            <a href="{% url 'shop' %}" class="btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem; box-shadow: 0 0 30px var(--color-accent);">COPP NOW</a>
+        <div style="margin-top: 0; text-align: center; position: relative; z-index: 10;">
+            <h2 class="text-theme mb-4" style="font-size: clamp(2rem, 5vw, 3rem); letter-spacing: 4px; font-weight: 800; opacity: 0.9;">FUTURE STEP</h2>
+            <a href="{% url 'shop' %}" class="btn-primary" style="padding: 1rem 4rem; font-size: 1.2rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2);">COPP NOW</a>
         </div>
     </div>
 </section>
@@ -682,7 +697,7 @@
         <!-- HARDCODED BACKUP CARD 1 (Guaranteed to show) -->
         <div class="glass-card">
             <div class="glass-card-image-wrapper">
-                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2670&auto=format&fit=crop" class="glass-card-img" alt="Fallback">
+                <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Fallback" loading="lazy">
                 <div class="glass-badge">NEW</div>
             </div>
             <div>
@@ -704,7 +719,7 @@
                 {% if product.product_image %}
                     <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}">
                 {% else %}
-                    <img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=1964&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
+                    <img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
                 {% endif %}
                 <div class="glass-badge">HOT</div>
             </div>
@@ -741,7 +756,7 @@
                 </div>
             </a>
             {% empty %}
-            <div class="text-white">Loading vibes...</div>
+            <div class="text-muted-theme">Loading vibes...</div>
             {% endfor %}
         </div>
         
@@ -800,7 +815,7 @@
 <section class="manifesto-section" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=2670&auto=format&fit=crop'); background-attachment: fixed; background-size: cover;">
     <div class="container">
         <h2 class="manifesto-title hover-reveal-text" style="font-size: clamp(3rem, 8vw, 6rem);">Creating the Community</h2>
-        <p class="manifesto-text">
+        <p class="manifesto-text text-force-white">
             We are not just a store. We are a movement. Transforming the footwear shopping experience one drop at a time.
             Join the revolution of style, comfort, and pure aesthetic.
         </p>
@@ -850,23 +865,23 @@
     <div class="d-flex flex-wrap justify-content-center gap-5 text-center">
         <div style="flex: 1; min-width: 250px;">
             <i class="fas fa-shipping-fast text-accent fa-3x mb-3"></i>
-            <h4 class="text-white">Lightning Shipping</h4>
-            <p class="text-gray">Get your drips faster than you can say "Sheesh".</p>
+            <h4 class="text-theme">Lightning Shipping</h4>
+            <p class="text-muted-theme">Get your drips faster than you can say "Sheesh".</p>
         </div>
         <div style="flex: 1; min-width: 250px;">
             <i class="fas fa-check-circle text-accent fa-3x mb-3"></i>
-            <h4 class="text-white">100% Authentic</h4>
-            <p class="text-gray">Verified by our experts. No fakes, ever.</p>
+            <h4 class="text-theme">100% Authentic</h4>
+            <p class="text-muted-theme">Verified by our experts. No fakes, ever.</p>
         </div>
         <div style="flex: 1; min-width: 250px;">
             <i class="fas fa-undo text-accent fa-3x mb-3"></i>
-            <h4 class="text-white">Easy Returns</h4>
-            <p class="text-gray">Didn't fit the vibe? Send it back, no questions asked.</p>
+            <h4 class="text-theme">Easy Returns</h4>
+            <p class="text-muted-theme">Didn't fit the vibe? Send it back, no questions asked.</p>
         </div>
         <div style="flex: 1; min-width: 250px;">
             <i class="fas fa-lock text-accent fa-3x mb-3"></i>
-            <h4 class="text-white">Secure Drops</h4>
-            <p class="text-gray">Bot-proof checkout so real ones get the win.</p>
+            <h4 class="text-theme">Secure Drops</h4>
+            <p class="text-muted-theme">Bot-proof checkout so real ones get the win.</p>
         </div>
     </div>
 </section>
@@ -876,43 +891,39 @@
     <h2 class="section-title-large">HYPE FROM THE FAM</h2>
     <div class="reviews-container d-flex overflow-auto" style="padding-bottom: 2rem;">
         <!-- Review 1 -->
-        <div class="review-card">
+        <div class="review-card glass-card">
             <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-            <p class="text-white mb-3">"Legit the best place to cop kicks. The UI is insane and shipping was crazy fast."</p>
+            <p class="text-theme mb-3">"Legit the best place to cop kicks. The UI is insane and shipping was crazy fast."</p>
             <div class="d-flex align-items-center gap-2">
                 <div class="avatar">A</div>
-                <span class="text-white font-weight-bold">Alex K.</span>
+                <span class="text-theme font-weight-bold">Alex K.</span>
             </div>
         </div>
         <!-- Review 2 -->
-        <div class="review-card">
+        <div class="review-card glass-card">
             <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-            <p class="text-white mb-3">"Finally a site that actually looks good on mobile. Got my Jordans in 2 days."</p>
+            <p class="text-theme mb-3">"Finally a site that actually looks good on mobile. Got my Jordans in 2 days."</p>
             <div class="d-flex align-items-center gap-2">
                 <div class="avatar" style="background:#ff0099;">S</div>
-                <span class="text-white font-weight-bold">Sarah J.</span>
+                <span class="text-theme font-weight-bold">Sarah J.</span>
             </div>
         </div>
         <!-- Review 3 -->
-        <div class="review-card">
+        <div class="review-card glass-card">
             <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-            <p class="text-white mb-3">"Customer support helped me choose the right size. Top tier service."</p>
+            <p class="text-theme mb-3">"Customer support helped me choose the right size. Top tier service."</p>
             <div class="d-flex align-items-center gap-2">
                 <div class="avatar" style="background:#3333ff;">M</div>
-                <span class="text-white font-weight-bold">Mike T.</span>
+                <span class="text-theme font-weight-bold">Mike T.</span>
             </div>
         </div>
     </div>
     
     <style>
         .review-card {
-            background: rgba(255,255,255,0.05);
+            /* Inherits glass-card styles but adds sizing */
             padding: 2rem;
-            border-radius: 12px;
             min-width: 300px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
             margin-right: 2rem;
         }
         .review-card:hover {

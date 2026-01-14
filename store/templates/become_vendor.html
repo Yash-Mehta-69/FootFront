@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Become A Vendor{% endblock %}
+
+{% block content %}
+<style>
+    /* Page Specific Styles */
+    .vendor-hero {
+        padding: 8rem 0 4rem;
+        background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .glass-card-feature {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        padding: 2.5rem;
+        border-radius: 16px;
+        height: 100%;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glass-card-feature::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+        transform: translateX(-100%);
+        transition: 0.5s;
+    }
+
+    .glass-card-feature:hover::before {
+        transform: translateX(100%);
+    }
+
+    .glass-card-feature:hover {
+        transform: translateY(-10px);
+        border-color: var(--color-accent);
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.2);
+    }
+
+    .feature-icon {
+        font-size: 3.5rem;
+        color: var(--color-accent);
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .glass-card-feature:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .process-step {
+        position: relative;
+        padding: 2.5rem 2rem;
+        border: 1px dashed var(--glass-border);
+        border-radius: 16px;
+        background: rgba(0,0,0,0.2);
+        height: 100%;
+        transition: all 0.3s ease;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); /* Clean box */
+    }
+
+    .process-step:hover {
+        background: var(--glass-bg);
+        border-color: var(--color-accent);
+        transform: translateY(-5px);
+    }
+
+    .step-number {
+        font-family: var(--font-heading);
+        font-size: 5rem;
+        color: rgba(255,255,255,0.03); /* Subtle background number */
+        position: absolute;
+        top: -10px;
+        right: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+        transition: color 0.3s ease;
+    }
+    
+    .process-step:hover .step-number {
+        color: rgba(204, 255, 0, 0.1);
+    }
+
+    .pricing-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        padding: 3rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--color-accent);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .pricing-card.highlight {
+        border-color: var(--color-accent);
+        box-shadow: 0 0 30px rgba(204, 255, 0, 0.1);
+    }
+    
+    .pricing-card.highlight::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 24px;
+        box-shadow: inset 0 0 20px rgba(204, 255, 0, 0.1);
+        pointer-events: none;
+    }
+
+    .price-tag {
+        font-family: var(--font-heading);
+        font-size: 4rem;
+        color: var(--color-text);
+        margin: 1.5rem 0;
+        line-height: 0.9;
+    }
+    
+    .price-period {
+        font-size: 1rem;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: block;
+        margin-top: 0.5rem;
+    }
+    
+    .check-list {
+        list-style: none;
+        padding: 0;
+        margin: 2.5rem 0;
+        text-align: left;
+    }
+    
+    .check-list li {
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: var(--color-text-muted);
+        font-size: 1.1rem;
+    }
+    
+    .check-list i {
+        color: var(--color-accent);
+        font-size: 1.2rem;
+    }
+
+    /* Form Styles Override for this page */
+    .vendor-form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        padding: 4rem;
+        border-radius: 24px;
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .form-heading-wrapper {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .tech-label {
+        color: var(--color-text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        display: block;
+    }
+
+    /* Custom Popup */
+    .success-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(10px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .success-popup.active {
+        display: flex;
+        opacity: 1;
+    }
+    
+    .popup-content {
+        background: #0f0f0f;
+        border: 1px solid var(--color-accent);
+        padding: 4rem;
+        border-radius: 24px;
+        text-align: center;
+        max-width: 500px;
+        box-shadow: 0 0 50px rgba(204, 255, 0, 0.2);
+        transform: scale(0.9);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .success-popup.active .popup-content {
+        transform: scale(1);
+    }
+    
+    @media (max-width: 768px) {
+        .feature-icon { font-size: 2.5rem; }
+        .price-tag { font-size: 3rem; }
+        .vendor-form-container { padding: 2rem; }
+        .section-title-large { font-size: 3rem !important; }
+    }
+</style>
+
+<!-- HERO SECTION -->
+<div class="container vendor-hero text-center">
+    <h1 class="section-title-large mb-3">
+        BECOME A <span class="text-accent">VENDOR</span>
+    </h1>
+    <p class="lead text-muted-theme mx-auto break-word" style="max-width: 700px; font-size: 1.2rem; line-height: 1.6;">
+        Join <strong>FOOTFRONT</strong> and take your business to the next level. 
+        Unlimited listings, instant payouts, and direct access to the most exclusive community of sneakerheads.
+    </p>
+    
+    <div class="mt-5 d-flex justify-content-center gap-3">
+        <button onclick="document.getElementById('plans').scrollIntoView({behavior: 'smooth'})" class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.1rem;">
+            Start Selling
+        </button>
+    </div>
+</div>
+
+<!-- FEATURES GRID -->
+<div class="container section-padding">
+    <div class="row g-4">
+        <!-- Feature 1 -->
+        <div class="col-12 col-md-4">
+            <div class="glass-card-feature">
+                <i class="fas fa-money-bill-wave feature-icon"></i>
+                <h3 class="mb-2">0% Commission</h3>
+                <p class="text-muted-theme">Keep 100% of your earnings. We don't take a cut from your sales.</p>
+            </div>
+        </div>
+        <!-- Feature 2 -->
+        <div class="col-12 col-md-4">
+            <div class="glass-card-feature">
+                <i class="fas fa-th-large feature-icon"></i>
+                <h3 class="mb-2">Unlimited Listings</h3>
+                <p class="text-muted-theme">List your entire inventory. No caps, no limits. Scale as you grow.</p>
+            </div>
+        </div>
+        <!-- Feature 3 -->
+        <div class="col-12 col-md-4">
+            <div class="glass-card-feature">
+                <i class="fas fa-headset feature-icon"></i>
+                <h3 class="mb-2">24/7 Support</h3>
+                <p class="text-muted-theme">Direct line to our support team for instant help with onboarding.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="container section-padding pt-0">
+    <div class="text-center mb-5">
+        <h2 class="text-uppercase" style="font-family: var(--font-heading); font-size: 3rem; letter-spacing: 2px;">How It Works</h2>
+        <div style="width: 60px; height: 4px; background: var(--color-accent); margin: 1rem auto;"></div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-12 col-md-3">
+            <div class="process-step">
+                <span class="step-number">01</span>
+                <h4 class="mt-4 mb-3 text-uppercase">Sign Up</h4>
+                <p class="text-muted-theme small">Create your account and choose the subscription plan that fits your scale.</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="process-step">
+                <span class="step-number">02</span>
+                <h4 class="mt-4 mb-3 text-uppercase">List Kicks</h4>
+                <p class="text-muted-theme small">Upload product details, specs, and high-res images to your catalog.</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="process-step">
+                <span class="step-number">03</span>
+                <h4 class="mt-4 mb-3 text-uppercase">Sell</h4>
+                <p class="text-muted-theme small">Customers browse your collection and buy your products instantly.</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="process-step">
+                <span class="step-number">04</span>
+                <h4 class="mt-4 mb-3 text-uppercase">Get Paid</h4>
+                <p class="text-muted-theme small">Receive direct payments safely and on time to your bank account.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PRICING PLANS -->
+<div class="container section-padding pt-0" id="plans">
+    <div class="text-center mb-5">
+        <h2 class="text-uppercase" style="font-family: var(--font-heading); font-size: 3rem; letter-spacing: 2px;">Choose Your Plan</h2>
+        <p class="text-muted-theme mt-2">Simple pricing. No hidden fees.</p>
+    </div>
+    
+    <div class="row justify-content-center">
+        <!-- Standard Plan -->
+        <div class="col-12 col-md-6 col-lg-5">
+            <div class="pricing-card highlight">
+                <div style="position: absolute; top:0; left:0; width:100%; background: var(--color-accent); color:black; font-weight:800; padding:0.6rem; font-size:0.9rem; letter-spacing: 1px;">RECOMMENDED</div>
+                <h3 class="mt-4 fw-bold text-uppercase">Standard Plan</h3>
+                <div class="price-tag">₹30<span class="price-period">per day</span></div>
+                <p class="text-muted-theme mb-4">Billed Monthly or Yearly</p>
+                
+                <hr style="border-color: var(--glass-border);">
+                
+                <ul class="check-list">
+                    <li><i class="fas fa-check"></i> Unlimited Product Listings</li>
+                    <li><i class="fas fa-check"></i> Dedicated Seller Page</li>
+                    <li><i class="fas fa-check"></i> 24/7 Priority Support</li>
+                    <li><i class="fas fa-check"></i> Advanced Analytics Dashboard</li>
+                    <li><i class="fas fa-check"></i> Verified Seller Badge</li>
+                </ul>
+                
+                <button onclick="document.getElementById('inquiry').scrollIntoView({behavior: 'smooth'})" class="btn-primary w-100 py-3" style="font-size: 1.1rem;">Subscribe Now</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- INQUIRY FORM -->
+<div class="container section-padding pt-0" id="inquiry">
+    <div class="vendor-form-container">
+        <div class="form-heading-wrapper">
+            <h2 class="text-uppercase mb-2" style="font-family: var(--font-heading); font-size: 2.5rem;">Vendor Application</h2>
+            <p class="text-muted-theme">Fill details to start your journey</p>
+        </div>
+        
+        <!-- We prevent default submission to show the popup solely for this static demo request -->
+        <form id="vendorForm" onsubmit="handleFormSubmit(event)">
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-12 col-md-6">
+                    <label class="tech-label">First Name</label>
+                    <input type="text" class="tech-input w-100" placeholder="ENTER FIRST NAME" required>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="tech-label">Last Name</label>
+                    <input type="text" class="tech-input w-100" placeholder="ENTER LAST NAME" required>
+                </div>
+                
+                <div class="col-12 col-md-6">
+                    <label class="tech-label">Phone Number</label>
+                    <input type="tel" class="tech-input w-100" placeholder="+1 (555) 000-0000" required>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="tech-label">Business Name</label>
+                    <input type="text" class="tech-input w-100" placeholder="YOUR STORE NAME" required>
+                </div>
+                
+                <div class="col-12">
+                    <label class="tech-label">Business Details</label>
+                    <textarea class="tech-input w-100" rows="12" placeholder="TELL US ABOUT YOUR INVENTORY AND GOALS..." required style="resize: none; overflow: hidden;"></textarea>
+                </div>
+                
+                <div class="col-12 text-center mt-4">
+                    <button type="submit" class="btn-primary w-100 py-3 fw-bold" style="font-size: 1.2rem;">SUBMIT APPLICATION</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- SUCCESS POPUP -->
+<div class="success-popup" id="successPopup">
+    <div class="popup-content">
+        <i class="fas fa-check-circle mb-4" style="font-size: 4rem; color: var(--color-accent);"></i>
+        <h3 class="mb-3 text-uppercase" style="font-family: var(--font-heading); color: white; font-size: 2rem;">Application Sent!</h3>
+        <p class="text-muted-theme mb-4" style="font-size: 1.1rem;">We have received your details. Our team will contact you shortly to finalize your onboarding.</p>
+        <button class="btn-primary w-100" onclick="closePopup()">BACK TO HOME</button>
+    </div>
+</div>
+
+<script>
+    function handleFormSubmit(e) {
+        e.preventDefault(); // Stop actual submission
+        // Show popup
+        const popup = document.getElementById('successPopup');
+        popup.classList.add('active'); // Use class for opacity transition
+    }
+    
+    function closePopup() {
+        // Redirect to home
+        window.location.href = "{% url 'home' %}";
+    }
+</script>
+
+{% endblock %}

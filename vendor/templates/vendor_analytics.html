@@ -1,0 +1,227 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Analytics | Vendor Panel{% endblock %}
+
+{% block header_title %}Analytics Dashboard{% endblock %}
+{% block breadcrumb %}Analytics{% endblock %}
+
+{% block vendor_content %}
+<!-- Analytics Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size: 12px;">Total Sales</h6>
+                    <div class="icon-circle bg-soft-primary text-primary-custom">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1">{{ analytics.total_sales }}</h3>
+                <div class="text-success small fw-semibold">
+                    <i class="fas fa-arrow-up"></i> {{ analytics.sales_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size: 12px;">Total Orders</h6>
+                    <div class="icon-circle bg-soft-success text-success">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1">{{ analytics.total_orders }}</h3>
+                <div class="text-success small fw-semibold">
+                    <i class="fas fa-arrow-up"></i> {{ analytics.orders_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size: 12px;">Avg. Order Value</h6>
+                    <div class="icon-circle bg-soft-info text-info">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1">{{ analytics.avg_order_value }}</h3>
+                <div class="text-danger small fw-semibold">
+                    <i class="fas fa-arrow-down"></i> {{ analytics.aov_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size: 12px;">Products Sold</h6>
+                    <div class="icon-circle bg-soft-warning text-warning">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-1">{{ analytics.products_sold }}</h3>
+                <div class="text-success small fw-semibold">
+                    <i class="fas fa-arrow-up"></i> {{ analytics.products_sold_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section (Static Placeholders) -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <h5 class="card-title-custom">Sales Overview</h5>
+                <select class="form-select form-select-sm" style="width: auto; background-color: var(--bg-main); color: var(--text-main); border-color: var(--border-color);">
+                    <option>This Year</option>
+                    <option>Last Year</option>
+                </select>
+            </div>
+            <div class="card-body d-flex align-items-end justify-content-center" style="height: 300px;">
+                 <!-- Visual Placeholder for a Chart -->
+                 <div class="w-100 h-100 d-flex align-items-end justify-content-around px-3 pb-3">
+                    <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 40%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">Jan</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 55%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">Feb</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 70%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">Mar</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 60%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">Apr</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 85%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">May</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 75%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">Jun</small>
+                    </div>
+                     <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 90%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">Jul</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center w-100 mx-1">
+                        <div class="bg-primary rounded-top w-50" style="height: 65%; opacity: 0.8;"></div>
+                        <small class="mt-2 text-muted" style="font-size: 10px;">Aug</small>
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Top Products</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush custom-list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-main border-color py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded p-2 me-3">
+                                <i class="fas fa-shoe-prints text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Nike Air Max 90</h6>
+                                <small class="text-muted">Sneakers</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary fw-bold">$12,450</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-main border-color py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded p-2 me-3">
+                                <i class="fas fa-running text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Adidas UltraBoost</h6>
+                                <small class="text-muted">Running</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary fw-bold">$8,320</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-main border-color py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded p-2 me-3">
+                                <i class="fas fa-tshirt text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Puma Classic Tee</h6>
+                                <small class="text-muted">Apparel</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary fw-bold">$5,100</span>
+                    </li>
+                     <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-main border-color py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light rounded p-2 me-3">
+                                <i class="fas fa-socks text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Jordan Curw Socks</h6>
+                                <small class="text-muted">Accessories</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary fw-bold">$2,800</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Table -->
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">Recent Activity</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>New Order #ORD-1024 confirmed</td>
+                    <td>Today, 10:30 AM</td>
+                    <td><span class="badge-soft-success">Completed</span></td>
+                </tr>
+                <tr>
+                    <td>Shipment #TRK-9988 sent to courier</td>
+                    <td>Yesterday, 4:15 PM</td>
+                    <td><span class="badge-soft-primary">Shipped</span></td>
+                </tr>
+                 <tr>
+                    <td>Product "Nike Air Force 1" stock updated</td>
+                    <td>Oct 24, 2023</td>
+                    <td><span class="badge-soft-info">Updated</span></td>
+                </tr>
+                 <tr>
+                    <td>Order #ORD-1020 Cancelled by user</td>
+                    <td>Oct 22, 2023</td>
+                    <td><span class="badge-soft-danger">Cancelled</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Categories | Vendor Panel{% endblock %}
+
+{% block header_title %}Product Categories{% endblock %}
+{% block breadcrumb %}Categories{% endblock %}
+
+{% block vendor_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">All Categories</h5>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Category Name</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if categories %}
+                    {% for category in categories %}
+                    <tr>
+                        <td>
+                            {% if category.cat_image %}
+                                <img src="{{ category.cat_image.url }}" alt="{{ category.name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 10px;">
+                            {% else %}
+                                <div style="width: 50px; height: 50px; background: #eee; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-image text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td style="font-weight: 700;">{{ category.name }}</td>
+                        <td style="color: var(--text-secondary);">{{ category.description|truncatechars:100 }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4">
+                            <h6 class="text-muted">No categories found.</h6>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

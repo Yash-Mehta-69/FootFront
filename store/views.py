@@ -12,6 +12,8 @@ from django.conf import settings
 from .models import User, Customer, Category, Product, Color, Size
 from .decorators import redirect_special_users
 from django.db.models import Min, Q
+from .forms import ComplaintForm, UserUpdateForm, ShippingAddressForm
+from .models import User, Customer, Category, Product, Color, Size, ShippingAddress, Review
 
 
 
@@ -73,7 +75,7 @@ def initialize_firebase():
 def index(request):
     categories = Category.objects.filter(is_deleted=False)
     trending_products = Product.objects.filter(is_deleted=False, is_trending=True)[:8]
-    all_products = Product.objects.filter(is_deleted=False).order_by('?')[:12] # Random mix for "All Products"
+    all_products = Product.objects.filter(is_deleted=False).order_by('-created_at')[:12] # Optimized sort
     context = {
         'categories': categories,
         'trending_products': trending_products,
@@ -183,12 +185,155 @@ def forgot_password_view(request):
 @login_required(login_url='login')
 @redirect_special_users
 def profile_view(request):
-    return render(request, 'profile.html')
+    try:
+        customer = request.user.customer_profile
+    except Customer.DoesNotExist:
+        messages.error(request, "Customer profile not found.")
+        return redirect('home')
+
+    user_form = UserUpdateForm(instance=request.user, initial={'phone': customer.phone})
+
+    context = {
+        'user_form': user_form,
+    }
+    return render(request, 'profile.html', context)
+
+
+
+@login_required(login_url='login')
+def profile_settings(request):
+    try:
+        customer = request.user.customer_profile
+    except Customer.DoesNotExist:
+        messages.error(request, "Customer profile not found.")
+        return redirect('home')
+
+    if request.method == 'POST':
+        form = UserUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            user = form.save()
+            # Update phone in Customer model
+            new_phone = form.cleaned_data.get('phone')
+            if new_phone:
+                customer.phone = new_phone
+                customer.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect('profile_settings')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = UserUpdateForm(instance=request.user, initial={'phone': customer.phone})
+
+    context = {
+        'user_form': form,
+    }
+    return render(request, 'profile_settings.html', context)
+
+@login_required(login_url='login')
+def address_list(request):
+    try:
+        customer = request.user.customer_profile
+    except Customer.DoesNotExist:
+         messages.error(request, "Customer profile not found.")
+         return redirect('home')
+         
+    addresses = ShippingAddress.objects.filter(customer=customer, is_deleted=False)
+    return render(request, 'address_list.html', {'addresses': addresses})
+
+@login_required(login_url='login')
+def address_add(request):
+    try:
+        customer = request.user.customer_profile
+    except Customer.DoesNotExist:
+         return redirect('home')
+
+    if request.method == 'POST':
+        form = ShippingAddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.customer = customer
+            address.save()
+            messages.success(request, "Address added successfully.")
+            return redirect('address_list')
+    else:
+        form = ShippingAddressForm()
+    
+    return render(request, 'address_form.html', {'form': form})
+
+@login_required(login_url='login')
+def address_edit(request, address_id):
+    try:
+        customer = request.user.customer_profile
+        address = ShippingAddress.objects.get(id=address_id, customer=customer, is_deleted=False)
+    except (Customer.DoesNotExist, ShippingAddress.DoesNotExist):
+        return redirect('address_list')
+
+    if request.method == 'POST':
+        form = ShippingAddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Address updated successfully.")
+            return redirect('address_list')
+    else:
+        form = ShippingAddressForm(instance=address)
+    
+    return render(request, 'address_form.html', {'form': form})
+
+@login_required(login_url='login')
+def address_delete(request, address_id):
+    try:
+        customer = request.user.customer_profile
+        address = ShippingAddress.objects.get(id=address_id, customer=customer, is_deleted=False)
+        address.is_deleted = True # Soft delete
+        address.save()
+        messages.success(request, "Address deleted successfully.")
+    except (Customer.DoesNotExist, ShippingAddress.DoesNotExist):
+        pass
+    return redirect('address_list')
+
+from cart.models import Order, OrderItem
+
+@login_required(login_url='login')
+def order_list(request):
+    try:
+        customer = request.user.customer_profile
+    except Customer.DoesNotExist:
+         return redirect('home')
+         
+    orders = Order.objects.filter(customer=customer, is_deleted=False).order_by('-order_date')
+    return render(request, 'order_list.html', {'orders': orders})
+
+@login_required(login_url='login')
+def order_detail(request, order_id):
+    # Handle Demo IDs for the popup
+    if str(order_id) in ["001234", "001235", "1234", "1235", "123", "000123"]:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # For demo, we just pass the ID, the template handles static demo content
+            return render(request, 'includes/order_detail_partial.html', {
+                'order': {'id': str(order_id).zfill(6), 'total_amount': '438.50'}
+            })
+        return redirect('order_list')
+
+    try:
+        customer = request.user.customer_profile
+        order = Order.objects.get(id=order_id, customer=customer, is_deleted=False)
+        items = order.items.filter(is_deleted=False)
+    except (Customer.DoesNotExist, Order.DoesNotExist):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Order not found'}, status=404)
+        return redirect('order_list')
+        
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'includes/order_detail_partial.html', {'order': order, 'items': items})
+        
+    return render(request, 'order_detail.html', {'order': order, 'items': items})
+
+
 
 from django.db.models import Min, Q
 
 def shop(request):
-    products = Product.objects.filter(is_deleted=False)
+    products = Product.objects.filter(is_deleted=False).select_related('category')
     categories = Category.objects.filter(is_deleted=False)
     colors = Color.objects.all()
     sizes = Size.objects.all()
@@ -245,7 +390,7 @@ def shop(request):
 
     # --- Pagination ---
     from django.core.paginator import Paginator
-    paginator = Paginator(products, 1) # 1 product per page as requested
+    paginator = Paginator(products, 10) # 1 product per page as requested
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -258,16 +403,153 @@ def shop(request):
     }
     return render(request, 'shop.html', context)
 
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('profile_settings')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+        # Add styles to form fields
+        for field in form.fields:
+            form.fields[field].widget.attrs.update({
+                'class': 'form-control',
+                'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);' 
+            })
+            
+    return render(request, 'change_password.html', {'form': form})
+
+@login_required(login_url='login')
+def my_reviews(request):
+    # Fetch real reviews if any
+    try:
+        customer = request.user.customer_profile
+        reviews = Review.objects.filter(customer=customer, is_deleted=False).order_by('-created_at')
+    except:
+        reviews = []
+        
+    return render(request, 'my_reviews.html', {'reviews': reviews})
+
 def product_detail(request):
     product_id = request.GET.get('id')
     product = None
     if product_id:
         try:
             product = Product.objects.annotate(price=Min('productvariant__price')).get(id=product_id, is_deleted=False)
+            
+            # Fetch variants
+            variants = product.productvariant_set.filter(is_deleted=False)
+            
+            # Get unique colors and sizes available for this product
+            colors = sorted(list(set(v.color for v in variants)), key=lambda c: c.name)
+            sizes = sorted(list(set(v.size for v in variants)), key=lambda s: s.size_label)
+            
         except Product.DoesNotExist:
             return redirect('shop')
             
     context = {
         'product': product,
+        'variants': variants,
+        'available_colors': colors,
+        'available_sizes': sizes,
     }
     return render(request, 'product_detail.html', context)
+
+def complaint_view(request):
+    # Dummy Company Details
+    company_details = {
+        'address': '123 Tech Avenue, Innovation City, CA 90210',
+        'email': 'support@footfront.com',
+        'phone': '+1 (555) 019-2834',
+        'hours': 'Mon - Fri, 9am - 6pm PST'
+    }
+
+    # Dummy FAQs
+    faqs = [
+        {
+            'question': 'How do I track my order?',
+            'answer': 'You can track your order by logging into your account and visiting the "Orders" section. You will also receive an email with a tracking link once your order ships.'
+        },
+        {
+            'question': 'What is your return policy?',
+            'answer': 'We offer a 30-day return policy for unmatched items. Shoes must be unworn and in original packaging. Visit our Returns page to start a return.'
+        },
+        {
+            'question': 'Do you ship internationally?',
+            'answer': 'Yes! We ship to over 50 countries worldwide. Shipping rates and times vary by location and are calculated at checkout.'
+        },
+        {
+            'question': 'Are the sneakers authentic?',
+            'answer': 'Absolutely. Every pair on FootFront is verified by our expert team of authenticators before being shipped to you.'
+        },
+         {
+            'question': 'How can I change my shipping address?',
+            'answer': 'If your order hasn\'t shipped yet, please contact support immediately. Once shipped, we cannot change the destination.'
+        }
+    ]
+
+    form = ComplaintForm()
+
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+             messages.error(request, "You must be logged in to submit a complaint.")
+             return redirect('login')
+             
+        # Check if user has a customer profile
+        try:
+            customer = request.user.customer_profile
+        except Customer.DoesNotExist:
+             messages.error(request, "Customer profile not found.")
+             return redirect('home')
+
+        form = ComplaintForm(request.POST)
+        if form.is_valid():
+            complaint = form.save(commit=False)
+            complaint.customer = customer
+            complaint.save()
+            messages.success(request, "Your ticket has been submitted successfully! We will contact you shortly.")
+            return redirect('help')
+        else:
+            messages.error(request, "Please correct the errors below.")
+
+    context = {
+        'company_details': company_details,
+        'faqs': faqs,
+        'form': form
+    }
+    return render(request, 'complaint.html', context)
+
+
+
+def terms_view(request):
+    return render(request, 'terms.html')
+
+def privacy_view(request):
+    return render(request, 'privacy.html')
+
+def contact_view(request):
+    if request.method == 'POST':
+        messages.success(request, "Thanks for reaching out! We'll get back to you shortly.")
+        return redirect('contact')
+    return render(request, 'contact.html')
+
+def cookie_policy_view(request):
+    return render(request, 'cookie_policy.html')
+
+
+def become_vendor(request):
+    return render(request, 'become_vendor.html')
+
+def vendor_shop(request):
+    return render(request, 'vendor_shop.html')
+
+

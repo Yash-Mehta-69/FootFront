@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Legal Page Styles - Borrowing from Help Page for consistency */
+    .legal-header {
+        text-align: center;
+        padding: 8rem 1rem 4rem;
+        /* background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--color-bg) 100%); */
+        position: relative;
+    }
+
+    .legal-title {
+        font-family: var(--font-heading);
+        font-size: clamp(3rem, 8vw, 6rem);
+        text-transform: uppercase;
+        color: transparent;
+        -webkit-text-stroke: 1px var(--color-text);
+        margin-bottom: 2rem;
+        letter-spacing: 2px;
+    }
+
+    .legal-container {
+        max-width: 900px;
+        margin: 0 auto 6rem;
+        padding: 0 1.5rem;
+    }
+
+    .legal-card {
+        background: var(--glass-bg, rgba(255, 255, 255, 0.03));
+        border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 24px;
+        padding: 4rem;
+        box-shadow: var(--shadow-lg, 0 20px 50px rgba(0,0,0,0.1));
+    }
+
+    .legal-content h2 {
+        font-family: var(--font-heading);
+        color: var(--color-text);
+        font-size: 2rem;
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        border-left: 4px solid var(--color-accent);
+        padding-left: 1rem;
+    }
+
+    .legal-content h2:first-child {
+        margin-top: 0;
+    }
+
+    .legal-content p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--color-text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    .legal-content ul {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 2rem;
+    }
+
+    .legal-content li {
+        font-size: 1.1rem;
+        color: var(--color-text-muted);
+        margin-bottom: 0.8rem;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .legal-content li::before {
+        content: '▹';
+        color: var(--color-accent);
+        position: absolute;
+        left: 0;
+    }
+    
+    .last-updated {
+        text-align: center;
+        color: var(--color-text-muted);
+        font-family: 'Courier New', monospace;
+        margin-top: 4rem;
+        font-size: 0.9rem;
+        opacity: 0.7;
+    }
+
+    @media (max-width: 768px) {
+        .legal-card {
+            padding: 2rem;
+        }
+        .legal-title {
+            font-size: 3rem;
+        }
+    }
+</style>
+
+<div class="legal-header">
+    <h1 class="legal-title">Terms of Service</h1>
+</div>
+
+<div class="legal-container">
+    <div class="legal-card">
+        <div class="legal-content">
+            <h2>1. Introduction</h2>
+            <p>Welcome to FootFront. By accessing our website, you agree to these Terms of Service. These terms apply to all visitors, users, and others who access or use the Service.</p>
+
+            <h2>2. Purchases</h2>
+            <p>If you wish to purchase any product or service made available through the Service ("Purchase"), you may be asked to supply certain information relevant to your Purchase including, without limitation, your credit card number, the expiration date of your credit card, and your billing address.</p>
+
+            <h2>3. Accounts</h2>
+            <p>When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.</p>
+            <ul>
+                <li>You are responsible for safeguarding the password that you use to access the Service.</li>
+                <li>You agree not to disclose your password to any third party.</li>
+                <li>You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.</li>
+            </ul>
+
+            <h2>4. Intellectual Property</h2>
+            <p>The Service and its original content, features, and functionality are and will remain the exclusive property of FootFront and its licensors. The Service is protected by copyright, trademark, and other laws of both the United States and foreign countries.</p>
+
+            <h2>5. Termination</h2>
+            <p>We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+            
+            <p class="last-updated">LAST UPDATED: JANUARY 12, 2026</p>
+        </div>
+    </div>
+</div>
+
+<div style="height: 5rem;"></div> <!-- Footer Spacing -->
+
+{% endblock %}

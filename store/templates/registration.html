@@ -45,7 +45,7 @@
         <div class="text-center mb-4">
             <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 10vw, 3rem); margin: 0; line-height: 1;">JOIN SQUAD</h2>
             <div style="width: 50px; height: 3px; background: var(--color-accent); margin: 0.5rem auto;"></div>
-            <p style="color: #888; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Create Signal ID</p>
+            <p class="text-muted-theme" style="font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Create Signal ID</p>
         </div>
         
         <form id="registerForm" novalidate onsubmit="startRegAnimation(event)">
@@ -80,7 +80,7 @@
         <div id="register-message" style="color: var(--color-secondary); text-align: center; margin-top: 1rem; font-family: monospace; word-break: break-word; overflow-wrap: break-word; width: 100%;"></div>
 
         <div class="mt-4 text-center">
-            <p class="mb-2" style="font-size: 0.9rem; color: #666;">ALREADY CONNECTED?</p>
+            <p class="mb-2 text-muted-theme" style="font-size: 0.9rem;">ALREADY CONNECTED?</p>
             <a href="{% url 'login' %}" style="color: var(--color-accent); text-transform: uppercase; font-weight: bold; font-size: 0.9rem;">LOGIN TERMINAL ></a>
         </div>
     </div>

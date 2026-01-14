@@ -52,7 +52,7 @@
 .mobile-menu-btn span {
     width: 100%;
     height: 2px;
-    background: white;
+    background: var(--btn-text);
     transition: all 0.3s ease;
 }
 
@@ -74,7 +74,7 @@
     left: 0;
     width: 100%;
     height: 100vh;
-    background: rgba(10, 10, 10, 0.98); /* Less transparent for cleaner look */
+    background: var(--nav-bg-scrolled);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     z-index: 999;
@@ -111,7 +111,7 @@
 .mobile-search-form input {
     background: transparent;
     border: none;
-    color: white;
+    color: var(--input-text);
     flex: 1;
     font-family: var(--font-heading);
     font-size: 1.2rem;
@@ -160,7 +160,7 @@
 .mobile-nav-links a {
     font-family: var(--font-heading);
     font-size: 2.5rem;
-    color: white;
+    color: var(--color-text);
     text-transform: uppercase;
     font-weight: 700;
     transition: all 0.3s ease;

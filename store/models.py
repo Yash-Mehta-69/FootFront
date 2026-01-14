@@ -171,9 +171,10 @@ class Review(SoftDeleteModel):
     
 class Complaint(SoftDeleteModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+    subject = models.CharField(max_length=200)
     complaint_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Complaint by {self.customer.user.email} on {self.product.name}"
+        return f"Complaint: {self.subject} by {self.customer.user.email}"

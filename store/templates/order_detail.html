@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .order-detail-container {
+        padding-top: 150px;
+        padding-bottom: 150px;
+        min-height: 100vh;
+    }
+
+    .detail-header {
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--color-accent);
+        padding-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .order-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .meta-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.3);
+        padding: 1.5rem;
+    }
+
+    .meta-label {
+        font-family: var(--font-heading);
+        font-size: 0.8rem;
+        color: var(--color-accent);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+    }
+
+    .items-table th {
+        text-align: left;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(128,128,128,0.3);
+        font-family: var(--font-heading);
+        font-size: 0.9rem;
+    }
+
+    .items-table td {
+        padding: 1.5rem 1rem;
+        border-bottom: 1px solid rgba(128,128,128,0.1);
+        vertical-align: middle;
+    }
+
+    .product-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .product-thumb {
+        width: 60px;
+        height: 60px;
+        background: #f0f0f0;
+        object-fit: cover;
+    }
+    
+    .back-btn {
+        color: var(--text-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .back-btn:hover {
+        color: var(--color-accent);
+    }
+    
+    .summary-box {
+        background: rgba(255,255,255,0.05);
+        padding: 2rem;
+        border: 1px solid rgba(128,128,128,0.3);
+        max-width: 400px;
+        margin-left: auto;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-family: monospace;
+    }
+    
+    .summary-total {
+        border-top: 1px solid rgba(255,255,255,0.2);
+        padding-top: 1rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+        .items-table thead { display: none; }
+        .items-table tr { 
+            display: flex; 
+            flex-direction: column; 
+            border-bottom: 1px solid rgba(128,128,128,0.3);
+            padding: 1rem 0;
+        }
+        .items-table td { border: none; padding: 0.5rem 0; }
+        
+        .product-info {
+             flex-direction: row; /* Keep thumb and text side by side */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-container container">
+    <a href="{% url 'order_list' %}" class="back-btn mb-4">
+        <i class="fas fa-arrow-left"></i> BACK TO ORDERS
+    </a>
+
+    <div class="detail-header">
+        <div>
+            <span class="text-accent" style="letter-spacing: 2px; font-size: 0.9rem;">// SYSTEM.ORDER_DETAIL</span>
+            <h1 style="font-family: var(--font-heading); margin: 0;">
+                ORDER #{{ order.id|stringformat:"06d" }}
+            </h1>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 0.9rem; color: #888;">Placed on</div>
+            <div style="font-family: monospace;">{{ order.order_date|date:"F d, Y" }}</div>
+        </div>
+    </div>
+
+    <div class="order-meta-grid">
+        <div class="meta-card">
+            <span class="meta-label">SHIPPING ADDRESS</span>
+            {% if order.shipping_address %}
+                <div>{{ order.shipping_address.address_line1 }}</div>
+                {% if order.shipping_address.address_line2 %}<div>{{ order.shipping_address.address_line2 }}</div>{% endif %}
+                <div>{{ order.shipping_address.city }}, {{ order.shipping_address.state }}</div>
+                <div>{{ order.shipping_address.postal_code }}</div>
+            {% else %}
+                <div style="color: grey;">N/A</div>
+            {% endif %}
+        </div>
+        
+        <div class="meta-card">
+            <span class="meta-label">PAYMENT METHOD</span>
+            <div>
+                 {% if order.payment %}
+                    {{ order.payment.payment_method|upper }}
+                 {% else %}
+                    CREDIT CARD (Pending)
+                 {% endif %}
+            </div>
+            <div style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">
+                Status: {{ order.payment.status|default:"Pending"|upper }}
+            </div>
+        </div>
+        
+        <div class="meta-card">
+            <span class="meta-label">ORDER STATUS</span>
+            <div style="font-size: 1.2rem; color: var(--color-accent);">
+                PROCESSING
+                <!-- Ideally check shipments -->
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel p-0 mb-5" style="overflow: hidden;">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>PRODUCT</th>
+                    <th>TRACKING</th> <!-- New Column -->
+                    <th>PRICE</th>
+                    <th>QUANTITY</th>
+                    <th style="text-align: right;">TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td style="width: 30%;">
+                            <div class="product-info">
+                                {% if item.product_variant.image %}
+                                    <img src="{{ item.product_variant.image.url }}" alt="" class="product-thumb">
+                                {% else %}
+                                    <div class="product-thumb" style="display: flex; align-items: center; justify-content: center; background: #333;">
+                                        <i class="fas fa-shoe-prints" style="color: #666;"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div style="font-weight: bold;">{{ item.product_variant.product.name }}</div>
+                                    <div style="font-size: 0.8rem; color: #888;">
+                                        Size: {{ item.product_variant.size }} | Color: {{ item.product_variant.color }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="width: 35%;">
+                            <!-- Tracking UI -->
+                            <div class="tracking-timeline" style="display: flex; align-items: center; justify-content: space-between; position: relative; font-size: 0.65rem; color: #888; font-family: monospace; letter-spacing: 1px;">
+                                <!-- Connecting Line -->
+                                <div style="position: absolute; top: 6px; left: 10px; right: 10px; height: 1px; background: rgba(128,128,128,0.3); z-index: 1;"></div>
+                                
+                                <!-- Steps -->
+                                <div style="position: relative; z-index: 2; text-align: center; width: 25%;">
+                                    <div style="width: 14px; height: 14px; background: var(--color-accent); border-radius: 50%; margin: 0 auto 8px; box-shadow: 0 0 10px var(--color-accent);"></div>
+                                    <span style="color: var(--color-accent);">ORDERED</span>
+                                </div>
+                                <div style="position: relative; z-index: 2; text-align: center; width: 25%;">
+                                    <div style="width: 14px; height: 14px; background: var(--color-accent); border-radius: 50%; margin: 0 auto 8px; box-shadow: 0 0 10px var(--color-accent);"></div>
+                                    <span style="color: var(--color-accent);">PROCESSED</span>
+                                </div>
+                                <div style="position: relative; z-index: 2; text-align: center; width: 25%;">
+                                    <div style="width: 14px; height: 14px; background: #333; border: 1px solid #555; border-radius: 50%; margin: 0 auto 8px;"></div>
+                                    <span>SHIPPED</span>
+                                </div>
+                                <div style="position: relative; z-index: 2; text-align: center; width: 25%;">
+                                    <div style="width: 14px; height: 14px; background: #333; border: 1px solid #555; border-radius: 50%; margin: 0 auto 8px;"></div>
+                                    <span>DELIVERED</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-accent);">
+                                Carrier: FedEx | #TRK8829302
+                            </div>
+                        </td>
+                        <td style="font-family: monospace;">${{ item.price }}</td>
+                        <td style="font-family: monospace;">{{ item.quantity }}</td>
+                        <td style="font-family: monospace; text-align: right; font-weight: bold;">
+                             ${% widthratio item.price 1 item.quantity %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <!-- Static Demo Data -->
+                    <tr>
+                        <td style="width: 30%;">
+                            <div class="product-info">
+                                <div class="product-thumb" style="display: flex; align-items: center; justify-content: center; background: #333;">
+                                    <i class="fas fa-shoe-prints" style="color: #666;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: bold;">Nike Air Max (DEMO)</div>
+                                    <div style="font-size: 0.8rem; color: #888;">
+                                        Size: 10 | Color: Red
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                         <td style="width: 35%;">
+                            <div class="tracking-timeline" style="display: flex; align-items: center; justify-content: space-between; position: relative; font-size: 0.7rem; color: #888;">
+                                <div style="position: absolute; top: 5px; left: 0; right: 0; height: 2px; background: rgba(128,128,128,0.3); z-index: 1;"></div>
+                                <div style="position: relative; z-index: 2; text-align: center;">
+                                    <div style="width: 12px; height: 12px; background: var(--color-accent); border-radius: 50%; margin: 0 auto; margin-bottom: 5px;"></div>
+                                    <span style="color: var(--color-accent);">Ordered</span>
+                                </div>
+                                <div style="position: relative; z-index: 2; text-align: center;">
+                                    <div style="width: 12px; height: 12px; background: var(--color-accent); border-radius: 50%; margin: 0 auto; margin-bottom: 5px;"></div>
+                                    <span style="color: var(--color-accent);">Shipped</span>
+                                </div>
+                                <div style="position: relative; z-index: 2; text-align: center;">
+                                    <div style="width: 12px; height: 12px; background: var(--color-accent); border-radius: 50%; margin: 0 auto; margin-bottom: 5px;"></div>
+                                    <span style="color: var(--color-accent);">Delivering</span>
+                                </div>
+                                <div style="position: relative; z-index: 2; text-align: center;">
+                                    <div style="width: 12px; height: 12px; background: #555; border-radius: 50%; margin: 0 auto; margin-bottom: 5px;"></div>
+                                    <span>Delivered</span>
+                                </div>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--color-accent);">
+                                Carrier: UPS | #1Z999EA10293
+                            </div>
+                        </td>
+                        <td style="font-family: monospace;">$149.00</td>
+                        <td style="font-family: monospace;">1</td>
+                        <td style="font-family: monospace; text-align: right; font-weight: bold;">
+                             $149.00
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="summary-box">
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span>${{ order.total_amount }}</span>
+        </div>
+        <div class="summary-row">
+            <span>Shipping</span>
+            <span>$0.00</span>
+        </div>
+        <div class="summary-row">
+            <span>Tax</span>
+            <span>$0.00</span>
+        </div>
+        <div class="summary-row summary-total">
+            <span>TOTAL</span>
+            <span style="color: var(--color-accent);">${{ order.total_amount }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

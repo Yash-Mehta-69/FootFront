@@ -20,6 +20,19 @@
         position: sticky;
         top: 100px;
         display: none; /* Mobile first hidden, or adjust for desktop */
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .filter-sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .filter-sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .filter-sidebar::-webkit-scrollbar-thumb {
+        background: var(--color-accent);
+        border-radius: 10px;
     }
 
     @media (min-width: 992px) {
@@ -31,8 +44,8 @@
     .filter-title {
         font-family: var(--font-heading);
         font-size: 1.5rem;
-        margin-bottom: 1rem;
-        color: var(--color-accent);
+        margin-bottom: 2rem;
+        color: var(--sidebar-heading);
     }
 
     .filter-list {
@@ -98,7 +111,7 @@
     .search-box input {
         background: transparent;
         border: 1px solid var(--color-gray);
-        color: white;
+        color: var(--color-text);
         padding: 0.8rem 1.5rem;
         border-radius: 50px;
         width: 300px;
@@ -245,9 +258,9 @@
     <div id="filterBackdrop" class="filter-backdrop" onclick="toggleFilterSidebar()"></div>
 
     <!-- Filter Sidebar (Glass) -->
-    <aside class="glass-sidebar filter-sidebar" id="filterSidebar">
+    <aside class="glass-sidebar filter-sidebar" id="filterSidebar" data-lenis-prevent>
         <button class="filter-close-btn d-lg-none" onclick="toggleFilterSidebar()"><i class="fas fa-times"></i></button>
-        <h3 class="filter-title text-accent mb-5" style="font-family: var(--font-heading); letter-spacing: 1px;">FILTERS</h3>
+        <h3 class="filter-title mb-5" style="font-family: var(--font-heading); letter-spacing: 1px;">FILTERS</h3>
         
         <form id="filterForm" action="{% url 'shop' %}" method="GET">
             {% if request.GET.q %}<input type="hidden" name="q" value="{{ request.GET.q }}">{% endif %}
@@ -256,7 +269,7 @@
             <!-- Category Filter -->
             <div class="filter-section">
                 <div class="filter-header">
-                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Categories</h5>
+                    <h5 class="text-uppercase mb-0" style="font-size: 0.9rem; color: var(--color-text);">Categories</h5>
                     <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                 </div>
                 <div class="filter-content">
@@ -283,7 +296,7 @@
             <!-- Gender Filter -->
             <div class="filter-section">
                 <div class="filter-header">
-                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Gender</h5>
+                    <h5 class="text-uppercase mb-0" style="font-size: 0.9rem; color: var(--color-text);">Gender</h5>
                     <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                 </div>
                 <div class="filter-content">
@@ -310,14 +323,14 @@
             <!-- Price Filter (Dual Slider) -->
             <div class="filter-section">
                 <div class="filter-header">
-                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Price Range</h5>
+                    <h5 class="text-uppercase mb-0" style="font-size: 0.9rem; color: var(--color-text);">Price Range</h5>
                     <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                 </div>
                 <div class="filter-content">
                     <!-- Number Inputs (Synced) -->
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <input type="number" id="minPriceInput" name="min_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.min_price|default:'0' }}" min="0" max="1000">
-                        <span class="text-white" style="font-size: 0.8rem;">-</span>
+                        <span style="font-size: 0.8rem; color: var(--color-text);">-</span>
                         <input type="number" id="maxPriceInput" name="max_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.max_price|default:'1000' }}" min="0" max="1000">
                     </div>
 
@@ -334,7 +347,7 @@
             <!-- Color Filter -->
             <div class="filter-section">
                 <div class="filter-header">
-                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Color</h5>
+                    <h5 class="text-uppercase mb-0" style="font-size: 0.9rem; color: var(--color-text);">Color</h5>
                     <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                 </div>
                 <div class="filter-content">
@@ -352,7 +365,7 @@
             <!-- Size Filter -->
             <div class="filter-section">
                 <div class="filter-header">
-                    <h5 class="text-white text-uppercase mb-0" style="font-size: 0.9rem;">Size</h5>
+                    <h5 class="text-uppercase mb-0" style="font-size: 0.9rem; color: var(--color-text);">Size</h5>
                     <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                 </div>
                 <div class="filter-content">
@@ -387,8 +400,8 @@
     <div class="shop-content">
         <div class="shop-header">
             <div>
-                <h1 class="shop-title glitch-text" style="margin: 0; text-transform: uppercase; color: white;">SHOP</h1>
-                <p style="color: #888; margin-top: 0.5rem;">EXPLORE THE COLLECTION</p>
+                <h1 class="shop-title glitch-text" style="margin: 0; text-transform: uppercase; color: var(--color-text);">SHOP</h1>
+                <p style="color: var(--color-text-muted); margin-top: 0.5rem;">EXPLORE THE COLLECTION</p>
             </div>
             
             <div class="tech-search-container d-flex" style="gap: 1rem;">
@@ -435,9 +448,9 @@
         align-items: center;
         width: 35px;
         height: 35px;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.1);
-        color: white;
+        background: var(--btn-bg);
+        border: 1px solid var(--btn-border);
+        color: var(--color-text);
         font-size: 0.8rem;
         transition: all 0.3s ease;
     }
@@ -475,9 +488,9 @@
             <div class="glass-card">
                 <div class="glass-card-image-wrapper">
                     {% if product.product_image %}
-                        <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}">
+                        <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}" loading="lazy">
                     {% else %}
-                        <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2670&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
+                        <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
                     {% endif %}
                     <div class="glass-badge">NEW</div>
                 </div>
@@ -497,7 +510,7 @@
                 </div>
             </div>
             {% empty %}
-            <div class="col-12" style="grid-column: 1 / -1; padding: 4rem; text-align: center; border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;">
+            <div class="empty-state-box col-12" style="grid-column: 1 / -1;">
                 <h3 style="color: #666;">NO RESULTS FOUND</h3>
                 <p style="color: #444;">Try adjusting your search filters.</p>
             </div>

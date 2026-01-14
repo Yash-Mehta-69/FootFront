@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        padding-top: 150px;
+        padding-bottom: 150px;
+        min-height: 100vh;
+    }
+
+    .settings-header {
+        margin-bottom: 3rem;
+        border-bottom: 2px solid var(--color-accent);
+        padding-bottom: 2rem;
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: 1fr 3fr;
+        gap: 3rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+        font-family: var(--font-heading);
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        background: rgba(255, 255, 255, 0.05); /* Light/Dark friendly glass */
+        border: 1px solid rgba(128, 128, 128, 0.3);
+        color: var(--text-color);
+        font-family: monospace;
+        transition: all 0.3s ease;
+    }
+    
+    /* Dark mode specific override if needed, but using vars is better */
+    [data-theme="dark"] .form-control {
+         background: rgba(0, 0, 0, 0.3);
+         border-color: #333;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
+    }
+
+    .save-btn {
+        background: var(--color-accent);
+        color: black;
+        border: none;
+        padding: 1rem 2rem;
+        font-family: var(--font-heading);
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-block;
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    }
+
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 900px) {
+        .settings-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .settings-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container container">
+    <div class="settings-header">
+        <div>
+            <span class="text-accent" style="letter-spacing: 2px; font-size: 0.9rem;">// SYSTEM.USER_SETTINGS</span>
+            <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: clamp(2rem, 8vw, 3rem); margin: 0;">
+                PROFILE SETTINGS
+            </h1>
+        </div>
+    </div>
+
+    <div class="settings-grid">
+        <!-- Sidebar Navigation (Reusable if componentized, else duplicated for now) -->
+        {% include 'includes/profile_sidebar.html' with active_page='settings' %}
+
+        <!-- Main Content -->
+        <main class="glass-panel">
+            <h3 class="text-accent mb-4" style="font-family: var(--font-heading); border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 1rem;">
+                EDIT PROFILE
+            </h3>
+
+            <form method="POST" action="{% url 'profile_settings' %}">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="form-label">FIRST NAME</label>
+                        {{ user_form.first_name }}
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="form-label">LAST NAME</label>
+                        {{ user_form.last_name }}
+                    </div>
+                </div>
+
+                <div class="row">
+                     <div class="col-md-6 form-group">
+                        <label class="form-label">PHONE NUMBER</label>
+                        {{ user_form.phone }}
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label class="form-label">EMAIL ADDRESS</label>
+                        <input type="email" class="form-control" value="{{ user.email }}" disabled style="opacity: 0.7; cursor: not-allowed;">
+                        <small style="color: grey; font-size: 0.7rem;">Email cannot be changed directly.</small>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="save-btn">
+                        SAVE CHANGES
+                    </button>
+                    <a href="{% url 'change_password' %}" class="text-accent ms-4" style="text-decoration: underline; font-size: 0.9rem;">
+                        CHANGE PASSWORD >
+                    </a>
+                </div>
+            </form>
+        </main>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Shipments | Vendor Panel{% endblock %}
+
+{% block header_title %}Shipments{% endblock %}
+{% block breadcrumb %}Shipments{% endblock %}
+
+{% block vendor_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">All Shipments</h5>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Order Item</th>
+                    <th>Tracking Number</th>
+                    <th>Courier</th>
+                    <th>Status</th>
+                    <th>Shipped Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if shipments %}
+                    {% for shipment in shipments %}
+                    <tr>
+                        <td>
+                            <div>
+                                <span style="display: block; font-weight: 700;">{{ shipment.order_item.product_variant.product.name }}</span>
+                                <span style="font-size: 12px; color: var(--text-secondary);">Order #{{ shipment.order_item.order.pk }}</span>
+                            </div>
+                        </td>
+                        <td>{{ shipment.tracking_number }}</td>
+                        <td>{{ shipment.courier_name }}</td>
+                        <td>
+                            {% if shipment.status == 'delivered' %}
+                                <span class="status-badge status-active">
+                                    <i class="fas fa-check-circle"></i> Delivered
+                                </span>
+                            {% elif shipment.status == 'shipped' %}
+                                <span class="status-badge text-primary-custom">
+                                    <i class="fas fa-shipping-fast"></i> Shipped
+                                </span>
+                            {% elif shipment.status == 'pending' %}
+                                <span class="status-badge text-warning" style="color: #ffb547;">
+                                    <i class="fas fa-clock"></i> Pending
+                                </span>
+                            {% elif shipment.status == 'cancelled' %}
+                                <span class="status-badge status-inactive">
+                                    <i class="fas fa-times-circle"></i> Cancelled
+                                </span>
+                            {% elif shipment.status == 'returned' %}
+                                <span class="status-badge text-info">
+                                    <i class="fas fa-undo"></i> Returned
+                                </span>
+                            {% else %}
+                                <span class="status-badge text-muted">
+                                    {{ shipment.status|title }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
+                        <td>
+                            {% if shipment.expected_delivery %}
+                                {{ shipment.expected_delivery|date:"M d, Y" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#updateStatusModal{{ shipment.pk }}">
+                                Update
+                            </button>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="updateStatusModal{{ shipment.pk }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main);">
+                                        <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
+                                            <h5 class="modal-title">Update Status</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(var(--invert-value));"></button>
+                                        </div>
+                                        <form method="POST" action="{% url 'update_shipment_status' shipment.pk %}">
+                                            {% csrf_token %}
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">New Status</label>
+                                                    <select name="status" class="form-select form-select-custom">
+                                                        <option value="pending" {% if shipment.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                        <option value="shipped" {% if shipment.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                                        <option value="delivered" {% if shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                                        <option value="cancelled" {% if shipment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                        <option value="returned" {% if shipment.status == 'returned' %}selected{% endif %}>Returned</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-primary-custom">Save changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <h6 class="text-muted">No shipments found.</h6>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

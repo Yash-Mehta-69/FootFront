@@ -1,0 +1,571 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Page Specific Styles */
+    .help-header {
+        text-align: center;
+        padding: 8rem 1rem 4rem; /* Increased Padding */
+        /* background: linear-gradient(180deg, rgba(0,0,0,0) 0%, var(--color-bg) 100%); */
+        position: relative;
+    }
+
+    .help-title {
+        font-family: var(--font-heading);
+        font-size: clamp(3.5rem, 10vw, 7rem); /* Larger Title */
+        text-transform: uppercase;
+        color: transparent;
+        -webkit-text-stroke: 1px var(--color-text);
+        margin-bottom: 1.5rem;
+        letter-spacing: 2px;
+    }
+
+    .help-subtitle {
+        font-size: 1.2rem;
+        color: var(--color-text-muted);
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    /* Company Card */
+    .company-card {
+        background: var(--glass-bg, rgba(255, 255, 255, 0.03)); /* Theme variable aware */
+        border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 4rem 2rem; /* More spacing */
+        margin-bottom: 6rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Better responsiveness */
+        gap: 3rem;
+        align-items: center;
+        text-align: center; /* Center align on mobile naturally */
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column; /* Stack icon and text */
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .info-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--color-accent);
+        color: black;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }
+    
+    .info-item:hover .info-icon {
+        transform: scale(1.1);
+    }
+
+    .info-text h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        letter-spacing: 1px;
+    }
+
+    .info-text p {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--color-text);
+    }
+
+    /* FAQ Accordion */
+    .faq-section {
+        margin-bottom: 5rem;
+    }
+
+    .section-heading {
+        font-family: var(--font-heading);
+        font-size: clamp(2rem, 5vw, 3rem);
+        margin-bottom: 3rem;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--color-accent);
+        display: inline-block;
+        padding-bottom: 0.5rem;
+        color: var(--color-text);
+    }
+
+    .faq-item {
+        border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+        margin-bottom: 1.5rem;
+    }
+
+    .faq-question {
+        width: 100%;
+        max-width: 85%; /* Limit width to bring icon closer */
+        text-align: left;
+        background: none;
+        border: none;
+        padding: 1.5rem 0;
+        font-size: 1.4rem; /* Larger Text */
+        color: var(--color-text);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: color 0.3s ease;
+        outline: none; /* Remove focus outline */
+    }
+    
+    .faq-question:focus {
+        outline: none; /* Explicitly ensure no border on click */
+    }
+
+    .faq-question:hover {
+        color: var(--color-accent);
+    }
+
+    .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out;
+        padding-right: 2rem;
+    }
+
+    .faq-answer p {
+        padding-bottom: 2rem;
+        color: var(--color-text-muted);
+        line-height: 1.8; /* Better readability */
+        font-size: 1.1rem;
+    }
+
+    .faq-icon {
+        transition: transform 0.3s ease;
+        font-size: 1.2rem;
+    }
+
+    .faq-item.active .faq-icon {
+        transform: rotate(45deg);
+        color: var(--color-accent);
+    }
+    
+    .faq-item.active .faq-answer {
+         max-height: 300px; /* Increased buffer */
+    }
+
+    /* Complaint Form */
+    .form-container {
+        width: 100%;
+        background: var(--card-bg, rgba(255, 255, 255, 0.05)); /* Default to glass/theme var */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--color-border, rgba(0,0,0,0.1));
+        padding: 4rem;
+        border-radius: 24px;
+        box-shadow: var(--shadow-lg, 0 20px 50px rgba(0,0,0,0.1));
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Removed decorative line as requested */
+
+    .form-group {
+        margin-bottom: 2rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.8rem;
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 1.2rem;
+        border-radius: 12px;
+        font-family: var(--font-body);
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        /* improved theme variables */
+        background: var(--input-bg, #fff); 
+        color: var(--input-text, #000);
+        border: 1px solid var(--input-border, #ddd);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--color-accent) !important;
+        box-shadow: 0 0 15px rgba(204, 255, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .btn-submit-ticket {
+        background: var(--color-accent);
+        color: black;
+        width: 100%;
+        padding: 1.2rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+        cursor: pointer;
+        letter-spacing: 1px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        margin-top: 1rem;
+    }
+
+    .btn-submit-ticket:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(204, 255, 0, 0.4);
+        filter: brightness(1.1);
+    }
+
+    /* Mobile Responsive Tweaks */
+    @media (max-width: 992px) {
+        .help-header {
+            padding: 6rem 1rem 3rem;
+        }
+        
+        .company-card {
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .row {
+            display: flex;
+            flex-direction: column;
+            gap: 4rem; /* Spacing between FAQ and Form on mobile */
+        }
+        
+        .col-lg-7, .col-lg-5 {
+            width: 100%;
+            padding: 0;
+        }
+        
+        .form-container {
+            padding: 2rem;
+        }
+    }
+
+    /* Custom Dropdown Styles (Matched to Shop) */
+    .custom-dropdown {
+        position: relative;
+        width: 100%;
+        font-family: var(--font-body);
+    }
+
+    .dropdown-trigger {
+        width: 100%;
+        padding: 1.2rem;
+        background: var(--input-bg, #fff);
+        border: 1px solid var(--input-border, #ddd);
+        border-radius: 12px;
+        color: var(--color-text);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.3s ease;
+        user-select: none;
+    }
+
+    .dropdown-trigger:hover {
+        border-color: var(--color-accent);
+    }
+
+    .custom-dropdown.open .dropdown-trigger {
+        border-color: var(--color-accent);
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .dropdown-arrow {
+        width: 24px;
+        height: 24px;
+        fill: var(--color-text);
+        transition: transform 0.3s ease;
+    }
+
+    .custom-dropdown.open .dropdown-arrow {
+        transform: rotate(180deg);
+        fill: var(--color-accent);
+    }
+
+    .dropdown-options {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--card-bg-dark, #151515); /* Fallback */
+        background: var(--nav-bg-scrolled); /* Consistent with glass/dark theme */
+        border: 1px solid var(--color-accent);
+        border-top: none;
+        border-bottom-right-radius: 12px;
+        border-bottom-left-radius: 12px;
+        max-height: 0;
+        overflow: hidden;
+        z-index: 10;
+        opacity: 0;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .custom-dropdown.open .dropdown-options {
+        max-height: 300px;
+        opacity: 1;
+        overflow-y: auto;
+    }
+
+    .dropdown-option {
+        padding: 1rem 1.2rem;
+        color: var(--color-text);
+        cursor: pointer;
+        transition: background 0.2s ease;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .dropdown-option:last-child {
+        border-bottom: none;
+    }
+
+    .dropdown-option:hover {
+        background: rgba(var(--color-accent-rgb, 204, 255, 0), 0.2); /* Fallback logic needs valid CSS color or var */
+        background: var(--glass-hover-bg);
+        color: var(--color-accent);
+        padding-left: 1.5rem; /* Slide effect */
+    }
+    
+    .dropdown-option.selected {
+        color: var(--color-accent);
+        background: rgba(255,255,255,0.05);
+    }
+
+    /* Hide original select */
+    .form-group select {
+        display: none;
+    }
+</style>
+
+<div class="container" style="padding-bottom: 5rem;">
+    
+    <!-- Header -->
+    <header class="help-header">
+        <h1 class="help-title">Support Center</h1>
+        <p class="help-subtitle">Need assistance with your order or have a question? We're here to help.</p>
+    </header>
+
+    <!-- Content Row -->
+    
+    <!-- Company Details Card -->
+    <div class="company-card">
+        <div class="info-item">
+            <div class="info-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="info-text">
+                <h4>Address</h4>
+                <p>{{ company_details.address }}</p>
+            </div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-icon">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="info-text">
+                <h4>Email Us</h4>
+                <p>{{ company_details.email }}</p>
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-icon">
+                <i class="fas fa-phone"></i>
+            </div>
+            <div class="info-text">
+                <h4>Call Us</h4>
+                <p>{{ company_details.phone }}</p>
+            </div>
+        </div>
+        
+        <div class="info-item">
+            <div class="info-icon">
+                <i class="far fa-clock"></i>
+            </div>
+            <div class="info-text">
+                <h4>Working Hours</h4>
+                <p>{{ company_details.hours }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ and Form Grid -->
+    <div class="row">
+        
+        <!-- FAQ Section -->
+        <div class="col-lg-7">
+            <div class="faq-section">
+                <h2 class="section-heading">Frequently Asked Questions</h2>
+                
+                <div class="faq-accordion">
+                    {% for faq in faqs %}
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            {{ faq.question }}
+                            <i class="fas fa-plus faq-icon"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>{{ faq.answer }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="col-lg-5">
+            <div class="form-container">
+                <h2 class="section-heading" style="font-size: 2rem; margin-bottom: 2rem;">Submit a Ticket</h2>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; {% if message.tags == 'error' %}background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444;{% else %}background: rgba(0,255,0,0.1); color: #00cc00; border: 1px solid #00cc00;{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>Subject</label>
+                        {{ form.subject }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Related Product (Optional)</label>
+                        {{ form.product }}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Description</label>
+                        {{ form.complaint_text }}
+                    </div>
+                    
+                    <button type="submit" class="btn-submit-ticket">Submit Ticket</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    // FAQ Accordion Logic
+    document.querySelectorAll('.faq-question').forEach(button => {
+        button.addEventListener('click', () => {
+            const faqItem = button.parentElement;
+            const answer = faqItem.querySelector('.faq-answer');
+            const icon = button.querySelector('.faq-icon');
+
+            // Toggle current item
+            faqItem.classList.toggle('active');
+            
+            if (faqItem.classList.contains('active')) {
+                answer.style.maxHeight = answer.scrollHeight + "px";
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-times');
+            } else {
+                answer.style.maxHeight = null;
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-plus'); 
+            }
+        });
+    });
+
+    // Custom Dropdown Initialization
+    document.querySelectorAll('select').forEach(select => {
+        // Create Container
+        const wrapper = document.createElement('div');
+        wrapper.className = 'custom-dropdown';
+        
+        // Create Trigger
+        const trigger = document.createElement('div');
+        trigger.className = 'dropdown-trigger';
+        
+        // Get selected option text
+        const selectedOption = select.options[select.selectedIndex];
+        const selectedText = selectedOption ? selectedOption.text : 'Select Option';
+        
+        trigger.innerHTML = `
+            <span class="selected-text">${selectedText}</span>
+            <svg class="dropdown-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        `;
+        
+        // Create Options Container
+        const optionsList = document.createElement('div');
+        optionsList.className = 'dropdown-options';
+        
+        // Populate Options
+        Array.from(select.options).forEach(option => {
+            const optDiv = document.createElement('div');
+            optDiv.className = 'dropdown-option';
+            if (option.selected) optDiv.classList.add('selected');
+            optDiv.textContent = option.text;
+            optDiv.dataset.value = option.value;
+            
+            optDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Update Select
+                select.value = option.value;
+                // Trigger Change Event
+                select.dispatchEvent(new Event('change'));
+                
+                // Update UI
+                wrapper.querySelector('.selected-text').textContent = option.text;
+                wrapper.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('selected'));
+                optDiv.classList.add('selected');
+                
+                // Close
+                wrapper.classList.remove('open');
+            });
+            
+            optionsList.appendChild(optDiv);
+        });
+        
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(optionsList);
+        
+        // Insert after select
+        select.parentNode.insertBefore(wrapper, select.nextSibling);
+
+        // Toggle Logic
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Close other dropdowns
+            document.querySelectorAll('.custom-dropdown').forEach(d => {
+                if (d !== wrapper) d.classList.remove('open');
+            });
+            wrapper.classList.toggle('open');
+        });
+    });
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.custom-dropdown').forEach(d => d.classList.remove('open'));
+    });
+</script>
+{% endblock %}

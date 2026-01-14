@@ -23,17 +23,13 @@
     }
 
     /* Cart Rows as Glass Panels */
+    /* Cart Rows using Theme Class */
     .cart-row {
         display: flex;
         align-items: center;
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        /* properties handled by .glass-row-theme */
         padding: 1.5rem;
-        border-radius: 12px;
         margin-bottom: 1rem;
-        transition: border-color 0.3s ease;
     }
     
     .cart-row:hover {
@@ -57,7 +53,11 @@
         font-family: var(--font-heading);
         font-size: 1.5rem;
         margin-bottom: 0.5rem;
-        color: white;
+    .cart-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: var(--color-text);
     }
 
     .cart-meta {
@@ -109,51 +109,56 @@
 {% block content %}
 <div class="cart-container container">
     <div class="d-flex align-items-center mb-5">
-        <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: 4rem; color: white; margin: 0;">YOUR BAG</h1>
-        <span class="ms-4 text-muted" style="font-family: monospace;">// {{ items|length }} ITEMS DETECTED</span>
+        <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: 4rem; color: var(--color-text); margin: 0;">YOUR BAG</h1>
+        <span class="ms-4 text-muted-theme" style="font-family: monospace;">// {{ items|length }} ITEMS DETECTED</span>
     </div>
 
     <div class="cart-grid">
         <div class="cart-list">
-            {% for item in items %}
-            <div class="cart-row">
-                {% if item.product_variant.image %}
-                    <img src="{{ item.product_variant.image.url }}" class="cart-thumb" alt="Product">
-                {% else %}
-                     <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop" class="cart-thumb" alt="Shoe">
-                {% endif %}
-                
+            <!-- Mock Item 1 -->
+            <div class="cart-row glass-row-theme">
+                 <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop" class="cart-thumb" alt="Shoe">
                 <div class="cart-details">
-                    <h3 class="cart-title">{{ item.product_variant.product.name }}</h3>
+                    <h3 class="cart-title">Nike Air Max 270</h3>
                     <div class="cart-meta">
-                        SIZE: {{ item.product_variant.size }} <br> 
-                        COLOR: {{ item.product_variant.color }}
+                        SIZE: US 9 <br> 
+                        COLOR: Red
                     </div>
-                    <span class="cart-price">${{ item.product_variant.price }}</span>
+                    <span class="cart-price">$150.00</span>
                 </div>
-
                 <div class="text-end">
-                    <div class="mb-2 text-white">QTY: {{ item.quantity }}</div>
-                    <a href="{% url 'remove_from_cart' item.id %}" style="color: var(--color-secondary); font-size: 0.8rem; text-decoration: underline;">REMOVE</a>
+                    <div class="mb-2 text-theme">QTY: 1</div>
+                    <a href="#" style="color: var(--color-secondary); font-size: 0.8rem; text-decoration: underline;">REMOVE</a>
                 </div>
             </div>
-            {% empty %}
-            <div style="padding: 4rem; text-align: center; border: 1px dashed rgba(255,255,255,0.1);">
-                <h3 class="text-muted">BAG IS EMPTY</h3>
-                <a href="{% url 'shop' %}" class="btn-primary mt-3">INITIATE SHOPPING</a>
+
+            <!-- Mock Item 2 -->
+            <div class="cart-row glass-row-theme">
+                 <img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=1964&auto=format&fit=crop" class="cart-thumb" alt="Shoe">
+                <div class="cart-details">
+                    <h3 class="cart-title">Adidas Ultraboost</h3>
+                    <div class="cart-meta">
+                        SIZE: US 10 <br> 
+                        COLOR: Black
+                    </div>
+                    <span class="cart-price">$180.00</span>
+                </div>
+                <div class="text-end">
+                    <div class="mb-2 text-theme">QTY: 1</div>
+                    <a href="#" style="color: var(--color-secondary); font-size: 0.8rem; text-decoration: underline;">REMOVE</a>
+                </div>
             </div>
-            {% endfor %}
         </div>
 
         <div class="summary-card">
-            <h3 class="mb-4 text-white" style="font-family: var(--font-heading);">ORDER SUMMARY</h3>
+            <h3 class="mb-4 text-theme" style="font-family: var(--font-heading);">ORDER SUMMARY</h3>
             <div class="summary-row">
-                <span class="text-muted">SUBTOTAL</span>
-                <span class="text-white">${{ total }}</span>
+                <span class="text-muted-theme">SUBTOTAL</span>
+                <span class="text-theme">${{ total }}</span>
             </div>
             <div class="summary-row">
-                <span class="text-muted">SHIPPING</span>
-                <span class="text-white">CALCULATED NEXT</span>
+                <span class="text-muted-theme">SHIPPING</span>
+                <span class="text-theme">CALCULATED NEXT</span>
             </div>
             <div class="summary-total">
                 <span>TOTAL</span>

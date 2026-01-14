@@ -1,0 +1,28 @@
+<!-- store/templates/includes/profile_sidebar.html -->
+<aside class="glass-sidebar" id="profileSidebar" style="height: calc(100vh - 110px); padding: 1rem; position: sticky; top: 110px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;">
+    <style>
+        #profileSidebar .dashboard-menu-item {
+            padding: 0.7rem 1rem; /* Condensed padding */
+        }
+    </style>
+    <div class="sidebar-top">
+        <a href="{% url 'profile' %}" class="dashboard-menu-item {% if active_page == 'profile' %}active{% endif %}">Overview</a>
+        <a href="{% url 'cart_detail' %}" class="dashboard-menu-item">My Bag</a>
+        <a href="{% url 'wishlist_detail' %}" class="dashboard-menu-item">Wishlist</a>
+        <a href="{% url 'order_list' %}" class="dashboard-menu-item {% if active_page == 'orders' %}active{% endif %}">Orders</a>
+        <a href="{% url 'address_list' %}" class="dashboard-menu-item {% if active_page == 'addresses' %}active{% endif %}">Addresses</a>
+        <a href="{% url 'my_reviews' %}" class="dashboard-menu-item {% if active_page == 'reviews' %}active{% endif %}">Reviews</a>
+        <a href="{% url 'profile_settings' %}" class="dashboard-menu-item {% if active_page == 'settings' %}active{% endif %}">Settings</a>
+        
+        <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <span style="display: block; font-family: var(--font-heading); font-size: 0.65rem; color: var(--color-accent); letter-spacing: 1px; margin-bottom: 0.4rem; padding-left: 1rem;">// HELP & SUPPORT</span>
+            <a href="{% url 'contact' %}" class="dashboard-menu-item {% if active_page == 'contact' %}active{% endif %}">Contact Us</a>
+            <a href="{% url 'complaint' %}" class="dashboard-menu-item {% if active_page == 'complaint' %}active{% endif %}">Complain Center</a>
+        </div>
+    </div>
+
+    <div style="padding: 0.75rem 1rem; border-top: 1px dashed rgba(255,255,255,0.1); color: #555; font-size: 0.7rem; font-family: monospace;">
+        ID: {{ user.id|stringformat:"04d" }}<br>
+        LEVEL: GEN_Z_ELITE
+    </div>
+</aside>

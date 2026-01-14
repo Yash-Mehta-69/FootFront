@@ -20,32 +20,56 @@
     </div>
     
     <div class="glass-grid">
-        {% for item in items %}
+        <!-- Mock Item 1 -->
         <div class="glass-card">
             <div class="glass-card-image-wrapper">
-                 {% if item.product_variant.image %}
-                    <img src="{{ item.product_variant.image.url }}" class="glass-card-img" alt="Product">
-                {% else %}
-                     <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
-                {% endif %}
+                 <img src="https://images.unsplash.com/photo-1600185365926-3a6d3de3ddaf?q=80&w=1925&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
                 <div class="glass-badge">SAVED</div>
             </div>
             <div>
-                <a href="{% url 'product_detail' %}?id={{ item.product_variant.product.id }}">
-                    <h4 class="glass-card-title">{{ item.product_variant.product.name }}</h4>
+                <a href="#">
+                    <h4 class="glass-card-title">Nike Dunk Low Retro</h4>
                 </a>
                 <div class="glass-card-footer">
-                    <span class="glass-card-price">${{ item.product_variant.price }}</span>
-                    <!-- Could add remove action here -->
-                    <a href="{% url 'product_detail' %}?id={{ item.product_variant.product.id }}" class="glass-btn">VIEW</a>
+                    <span class="glass-card-price">$110.00</span>
+                    <a href="#" class="glass-btn">VIEW</a>
                 </div>
             </div>
         </div>
-        {% empty %}
-        <div style="grid-column: 1/-1; padding: 4rem; text-align: center; border: 1px dashed rgba(255,255,255,0.1);">
-            <h3 class="text-muted">NO SAVED ITEMS</h3>
+
+        <!-- Mock Item 2 -->
+        <div class="glass-card">
+            <div class="glass-card-image-wrapper">
+                 <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=2012&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
+                <div class="glass-badge">SAVED</div>
+            </div>
+            <div>
+                <a href="#">
+                    <h4 class="glass-card-title">Jordan 1 High OG</h4>
+                </a>
+                <div class="glass-card-footer">
+                    <span class="glass-card-price">$170.00</span>
+                    <a href="#" class="glass-btn">VIEW</a>
+                </div>
+            </div>
         </div>
-        {% endfor %}
+
+        <!-- Mock Item 3 -->
+        <div class="glass-card">
+            <div class="glass-card-image-wrapper">
+                 <img src="https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?q=80&w=2070&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
+                <div class="glass-badge">SAVED</div>
+            </div>
+            <div>
+                <a href="#">
+                    <h4 class="glass-card-title">Asics Gel-Kayano</h4>
+                </a>
+                <div class="glass-card-footer">
+                    <span class="glass-card-price">$160.00</span>
+                    <a href="#" class="glass-btn">VIEW</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

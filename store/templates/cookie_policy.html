@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Page Container */
+    .legal-wrapper {
+        position: relative;
+        min-height: 100vh;
+        padding-top: 8rem;
+        padding-bottom: 5rem;
+    }
+
+    /* Grid Background Effect */
+    .grid-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: var(--hero-overlay-grid);
+        background-size: 50px 50px;
+        opacity: 0.3;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .legal-container {
+        position: relative;
+        z-index: 1; /* Content above grid */
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .legal-card {
+        background: var(--glass-bg, rgba(255, 255, 255, 0.03));
+        border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.1));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 4rem;
+        border-radius: 20px;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .legal-title {
+        font-family: var(--font-heading);
+        font-size: clamp(3rem, 6vw, 5rem);
+        text-transform: uppercase;
+        margin-bottom: 3rem;
+        text-align: center;
+        color: transparent;
+        -webkit-text-stroke: 1px var(--color-text);
+        letter-spacing: 2px;
+    }
+
+    .legal-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.8rem;
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+        color: var(--color-accent);
+        text-transform: uppercase;
+        border-left: 3px solid var(--color-accent);
+        padding-left: 1rem;
+    }
+
+    .legal-content p {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: var(--color-text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    .legal-content ul {
+        list-style: none;
+        padding-left: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .legal-content li {
+        margin-bottom: 0.8rem;
+        color: var(--color-text);
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+    }
+
+    .legal-content li::before {
+        content: '>';
+        color: var(--color-accent);
+        font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+        .legal-card {
+            padding: 2rem;
+        }
+    }
+</style>
+
+<div class="legal-wrapper">
+    <!-- Global Grid Background -->
+    <div class="grid-bg"></div>
+
+    <div class="legal-container">
+        <div class="legal-card">
+            <h1 class="legal-title">Cookie Policy</h1>
+            
+            <div class="legal-content">
+                <p>Last updated: January 13, 2026</p>
+                
+                <p>This Cookie Policy explains how FootFront ("we", "us", and "our") uses cookies and similar technologies to recognize you when you visit our website.</p>
+    
+                <h2>1. What are Cookies?</h2>
+                <p>Cookies are small data files that are placed on your computer or mobile device when you visit a website. Cookies are widely used by website owners in order to make their websites work, or to work more efficiently, as well as to provide reporting information.</p>
+    
+                <h2>2. Why do we use Cookies?</h2>
+                <p>We use first-party and third-party cookies for several reasons:</p>
+                <ul>
+                    <li><strong>Essential Cookies:</strong> Required for technical reasons for our website to operate (e.g., login status, shopping cart).</li>
+                    <li><strong>Analytics Cookies:</strong> Help us understand how our website is being used and how effective our marketing campaigns are.</li>
+                    <li><strong>Functional Cookies:</strong> Enhance the performance and functionality of our website but are non-essential to their use.</li>
+                </ul>
+    
+                <h2>3. How can I control Cookies?</h2>
+                <p>You have the right to decide whether to accept or reject cookies. You can set or amend your web browser controls to accept or refuse cookies. If you choose to reject cookies, you may still use our website though your access to some functionality and areas of our website may be restricted.</p>
+    
+                <h2>4. Essential Cookies We Use</h2>
+                <ul>
+                    <li>Session ID cookies (for auth)</li>
+                    <li>Cart token cookies</li>
+                    <li>Theme preference cookies</li>
+                </ul>
+    
+                <h2>5. Updates to this Policy</h2>
+                <p>We may update this Cookie Policy from time to time in order to reflect, for example, changes to the cookies we use or for other operational, legal or regulatory reasons. Please therefore re-visit this Cookie Policy regularly to stay informed about our use of cookies and related technologies.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
