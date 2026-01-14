@@ -1,34 +1,312 @@
-
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh; padding-top: 100px;">
-    <div class="glass-panel text-center" style="max-width: 600px; padding: 4rem;">
-        <div style="font-size: 4rem; color: var(--color-accent); margin-bottom: 2rem; animation: pulse 2s infinite;">
-            <i class="fas fa-satellite-dish"></i>
-        </div>
-        <h1 style="font-family: var(--font-heading); font-size: 3rem; margin-bottom: 1rem;">PAYMENT TERMINAL</h1>
-        <div style="width: 100px; height: 2px; background: var(--color-text); margin: 0 auto 2rem;"></div>
-        
-        <p class="mb-4" style="color: #aaa; font-family: monospace;">
-            SECURE CONNECTION ESTABLISHED.<br>
-            AWAITING PAYMENT INFRASTRUCTURE INTEGRATION...
-        </p>
-        
-        <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
-            <code style="color: var(--color-secondary);">Status: DEV_MODE // PROVIDER_PENDING</code>
-        </div>
-        
-        <a href="{% url 'shop' %}" class="btn-primary" style="padding: 1rem 3rem;">ABORT & RETURN</a>
-    </div>
-</div>
-
+{% block extra_css %}
 <style>
-    @keyframes pulse {
-        0% { opacity: 0.5; transform: scale(0.9); }
-        50% { opacity: 1; transform: scale(1.1); }
-        100% { opacity: 0.5; transform: scale(0.9); }
+    .checkout-container {
+        padding-top: 150px;
+        min-height: 100vh;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-bottom: 5rem;
+    }
+    
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 3rem;
+    }
+    
+    @media(max-width: 900px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .form-section {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        color: var(--color-text);
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    @media(max-width: 600px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    input, select {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border: none;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        color: var(--color-text);
+        padding: 0.8rem 0;
+        font-family: monospace; /* Tech aesthetic */
+        transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus {
+        outline: none;
+        border-bottom-color: var(--color-accent);
+        background: rgba(255,255,255,0.05);
+    }
+
+    /* Target inputs within glass panels specifically if needed */
+    .glass-input {
+         background: transparent;
+    }
+
+    /* Payment Methods */
+    .payment-option {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .payment-option:hover, .payment-option.active {
+        border-color: var(--color-accent);
+        background: rgba(255,255,255,0.05);
+    }
+    
+    .payment-radio {
+        margin-right: 1rem;
+        accent-color: var(--color-accent);
+    }
+    
+    /* Summary Panel (Sticky) */
+    .summary-panel {
+        background: var(--glass-bg);
+        border: 1px dashed rgba(255,255,255,0.2);
+        padding: 2rem;
+        position: sticky;
+        top: 150px;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        font-family: monospace;
+    }
+    
+    .summary-total {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        justify-content: space-between;
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        color: var(--color-accent);
+    }
+
+    /* Label Styling */
+    label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.2rem;
+        display: block;
     }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="d-flex align-items-center mb-5 ps-3">
+        <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: 3rem; color: var(--color-text); margin: 0;">TERMINAL CHECKOUT</h1>
+        <span class="ms-4 text-muted-theme" style="font-family: monospace;">// SECURE CONNECTION</span>
+    </div>
+
+    <form method="POST" action=""> <!-- Placeholder action -->
+        {% csrf_token %}
+        <div class="checkout-grid ps-3 pe-3">
+            
+            <!-- LEFT COLUMN: Forms -->
+            <div class="checkout-forms">
+                <!-- Shipping Info -->
+                <div class="form-section">
+                    <h3 class="section-title">SHIPPING DATA</h3>
+                    
+                    <div class="form-grid mb-4">
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input type="text" name="first_name" required placeholder="ENTER FIRST NAME">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" name="last_name" required placeholder="ENTER LAST NAME">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-4">
+                        <label>Address</label>
+                        <input type="text" name="address" required placeholder="STREET ADDRESS, P.O. BOX, ETC.">
+                    </div>
+                    
+                    <div class="form-grid mb-4">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="city" required placeholder="CITY">
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <select name="country">
+                                <option value="US">UNITED STATES</option>
+                                <option value="CA">CANADA</option>
+                                <option value="UK">UNITED KINGDOM</option>
+                                <!-- More options can be added -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>State / Province</label>
+                            <input type="text" name="state" placeholder="STATE">
+                        </div>
+                        <div class="form-group">
+                            <label>Zip / Postal Code</label>
+                            <input type="text" name="zipcode" required placeholder="00000">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Info -->
+                <div class="form-section">
+                    <h3 class="section-title">PAYMENT METHOD</h3>
+                    
+                    <div class="payment-option active" onclick="selectPayment(this, 'card')">
+                        <input type="radio" name="payment_method" value="card" checked class="payment-radio">
+                        <div>
+                            <div style="color: var(--color-text); font-weight: bold;">CREDIT / DEBIT CARD</div>
+                            <small class="text-muted-theme">Safe encrypted transaction</small>
+                        </div>
+                        <i class="fas fa-credit-card ms-auto" style="color: var(--color-text); font-size: 1.5rem;"></i>
+                    </div>
+                    
+                    <div class="payment-option" onclick="selectPayment(this, 'paypal')">
+                        <input type="radio" name="payment_method" value="paypal" class="payment-radio">
+                        <div>
+                            <div style="color: var(--color-text); font-weight: bold;">PAYPAL</div>
+                            <small class="text-muted-theme">Redirect to PayPal</small>
+                        </div>
+                        <i class="fab fa-paypal ms-auto" style="color: var(--color-text); font-size: 1.5rem;"></i>
+                    </div>
+                    
+                    <!-- Card Details (Mock) -->
+                    <div id="card-details" class="mt-4">
+                        <div class="form-group mb-3">
+                            <label>Card Number</label>
+                            <input type="text" placeholder="0000 0000 0000 0000">
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Expiry</label>
+                                <input type="text" placeholder="MM/YY">
+                            </div>
+                            <div class="form-group">
+                                <label>CVC</label>
+                                <input type="text" placeholder="123">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RIGHT COLUMN: Summary -->
+            <div>
+                <div class="summary-panel">
+                    <h3 class="section-title">ORDER SUMMARY</h3>
+                    
+                    <!-- Loop through mocked items or context items if available -->
+                    <!-- Ideally we pass 'items' from the view. Assuming context has 'items' -->
+                    <div class="mb-4" style="max-height: 200px; overflow-y: auto;">
+                        {% for item in items %} <!-- Safe to loop if empty -->
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <div style="color: var(--color-text); font-weight: 600;">{{ item.product_variant.product.name }}</div>
+                                <small class="text-muted-theme">QTY: {{ item.quantity }}</small>
+                            </div>
+                            <div style="color: var(--color-text);">${{ item.sub_total }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>SUBTOTAL</span>
+                        <span>${{ total }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>SHIPPING</span>
+                        <span>CALCULATED</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>TAX</span>
+                        <span>$0.00</span>
+                    </div>
+                    
+                    <div class="summary-total">
+                        <span>TOTAL</span>
+                        <span>${{ total }}</span>
+                    </div>
+                    
+                    <button type="button" class="btn-primary w-100 mt-4" onclick="alert('Payment Integration Pending!')">
+                        INITIATE PAYMENT
+                    </button>
+                    
+                    <div class="mt-3 text-center">
+                        <a href="{% url 'shop' %}" style="color: var(--color-secondary); font-size: 0.9rem; text-decoration: underline;">CONTINUE SHOPPING</a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </form>
+</div>
+
+<script>
+    function selectPayment(element, method) {
+        // Visual toggle only
+        document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+        element.querySelector('input').checked = true;
+        
+        const cardDetails = document.getElementById('card-details');
+        if (method === 'card') {
+            cardDetails.style.display = 'block';
+        } else {
+            cardDetails.style.display = 'none';
+        }
+    }
+</script>
 {% endblock %}

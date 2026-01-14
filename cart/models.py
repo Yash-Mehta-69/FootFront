@@ -19,6 +19,10 @@ class CartItem(SoftDeleteModel):
     def __str__(self):
         return f"{self.quantity} x {self.product_variant.product.name} ({self.product_variant.size}, {self.product_variant.color})"
 
+    @property
+    def sub_total(self):
+        return self.product_variant.price * self.quantity
+
 class Wishlist(SoftDeleteModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)

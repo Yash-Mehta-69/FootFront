@@ -48,7 +48,8 @@
             <p class="text-muted-theme" style="font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Create Signal ID</p>
         </div>
         
-        <form id="registerForm" novalidate onsubmit="startRegAnimation(event)">
+        <form id="registerForm" method="POST" novalidate onsubmit="startRegAnimation(event)">
+            {% csrf_token %}
             <div class="row-group mb-3">
                 <div class="form-group">
                     <input type="text" class="tech-input" id="firstName" name="firstName" placeholder="FIRST NAME" required>
@@ -107,46 +108,61 @@
 
 {% block extra_js %}
 <script>
-    // GSAP Entry Animation
-    gsap.from(".auth-card", {
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out"
-    });
-
-    // Registration Logic (Keeping original functional logic)
-    document.getElementById('registerForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const firstName = document.getElementById('firstName').value;
-        const lastName = document.getElementById('lastName').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
-        const password = document.getElementById('password').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
-        const messageDiv = document.getElementById('register-message');
-        messageDiv.innerText = '';
-
-        if (password !== confirmPassword) {
-            messageDiv.innerText = 'Passwords do not match.';
-            return;
+    document.addEventListener("DOMContentLoaded", function() {
+        // GSAP Entry Animation
+        if (typeof gsap !== 'undefined') {
+            gsap.from(".glass-panel", {
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
         }
 
-        firebase.auth().createUserWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                var user = userCredential.user;
-                user.getIdToken().then(function(idToken) {
-                    fetch("{% url 'register' %}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            idToken: idToken,
-                            firstName: firstName,
-                            lastName: lastName,
-                            phone: phone
-                        }),
+        // Registration Logic (Keeping original functional logic)
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                const messageDiv = document.getElementById('register-message');
+                messageDiv.innerText = '';
+
+                if (password !== confirmPassword) {
+                    messageDiv.innerText = 'Passwords do not match.';
+                    return;
+                }
+
+                // Ensure firebase is loaded
+                if (typeof firebase === 'undefined') {
+                    messageDiv.innerText = 'System Error: Auth provider not loaded.';
+                    return;
+                }
+
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        var user = userCredential.user;
+                        return user.getIdToken();
+                    })
+                    .then(function(idToken) {
+                        return fetch("{% url 'register' %}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                idToken: idToken,
+                                firstName: firstName,
+                                lastName: lastName,
+                                phone: phone
+                            }),
+                        });
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -154,18 +170,21 @@
                             window.location.href = data.redirect_url;
                         } else {
                             messageDiv.innerText = 'Registration failed: ' + data.message;
-                            user.delete();
+                            // If backend registration failed, we should probably delete the firebase user cleanup
+                            // But keeping it simple for now as per original code logic, or improving it?
+                            // Original code had user.delete(), let's keep that safely
+                            const currentUser = firebase.auth().currentUser;
+                            if (currentUser) currentUser.delete(); 
                         }
                     })
                     .catch((error) => {
-                        messageDiv.innerText = 'An error occurred during registration.';
-                        user.delete();
+                        console.error('Registration Error:', error);
+                        messageDiv.innerText = 'Registration failed: ' + (error.message || error);
+                        const currentUser = firebase.auth().currentUser;
+                        if (currentUser) currentUser.delete();
                     });
-                });
-            })
-            .catch((error) => {
-                messageDiv.innerText = 'Firebase registration failed: ' + error.message;
             });
+        }
     });
 </script>
 {% endblock %}

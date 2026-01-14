@@ -52,4 +52,16 @@ def wishlist_detail(request):
 
 @login_required(login_url='login')
 def checkout(request):
-    return render(request, 'checkout.html')
+    try:
+        cart = Cart.objects.get(customer=request.user.customer_profile, is_deleted=False)
+        items = cart.items.filter(is_deleted=False)
+        total = sum(item.product_variant.price * item.quantity for item in items)
+    except Cart.DoesNotExist:
+        items = []
+        total = 0
+    
+    context = {
+        'items': items,
+        'total': total
+    }
+    return render(request, 'checkout.html', context)
