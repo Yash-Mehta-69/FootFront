@@ -1,11 +1,16 @@
 
 {% load static %}
 
+
+{% load nav_tags %}
+
+
 <style>
     /* Tech Navbar - Floating Glass Pill */
     .tech-nav {
         position: fixed;
-        top: 0.5rem;
+        top: 0.5rem; /* Reverting back from announcement bar push */
+
         left: 50%;
         transform: translateX(-50%);
         width: 90%;
@@ -29,12 +34,13 @@
 
     /* Scrolled State: Compressed & Darker */
     .tech-nav.scrolled {
-        top: 1.5rem;
+        top: 1.5rem; /* Moves up slightly on scroll if needed, but we have the bars */
         padding: 0.6rem 2rem;
         background: var(--nav-bg-scrolled);
         border-color: var(--nav-border-scrolled);
         width: 95%; /* Slightly wider */
     }
+
 
     /* Logo Styling */
     .nav-logo-text {
@@ -62,6 +68,11 @@
         gap: 2.5rem;
         list-style: none;
         margin: 0;
+    }
+
+    .nav-link-item {
+        display: flex;
+        align-items: center;
     }
 
     .nav-link-item a {
@@ -142,6 +153,50 @@
         transform: scale(1.1);
     }
 
+    /* Cart Badge Styles */
+    .cart-btn-wrapper {
+        position: relative;
+    }
+
+    .cart-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: var(--color-accent);
+        color: var(--badge-text);
+        font-size: 0.7rem;
+        font-weight: 700;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 10px var(--color-accent);
+        pointer-events: none;
+        animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes badgePop {
+        0% { transform: scale(0); }
+        100% { transform: scale(1); }
+    }
+
+    /* Active Link State */
+    .nav-link-item.active a {
+        color: var(--color-accent);
+        text-shadow: var(--text-glow);
+    }
+
+    .nav-link-item.active a::before,
+    .nav-link-item.active a::after {
+        opacity: 1;
+    }
+
+    .nav-link-item.active a::before { left: -15px; transform: translateX(5px); }
+    .nav-link-item.active a::after { right: -15px; transform: translateX(-5px); }
+
+
     /* Mobile Hide */
     @media (max-width: 992px) {
         .nav-links { display: none; }
@@ -188,11 +243,373 @@
     .nav-search-input:focus {
         outline: none;
     }
+
+    /* Live Search Results */
+    .search-results-container {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 350px;
+        background: var(--nav-bg);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid var(--nav-border);
+        border-radius: 20px;
+        margin-top: 1.5rem;
+        box-shadow: var(--shadow-xl);
+        display: none;
+        overflow: hidden;
+        z-index: 1001;
+    }
+
+    .search-results-container.active {
+        display: block;
+        animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .search-result-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-item:hover {
+        background: rgba(var(--color-accent-rgb), 0.1);
+    }
+
+    .result-img {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        object-fit: cover;
+        background: #f0f0f0;
+    }
+
+    .result-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .result-name {
+        font-family: var(--font-heading);
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--color-text);
+    }
+
+    .result-meta {
+        font-size: 0.7rem;
+        color: var(--color-text-muted);
+    }
+
+    .result-price {
+        color: var(--color-accent);
+        font-weight: 700;
+        font-size: 0.8rem;
+    }
+
+    .no-results {
+        padding: 1.5rem;
+        text-align: center;
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mini Cart Drawer */
+    .mini-cart-drawer {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 100%;
+        max-width: 400px;
+        height: 100vh;
+        background: var(--nav-bg);
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+        border-left: 1px solid var(--nav-border);
+        z-index: 2000;
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    }
+
+    .mini-cart-drawer.active {
+        right: 0;
+    }
+
+    .drawer-header {
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--nav-border);
+    }
+
+    .drawer-header h3 {
+        font-family: var(--font-heading);
+        font-size: 1.2rem;
+        letter-spacing: 2px;
+        margin: 0;
+    }
+
+    .close-drawer {
+        background: transparent;
+        border: none;
+        color: var(--color-text);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .drawer-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .cart-item-mini {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .cart-item-mini img {
+        width: 70px;
+        height: 70px;
+        border-radius: 12px;
+        object-fit: cover;
+    }
+
+    .cart-item-details {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: block;
+    }
+
+    .cart-item-meta {
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+    }
+
+    .cart-item-price {
+        color: var(--color-accent);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .drawer-footer {
+        padding: 2rem;
+        border-top: 1px solid var(--nav-border);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+    }
+
+    .checkout-btn {
+        background: var(--color-accent);
+        color: var(--badge-text);
+        text-align: center;
+        padding: 1rem;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+
+    .checkout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px var(--color-accent);
+    }
+
+    .drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(4px);
+        z-index: 1999;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .drawer-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+
+    /* Drops Dropdown Styles */
+    .dropdown {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background: var(--nav-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--nav-border);
+        border-radius: 20px;
+        min-width: 200px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 1001;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .dropdown:hover .dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    .dropdown-menu-right {
+        left: auto;
+        right: 0;
+        transform: translateY(10px);
+    }
+
+    .dropdown:hover .dropdown-menu-right {
+        transform: translateY(20px);
+    }
+
+    .user-info-brief {
+        padding: 0.5rem 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-name {
+        color: var(--color-text);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    .user-role {
+        font-size: 0.6rem;
+        color: var(--color-accent);
+        letter-spacing: 1px;
+    }
+
+    .dropdown-divider {
+        height: 1px;
+        background: var(--nav-border);
+        margin: 0.5rem 0;
+    }
+
+    .dropdown-item i {
+        margin-right: 8px;
+        font-size: 0.8rem;
+        width: 16px;
+        text-align: center;
+    }
+
+    /* .icon-btn i.fa-user-circle {
+        font-size: 1.1rem;
+    } */
+
+    
+
+    .dropdown-item {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        white-space: nowrap;
+        position: relative;
+    }
+
+    .dropdown-item:hover {
+        background: rgba(var(--color-accent-rgb), 0.1);
+        color: var(--color-accent);
+        padding-left: 1.5rem;
+    }
+
+    .dropdown-item::before {
+        content: '>';
+        position: absolute;
+        left: 0.5rem;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .dropdown-item:hover::before {
+        opacity: 1;
+    }
+
+    /* Mobile Dropdown adjustment */
+    .mobile-nav-links .mobile-drops-categories {
+        margin-left: 1rem;
+        border-left: 1px solid var(--nav-border);
+        padding-left: 1rem;
+        margin-top: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .mobile-category-link {
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        text-decoration: none;
+    }
+
 </style>
 
 
 <nav class="tech-nav" id="main-nav">
+    {% get_cart_count request as cart_count %}
     <div class="nav-logo">
+
         <a href="/" class="nav-logo-text">
             FOOTFRONT <span class="logo-dot"></span>
         </a>
@@ -201,18 +618,39 @@
     <!-- Desktop Menu -->
     <ul class="nav-links d-none d-lg-flex">
         <!-- <li class="nav-link-item"><a href="/">Home</a></li> -->
-        <li class="nav-link-item"><a href="/shop/">Shop</a></li>
-        <li class="nav-link-item"><a href="#">Men</a></li>
-        <li class="nav-link-item"><a href="#">Women</a></li>
-        <li class="nav-link-item"><a href="{% url 'become_vendor' %}">Sell</a></li>
-        <li class="nav-link-item"><a href="{% url 'contact' %}">Contact</a></li>
+        <li class="nav-link-item {% is_active request 'shop' %}"><a href="{% url 'shop' %}">Shop</a></li>
+        <li class="nav-link-item dropdown">
+            <a href="#" style="display: flex; align-items: center;">Drops <i class="fas fa-chevron-down" style="font-size: 0.7rem; margin-left: 6px; opacity: 0.7;"></i></a>
+
+
+            <div class="dropdown-menu">
+                {% get_categories as categories %}
+                {% for category in categories %}
+                    <a href="{% url 'shop' %}?category={{ category.slug }}" class="dropdown-item {% is_active request 'shop' category=category.slug %}">{{ category.name }}</a>
+                {% endfor %}
+
+            </div>
+        </li>
+        <li class="nav-link-item {% is_active request 'shop' gender='M' %}"><a href="{% url 'shop' %}?gender=M">Men</a></li>
+        <li class="nav-link-item {% is_active request 'shop' gender='W' %}"><a href="{% url 'shop' %}?gender=W">Women</a></li>
+
+        <li class="nav-link-item {% is_active request 'become_vendor' %}"><a href="{% url 'become_vendor' %}">Sell</a></li>
+
         <!-- <li class="nav-link-item"><a href="{% url 'complaint' %}">Support</a></li> -->
     </ul>
+
 
     <!-- Mobile Controls (Cart + Hamburger) -->
     <div class="mobile-controls">
         <!-- Mobile Cart (Visible on Bar) -->
-        <a href="/cart/" class="icon-btn"><i class="fas fa-shopping-bag"></i></a>
+        <div class="cart-btn-wrapper">
+            <a href="#" class="icon-btn cart-trigger" onclick="toggleCartDrawer(event)"><i class="fas fa-shopping-bag"></i></a>
+            {% if cart_count > 0 %}
+                <span class="cart-badge">{{ cart_count }}</span>
+            {% endif %}
+        </div>
+
+
         
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
             <span></span>
@@ -226,21 +664,54 @@
         <!-- Search Container -->
         <div class="nav-search-container" id="navSearch">
             <form action="{% url 'shop' %}" method="GET" style="display: flex;">
-                <input type="text" name="q" class="nav-search-input" placeholder="SEARCH SYSTEM...">
+                <input type="text" name="q" class="nav-search-input" id="search-input" placeholder="SEARCH SYSTEM..." autocomplete="off">
             </form>
             <button class="icon-btn search-trigger" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+            <div class="search-results-container" id="searchResults">
+                <!-- Dynamic Results -->
+            </div>
         </div>
+
 
         <!-- Theme Toggle -->
         <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" title="Toggle Theme">
             <i class="fas fa-sun" id="theme-icon"></i>
         </button>
 
-        <a href="{% url 'cart_detail' %}" class="icon-btn"><i class="fas fa-shopping-bag"></i></a>
+        <div class="cart-btn-wrapper">
+            <a href="#" class="icon-btn cart-trigger" onclick="toggleCartDrawer(event)"><i class="fas fa-shopping-bag"></i></a>
+            {% if cart_count > 0 %}
+                <span class="cart-badge">{{ cart_count }}</span>
+            {% endif %}
+        </div>
+
+        
         <a href="{% url 'wishlist_detail' %}" class="icon-btn"><i class="fas fa-heart"></i></a>
-        <a href="/profile/" class="icon-btn" title="Profile"><i class="fas fa-user"></i></a>
-        <a href="/logout/" class="icon-btn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        
+        {% if user.is_authenticated %}
+            <!-- Unified User Dropdown -->
+            <div class="dropdown">
+                <button class="icon-btn" title="User Menu"><i class="fas fa-user"></i></button>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <div class="user-info-brief">
+                        <span class="user-name">{{ user.first_name }}</span>
+                        <span class="user-role">{{ user.role|upper }}</span>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'profile' %}" class="dropdown-item"><i class="fas fa-user"></i> My Profile</a>
+                    <a href="{% url 'order_list' %}" class="dropdown-item"><i class="fas fa-box"></i> My Orders</a>
+                    <a href="{% url 'address_list' %}" class="dropdown-item"><i class="fas fa-map-marker-alt"></i> Addresses</a>
+                    <a href="{% url 'my_reviews' %}" class="dropdown-item"><i class="fas fa-star"></i> My Reviews</a>
+                    <div class="dropdown-divider"></div>
+                    <a href="{% url 'logout' %}" class="dropdown-item" style="color: var(--color-secondary);"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        {% else %}
+            <a href="{% url 'login' %}" class="icon-btn" title="Login"><i class="fas fa-sign-in-alt"></i></a>
+        {% endif %}
     </div>
+
+
 
     <!-- Mobile Menu Overlay -->
     <div class="mobile-menu-overlay" id="mobileMenu">
@@ -252,13 +723,26 @@
             </form>
 
             <ul class="mobile-nav-links">
-                <li><a href="/shop/" onclick="toggleMobileMenu()">Shop</a></li>
-                <li><a href="#" onclick="toggleMobileMenu()">Men</a></li>
-                <li><a href="#" onclick="toggleMobileMenu()">Women</a></li>
+                <li><a href="{% url 'shop' %}" onclick="toggleMobileMenu()">Shop</a></li>
+                <li class="mobile-dropdown">
+                    <span style="color: var(--color-text); font-weight: 700; font-size: 1.1rem; padding-bottom: 0.5rem; display: block;">DROPS</span>
+                    <div class="mobile-drops-categories">
+                        {% get_categories as categories %}
+                        {% for category in categories %}
+                            <a href="{% url 'shop' %}?category={{ category.slug }}" class="mobile-category-link {% is_active request 'shop' category=category.slug %}" onclick="toggleMobileMenu()" {% if request.GET.category == category.slug %}style="color: var(--color-accent);"{% endif %}>{{ category.name }}</a>
+                        {% endfor %}
+                    </div>
+
+                </li>
+                <li><a href="{% url 'shop' %}?gender=M" onclick="toggleMobileMenu()">Men</a></li>
+                <li><a href="{% url 'shop' %}?gender=W" onclick="toggleMobileMenu()">Women</a></li>
                 <li><a href="{% url 'become_vendor' %}" onclick="toggleMobileMenu()">Sell</a></li>
-                <li><a href="{% url 'contact' %}" onclick="toggleMobileMenu()">Contact</a></li>
-                <li><a href="/profile/" onclick="toggleMobileMenu()">Profile</a></li>
+
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'profile' %}" onclick="toggleMobileMenu()">Profile</a></li>
+                {% endif %}
                 <li><a href="#" onclick="toggleTheme(); return false;" style="color: var(--color-accent);">
+
                     <i class="fas fa-sun" id="theme-icon-mobile"></i> Toggle Theme
                 </a></li>
                 {% if user.is_authenticated %}
@@ -267,9 +751,53 @@
                 <li><a href="/login/" onclick="toggleMobileMenu()">Login</a></li>
                 {% endif %}
             </ul>
+
         </div>
     </div>
 </nav>
+
+<!-- Mini Cart Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="toggleCartDrawer()"></div>
+<div class="mini-cart-drawer" id="cartDrawer">
+    <div class="drawer-header">
+        <h3>YOUR SYSTEM BAG</h3>
+        <button class="close-drawer" onclick="toggleCartDrawer()"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div class="drawer-content">
+        {% get_cart_items request as cart_items %}
+        {% if cart_items %}
+            {% for item in cart_items %}
+                <div class="cart-item-mini">
+                    {% if item.product_variant.image %}
+                        <img src="{{ item.product_variant.image.url }}" alt="{{ item.product_variant.product.name }}">
+                    {% else %}
+                        <img src="{% static 'images/placeholder-shoe.png' %}" alt="{{ item.product_variant.product.name }}">
+                    {% endif %}
+                    <div class="cart-item-details">
+
+                        <span class="cart-item-name">{{ item.product_variant.product.name }}</span>
+                        <span class="cart-item-meta">{{ item.product_variant.size }} | {{ item.product_variant.color }} | QTY: {{ item.quantity }}</span>
+                        <div class="cart-item-price">${{ item.product_variant.price }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-results">SYSTEM: CART IS EMPTY. <br> START COLLECTING.</div>
+        {% endif %}
+    </div>
+
+    {% if cart_items %}
+    <div class="drawer-footer">
+        <div class="total-row">
+            <span>TOTAL:</span>
+            <span>${% get_cart_total request %}</span>
+        </div>
+        <a href="{% url 'cart_detail' %}" class="checkout-btn">VIEW FULL BAG</a>
+    </div>
+    {% endif %}
+</div>
+
 
 
 <script>
@@ -286,11 +814,13 @@
     // Search Toggle
     function toggleSearch() {
         const container = document.getElementById('navSearch');
-        const input = container.querySelector('input');
+        const input = document.getElementById('search-input');
+        const results = document.getElementById('searchResults');
         
         if (container.classList.contains('active')) {
             if(input.value.trim() === "") {
                  container.classList.remove('active');
+                 results.classList.remove('active');
             } else {
                  container.querySelector('form').submit();
             }
@@ -300,7 +830,52 @@
         }
     }
 
+    // Live Search AJAX
+    let searchTimeout;
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('searchResults');
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            searchResults.classList.remove('active');
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/search/?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.products.length > 0) {
+                        searchResults.innerHTML = data.products.map(p => `
+                            <a href="${p.url}" class="search-result-item">
+                                <img src="${p.image}" class="result-img" onerror="this.src='/static/images/placeholder.png'">
+                                <div class="result-info">
+                                    <span class="result-name">${p.name}</span>
+                                    <span class="result-meta">${p.category} • <span class="result-price">$${p.price}</span></span>
+                                </div>
+                            </a>
+                        `).join('');
+                        searchResults.classList.add('active');
+                    } else {
+                        searchResults.innerHTML = '<div class="no-results">SYSTEM: NO MATCHES FOUND</div>';
+                        searchResults.classList.add('active');
+                    }
+                });
+        }, 300);
+    });
+
+    // Close results on click outside
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('navSearch').contains(e.target)) {
+            searchResults.classList.remove('active');
+        }
+    });
+
     // Mobile Menu Toggle
+
     function toggleMobileMenu() {
         const menu = document.getElementById('mobileMenu');
         const btn = document.querySelector('.mobile-menu-btn');
@@ -309,6 +884,21 @@
         
         // Prevent body scroll when menu is open
         if (menu.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Mini Cart Toggle
+    function toggleCartDrawer(e) {
+        if(e) e.preventDefault();
+        const drawer = document.getElementById('cartDrawer');
+        const overlay = document.getElementById('drawerOverlay');
+        drawer.classList.toggle('active');
+        overlay.classList.toggle('active');
+        
+        if (drawer.classList.contains('active')) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';

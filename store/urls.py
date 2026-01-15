@@ -30,4 +30,6 @@ urlpatterns = [
     path('profile/orders/<int:order_id>/', views.order_detail, name='order_detail'),
     path('profile/change-password/', views.change_password, name='change_password'),
     path('profile/reviews/', views.my_reviews, name='my_reviews'),
+    path('api/search/', views.api_search, name='api_search'),
 ]
+

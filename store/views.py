@@ -403,6 +403,29 @@ def shop(request):
     }
     return render(request, 'shop.html', context)
 
+def api_search(request):
+    query = request.GET.get('q', '').strip()
+    if not query:
+        return JsonResponse({'products': []})
+    
+    products = Product.objects.filter(
+        Q(name__icontains=query) | Q(description__icontains=query),
+        is_deleted=False
+    ).select_related('category').annotate(min_price=Min('productvariant__price'))[:5]
+    
+    results = []
+    for product in products:
+        results.append({
+            'id': product.id,
+            'name': product.name,
+            'price': float(product.min_price) if product.min_price else 0,
+            'image': product.product_image.url if product.product_image else '/static/images/placeholder-shoe.png',
+            'category': product.category.name if product.category else 'Sneakers',
+            'url': f"/product-detail/?id={product.id}"
+        })
+    
+    return JsonResponse({'products': results})
+
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
