@@ -1,0 +1,62 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Manage Categories | Admin Panel{% endblock %}
+
+{% block header_title %}Manage Categories{% endblock %}
+{% block breadcrumb %}Categories{% endblock %}
+
+{% block admin_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">Product Categories</h5>
+        <a href="{% url 'add_category' %}" class="btn btn-primary-custom">
+            <i class="fas fa-plus me-2"></i> Add Category
+        </a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Icon</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Products</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>#{{ category.pk }}</td>
+                    <td>
+                        <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width: 40px; height: 40px;">
+                            <i class="fas fa-tag text-secondary"></i>
+                        </div>
+                    </td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.description|truncatechars:50 }}</td>
+                    <td>{{ category.product_count }}</td>
+                    <td>
+                        <span class="status-badge {% if category.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
+                            <i class="fas {% if category.status == 'Active' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                            {{ category.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'edit_category' category.pk %}" class="btn-icon-soft me-1" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn-icon-soft text-danger" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

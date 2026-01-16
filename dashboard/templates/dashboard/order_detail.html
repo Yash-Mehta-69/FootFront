@@ -1,0 +1,97 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Order Details | Admin Panel{% endblock %}
+
+{% block header_title %}Order Details #{{ order.pk }}{% endblock %}
+{% block breadcrumb %}Orders / Details{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Order Items -->
+        <div class="custom-card mb-4">
+            <h5 class="card-title-custom mb-3">Order Items</h5>
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle">
+                    <thead class="text-secondary">
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ item.image }}" alt="" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                    <span class="fw-bold text-dark">{{ item.product }}</span>
+                                </div>
+                            </td>
+                            <td>{{ item.price }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td class="text-end">{{ item.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="border-top">
+                        <tr>
+                            <td colspan="3" class="text-end pt-3">Subtotal</td>
+                            <td class="text-end pt-3 fw-bold">{{ order.subtotal }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end border-0">Shipping</td>
+                            <td class="text-end border-0 fw-bold">{{ order.shipping }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end border-0 fs-5 text-dark fw-bold">Total</td>
+                            <td class="text-end border-0 fs-5 text-primary fw-bold">{{ order.total }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Customer Details -->
+        <div class="custom-card mb-4">
+            <h5 class="card-title-custom mb-3">Customer Details</h5>
+            <div class="d-flex align-items-center mb-3">
+                <div class="user-avatar me-3" style="width: 45px; height: 45px;">
+                    {{ order.customer.name|slice:":1" }}
+                </div>
+                <div>
+                    <h6 class="mb-0 text-dark fw-bold">{{ order.customer.name }}</h6>
+                    <small class="text-secondary">{{ order.customer.email }}</small>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="text-secondary small d-block">Contact Number</label>
+                <span class="text-dark fw-bold">{{ order.customer.phone }}</span>
+            </div>
+            <div>
+                <label class="text-secondary small d-block">Shipping Address</label>
+                <span class="text-dark fw-bold">{{ order.shipping_address }}</span>
+            </div>
+        </div>
+
+        <!-- Order Status -->
+        <div class="custom-card">
+            <h5 class="card-title-custom mb-3">Order Status</h5>
+            <div class="mb-3">
+                <label class="form-label">Update Status</label>
+                <select class="form-select-custom">
+                    <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                    <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                    <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                    <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <button class="btn btn-primary-custom w-100">Update Status</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

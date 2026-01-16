@@ -1,0 +1,55 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Product Reviews | Admin Panel{% endblock %}
+
+{% block header_title %}Product Reviews{% endblock %}
+{% block breadcrumb %}Reviews{% endblock %}
+
+{% block admin_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">All Reviews</h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>User</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in reviews %}
+                <tr>
+                    <td>{{ review.product }}</td>
+                    <td>{{ review.user }}</td>
+                    <td>
+                        <span class="text-warning">
+                             {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                             {% endfor %}
+                        </span>
+                    </td>
+                    <td>{{ review.comment|truncatechars:50 }}</td>
+                    <td>{{ review.date }}</td>
+                    <td>
+                        <button class="btn-icon-soft text-danger" title="Delete Review">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

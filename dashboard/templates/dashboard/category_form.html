@@ -1,0 +1,51 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}{{ action }} Category | Admin Panel{% endblock %}
+
+{% block header_title %}{{ action }} Category{% endblock %}
+{% block breadcrumb %}Categories / {{ action }}{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Category Details</h5>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Category Name</label>
+                        <input type="text" class="form-control-custom" name="name" value="{{ category.name }}" placeholder="Enter category name">
+                    </div>
+                    
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control-custom" name="description" rows="4" placeholder="Enter category description">{{ category.description }}</textarea>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Category Image</label>
+                        <input type="file" class="form-control-custom" name="image">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select class="form-select-custom" name="status">
+                            <option value="Active" {% if category.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="Inactive" {% if category.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 mt-4 text-end">
+                        <a href="{% url 'manage_categories' %}" class="btn btn-light me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4">{{ action }} Category</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

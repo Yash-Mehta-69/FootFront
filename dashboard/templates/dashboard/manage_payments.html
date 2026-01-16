@@ -1,0 +1,53 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Manage Payments | Admin Panel{% endblock %}
+
+{% block header_title %}Manage Payments{% endblock %}
+{% block breadcrumb %}Payments{% endblock %}
+
+{% block admin_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">Transaction History</h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Transaction ID</th>
+                    <th>User</th>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment.pk }}</td>
+                    <td>{{ payment.user }}</td>
+                    <td>{{ payment.date }}</td>
+                    <td><i class="fas fa-credit-card me-2 text-secondary"></i>{{ payment.method }}</td>
+                    <td class="fw-bold">{{ payment.amount }}</td>
+                    <td>
+                        <span class="status-badge 
+                            {% if payment.status == 'Success' %}status-active
+                            {% elif payment.status == 'Refunded' %}status-inactive
+                            {% else %}status-warning{% endif %}">
+                            <i class="fas 
+                                {% if payment.status == 'Success' %}fa-check-circle
+                                {% elif payment.status == 'Refunded' %}fa-undo
+                                {% else %}fa-exclamation-circle{% endif %}">
+                            </i>
+                            {{ payment.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

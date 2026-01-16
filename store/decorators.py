@@ -11,6 +11,6 @@ def redirect_special_users(view_func):
             if request.user.role == 'vendor':
                 return redirect('vendordashboard')
             elif request.user.role == 'admin':
-                return redirect('/admin/')
+                return redirect('admin_dashboard')
         return view_func(request, *args, **kwargs)
     return wrapper_func

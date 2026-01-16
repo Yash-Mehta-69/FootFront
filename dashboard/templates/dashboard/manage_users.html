@@ -1,0 +1,65 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Manage Users | Admin Panel{% endblock %}
+
+{% block header_title %}Manage Users{% endblock %}
+{% block breadcrumb %}Users{% endblock %}
+
+{% block admin_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">All Users</h5>
+        <a href="{% url 'add_user' %}" class="btn btn-primary-custom">
+            <i class="fas fa-plus me-2"></i> Add New User
+        </a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Join Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>#{{ user.pk }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 12px;">
+                                {{ user.name|slice:":1" }}
+                            </div>
+                            {{ user.name }}
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge bg-primary bg-opacity-10 text-primary">{{ user.role }}</span></td>
+                    <td>
+                        <span class="status-badge {% if user.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
+                            <i class="fas {% if user.status == 'Active' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                            {{ user.status }}
+                        </span>
+                    </td>
+                    <td>{{ user.join_date }}</td>
+                    <td>
+                        <a href="{% url 'edit_user' user.pk %}" class="btn-icon-soft me-1" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn-icon-soft text-danger" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

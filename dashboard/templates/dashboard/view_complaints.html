@@ -1,0 +1,53 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}User Complaints | Admin Panel{% endblock %}
+
+{% block header_title %}User Complaints{% endblock %}
+{% block breadcrumb %}Complaints{% endblock %}
+
+{% block admin_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">All Complaints</h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Ticket ID</th>
+                    <th>User</th>
+                    <th>Subject</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in complaints %}
+                <tr>
+                    <td>#{{ complaint.pk }}</td>
+                    <td>{{ complaint.user }}</td>
+                    <td>{{ complaint.subject }}</td>
+                    <td>{{ complaint.date }}</td>
+                    <td>
+                        <span class="status-badge {% if complaint.status == 'Resolved' %}status-active{% else %}status-warning{% endif %}">
+                             <i class="fas {% if complaint.status == 'Resolved' %}fa-check-circle{% else %}fa-clock{% endif %}"></i>
+                             {{ complaint.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-icon-soft me-1" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-icon-soft text-success" title="Mark Resolved">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

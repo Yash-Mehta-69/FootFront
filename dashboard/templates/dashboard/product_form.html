@@ -1,0 +1,71 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}{{ action }} Product | Admin Panel{% endblock %}
+
+{% block header_title %}{{ action }} Product{% endblock %}
+{% block breadcrumb %}Products / {{ action }}{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Product Information</h5>
+            </div>
+            
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Product Name</label>
+                        <input type="text" class="form-control-custom" name="name" value="{{ product.name }}" placeholder="Enter product name">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <select class="form-select-custom" name="category">
+                            <option value="Sneakers" {% if product.category == 'Sneakers' %}selected{% endif %}>Sneakers</option>
+                            <option value="Running" {% if product.category == 'Running' %}selected{% endif %}>Running</option>
+                            <option value="Casual" {% if product.category == 'Casual' %}selected{% endif %}>Casual</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Price ($)</label>
+                        <input type="number" class="form-control-custom" name="price" value="{{ product.price }}" placeholder="0.00">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Stock Quantity</label>
+                        <input type="number" class="form-control-custom" name="stock" value="{{ product.stock }}" placeholder="0">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select class="form-select-custom" name="status">
+                            <option value="Active" {% if product.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="Inactive" {% if product.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Product Images</label>
+                        <input type="file" class="form-control-custom" name="images" multiple>
+                        <div class="form-text">You can select multiple images.</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control-custom" name="description" rows="5" placeholder="Enter full product description">{{ product.description }}</textarea>
+                    </div>
+                    
+                    <div class="col-12 mt-4 text-end">
+                        <a href="{% url 'manage_products' %}" class="btn btn-light me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4">{{ action }} Product</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}{{ action }} User | Admin Panel{% endblock %}
+
+{% block header_title %}{{ action }} User{% endblock %}
+{% block breadcrumb %}Users / {{ action }}{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">User Details</h5>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control-custom" name="name" value="{{ user.name }}" placeholder="Enter full name">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control-custom" name="email" value="{{ user.email }}" placeholder="Enter email">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Role</label>
+                        <select class="form-select-custom" name="role">
+                            <option value="Customer" {% if user.role == 'Customer' %}selected{% endif %}>Customer</option>
+                            <option value="Vendor" {% if user.role == 'Vendor' %}selected{% endif %}>Vendor</option>
+                            <option value="Admin" {% if user.role == 'Admin' %}selected{% endif %}>Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Status</label>
+                        <select class="form-select-custom" name="status">
+                            <option value="Active" {% if user.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="Inactive" {% if user.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+
+                    {% if action == 'Add' %}
+                    <div class="col-md-6">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control-custom" name="password" placeholder="Enter password">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control-custom" name="confirm_password" placeholder="Confirm password">
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-12 mt-4 text-end">
+                        <a href="{% url 'manage_users' %}" class="btn btn-light me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4">{{ action }} User</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
