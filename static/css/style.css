@@ -1337,53 +1337,28 @@ input[type=number] {
     margin-top: 1rem;
 }
 
- 
- / *   - - -   G l o b a l   D a s h b o a r d   L a y o u t   ( A d d e d   b y   A g e n t )   - - -   * / 
- 
- . d a s h b o a r d - l a y o u t   { 
- 
-         p a d d i n g - t o p :   1 5 0 p x ; 
- 
-         p a d d i n g - b o t t o m :   1 0 0 p x ; 
- 
-         m i n - h e i g h t :   1 0 0 v h ; 
- 
- } 
- 
- 
- 
- . d a s h b o a r d - l a y o u t - g r i d   { 
- 
-         d i s p l a y :   g r i d ; 
- 
-         g r i d - t e m p l a t e - c o l u m n s :   2 8 0 p x   1 f r ; 
- 
-         g a p :   3 r e m ; 
- 
-         a l i g n - i t e m s :   s t a r t ; 
- 
- } 
- 
- 
- 
- @ m e d i a   ( m a x - w i d t h :   9 9 1 p x )   { 
- 
-         . d a s h b o a r d - l a y o u t - g r i d   { 
- 
-                 g r i d - t e m p l a t e - c o l u m n s :   1 f r ; 
- 
-                 g a p :   2 r e m ; 
- 
-         } 
- 
-         
- 
-         . d a s h b o a r d - l a y o u t   { 
- 
-                   p a d d i n g - t o p :   1 2 0 p x ; 
- 
-         } 
- 
- } 
- 
- 
+/* --- Global Dashboard Layout (Added by Agent) --- */
+
+.dashboard-layout {
+    padding-top: 150px;
+    padding-bottom: 100px;
+    min-height: 100vh;
+}
+
+.dashboard-layout-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+@media (max-width: 991px) {
+    .dashboard-layout-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .dashboard-layout {
+        padding-top: 120px;
+    }
+}

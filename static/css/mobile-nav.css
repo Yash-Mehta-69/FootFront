@@ -76,7 +76,7 @@
     width: 100%;
     width: 100%;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.85); /* Stronger background for legibility */
+    background: var(--nav-bg-scrolled);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     z-index: 999;
@@ -106,11 +106,11 @@
 .mobile-search-form {
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--input-bg);
     border: 1px solid var(--nav-border);
-    border-radius: 15px;
     padding: 0.8rem 1.2rem;
     margin-bottom: 2.5rem;
+    border-radius: 15px;
 }
 
 .mobile-search-form input {
