@@ -1362,3 +1362,111 @@ input[type=number] {
         padding-top: 120px;
     }
 }
+
+/* Global Error Modal Styles */
+.tech-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.tech-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.tech-modal-content {
+    background: var(--card-bg-dark);
+    border: 1px solid var(--color-secondary); /* Alert Color Default */
+    border-radius: 16px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 30px rgba(255, 0, 153, 0.2);
+}
+
+.tech-modal-overlay.active .tech-modal-content {
+    transform: scale(1);
+}
+
+.tech-modal-header {
+    margin-bottom: 1.5rem;
+}
+
+.tech-modal-header i {
+    font-size: 3rem;
+    color: var(--color-secondary);
+    margin-bottom: 1rem;
+    animation: pulse-alert 2s infinite;
+}
+
+.tech-modal-header h3 {
+    margin: 0;
+    color: var(--color-text);
+    letter-spacing: 2px;
+    word-break: break-word;
+}
+
+.tech-modal-body p {
+    color: var(--color-text-muted);
+    font-size: 1.1rem; /* Slightly larger */
+    line-height: 1.6; /* Better readability */
+    margin-bottom: 2rem;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+}
+
+.tech-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.tech-modal-close:hover {
+    color: var(--color-text);
+}
+
+.btn-tech-outline {
+    background: transparent;
+    border: 1px solid var(--color-secondary);
+    color: var(--color-secondary);
+    padding: 0.8rem 2rem;
+    font-family: var(--font-heading);
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-tech-outline:hover {
+    background: var(--color-secondary);
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 0, 153, 0.4);
+}
+
+@keyframes pulse-alert {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}

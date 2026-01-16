@@ -6,116 +6,120 @@
 {% block breadcrumb %}Products / Edit{% endblock %}
 
 {% block vendor_content %}
-<div class="row">
-    <div class="col-lg-8">
-        <!-- Basic Information -->
-        <div class="custom-card mb-4">
-            <div class="card-header-custom">
-                <h5 class="card-title-custom">Basic Information</h5>
-            </div>
-            <form>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="custom-card mb-4">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">Basic Information</h5>
+                </div>
+                <!-- Removed inner form tag -->
                 <div class="mb-3">
                     <label class="form-label">Product Name</label>
-                    <input type="text" class="form-control-custom" value="Nike Air Max 90">
+                    <input type="text" name="name" class="form-control-custom" value="Nike Air Max 90" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Description</label>
-                    <textarea class="form-control-custom"
-                        rows="5">Classic sneaker with excellent cushioning and timeless style.</textarea>
+                    <textarea name="description" class="form-control-custom"
+                        rows="5" required>Classic sneaker with excellent cushioning and timeless style.</textarea>
                 </div>
-            </form>
+            </div>
+
+            <!-- Images -->
+            <div class="custom-card mb-4">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">Product Images</h5>
+                </div>
+                <div class="d-flex mb-3 gap-3">
+                    <!-- Current Images Display (Static for now, but would be dynamic in real Django) -->
+                    <div style="width: 100px; height: 100px; background: #eee; border-radius: 10px; position: relative;"
+                        class="d-flex align-items-center justify-content-center">
+                        <span class="text-muted">Img 1</span>
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
+                            style="border-radius: 50%; width: 20px; height: 20px; padding: 0; font-size: 10px;"><i
+                                class="fas fa-times"></i></button>
+                    </div>
+                    <div style="width: 100px; height: 100px; background: #eee; border-radius: 10px; position: relative;"
+                        class="d-flex align-items-center justify-content-center">
+                        <span class="text-muted">Img 2</span>
+                        <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
+                            style="border-radius: 50%; width: 20px; height: 20px; padding: 0; font-size: 10px;"><i
+                                class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="p-4 text-center"
+                    style="border: 2px dashed var(--border-color); border-radius: 15px; background: var(--bg-body); position: relative;">
+                    <input type="file" name="image" accept="image/*" multiple style="opacity: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer;">
+                    <i class="fas fa-cloud-upload-alt fa-2x mb-2" style="color: var(--primary-color);"></i>
+                    <p class="mb-0 text-muted">Upload more images</p>
+                </div>
+            </div>
+
+            <!-- Inventory & Pricing -->
+            <div class="custom-card mb-4">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">Pricing & Inventory</h5>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Regular Price ($)</label>
+                        <input type="number" name="price" step="0.01" class="form-control-custom" value="129.00" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Discount Price ($)</label>
+                        <input type="number" name="discount_price" step="0.01" class="form-control-custom" value="119.00">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Stock Quantity</label>
+                        <input type="number" name="stock" class="form-control-custom" value="45" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">SKU</label>
+                        <input type="text" name="sku" class="form-control-custom" value="NK-AM90-001">
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Images -->
-        <div class="custom-card mb-4">
-            <div class="card-header-custom">
-                <h5 class="card-title-custom">Product Images</h5>
-            </div>
-            <div class="d-flex mb-3 gap-3">
-                <div style="width: 100px; height: 100px; background: #eee; border-radius: 10px; position: relative;"
-                    class="d-flex align-items-center justify-content-center">
-                    <span class="text-muted">Img 1</span>
-                    <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
-                        style="border-radius: 50%; width: 20px; height: 20px; padding: 0; font-size: 10px;"><i
-                            class="fas fa-times"></i></button>
+        <div class="col-lg-4">
+            <!-- Organization -->
+            <div class="custom-card mb-4">
+                <div class="card-header-custom">
+                    <h5 class="card-title-custom">Organization</h5>
                 </div>
-                <div style="width: 100px; height: 100px; background: #eee; border-radius: 10px; position: relative;"
-                    class="d-flex align-items-center justify-content-center">
-                    <span class="text-muted">Img 2</span>
-                    <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
-                        style="border-radius: 50%; width: 20px; height: 20px; padding: 0; font-size: 10px;"><i
-                            class="fas fa-times"></i></button>
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    <select name="category" class="form-select-custom" required>
+                        <option value="1" selected>Sneakers</option>
+                        <option value="2">Boots</option>
+                        <option value="3">Sandals</option>
+                        <option value="4">Slippers</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select-custom">
+                        <option value="published" selected>Published</option>
+                        <option value="draft">Draft</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tags</label>
+                    <input type="text" name="tags" class="form-control-custom" value="Running, Nike, Sports">
                 </div>
             </div>
-            <div class="p-4 text-center"
-                style="border: 2px dashed var(--border-color); border-radius: 15px; background: var(--bg-body);">
-                <i class="fas fa-cloud-upload-alt fa-2x mb-2" style="color: var(--primary-color);"></i>
-                <p class="mb-0 text-muted">Upload more images</p>
-            </div>
-        </div>
 
-        <!-- Inventory & Pricing -->
-        <div class="custom-card mb-4">
-            <div class="card-header-custom">
-                <h5 class="card-title-custom">Pricing & Inventory</h5>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Regular Price ($)</label>
-                    <input type="number" class="form-control-custom" value="129.00">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Discount Price ($)</label>
-                    <input type="number" class="form-control-custom" value="119.00">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Stock Quantity</label>
-                    <input type="number" class="form-control-custom" value="45">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">SKU</label>
-                    <input type="text" class="form-control-custom" value="NK-AM90-001">
-                </div>
+            <!-- Actions -->
+            <div class="custom-card">
+                <button type="submit" class="btn btn-primary-custom w-100 mb-3" style="font-size: 16px; padding: 12px;">Update
+                    Product</button>
+                <button type="button" class="btn btn-outline-danger w-100" style="border-radius: 10px; padding: 12px;">Delete
+                    Product</button>
             </div>
         </div>
     </div>
-
-    <div class="col-lg-4">
-        <!-- Organization -->
-        <div class="custom-card mb-4">
-            <div class="card-header-custom">
-                <h5 class="card-title-custom">Organization</h5>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Category</label>
-                <select class="form-select-custom">
-                    <option value="1" selected>Sneakers</option>
-                    <option value="2">Boots</option>
-                    <option value="3">Sandals</option>
-                    <option value="4">Slippers</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Status</label>
-                <select class="form-select-custom">
-                    <option value="published" selected>Published</option>
-                    <option value="draft">Draft</option>
-                    <option value="inactive">Inactive</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Tags</label>
-                <input type="text" class="form-control-custom" value="Running, Nike, Sports">
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="custom-card">
-            <button class="btn btn-primary-custom w-100 mb-3" style="font-size: 16px; padding: 12px;">Update
-                Product</button>
-            <button class="btn btn-outline-danger w-100" style="border-radius: 10px; padding: 12px;">Delete
-                Product</button>
-        </div>
-    </div>
-</div>
+</form>
 {% endblock %}

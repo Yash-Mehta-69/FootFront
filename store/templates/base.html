@@ -67,6 +67,23 @@
 
     {% block modal %}{% endblock %}
 
+    <!-- Global Tech Error Modal -->
+    <div id="globalErrorModal" class="tech-modal-overlay">
+        <div class="tech-modal-content">
+            <div class="tech-modal-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3 id="globalErrorTitle">SYSTEM ALERT</h3>
+                <button class="tech-modal-close" onclick="closeGlobalError()">×</button>
+            </div>
+            <div class="tech-modal-body">
+                <p id="globalErrorMessage">An unexpected error has occurred.</p>
+            </div>
+            <div class="tech-modal-footer">
+                <button class="btn-tech-outline" onclick="closeGlobalError()">ACKNOWLEDGE</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Core Scripts -->
     <script defer src="{% static 'assets1/js/vendor/jquery-2.2.4.min.js' %}"></script>
     <script defer src="{% static 'assets1/js/vendor/bootstrap.min.js' %}"></script>

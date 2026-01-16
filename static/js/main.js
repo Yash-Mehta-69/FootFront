@@ -52,3 +52,20 @@ interactiveElements.forEach(el => {
 });
 
 console.log("FootFront UI Loaded - Gen Z Edition");
+
+/* Global Error Modal Logic */
+window.showGlobalError = function(title, message) {
+    const modal = document.getElementById('globalErrorModal');
+    if(modal) {
+        document.getElementById('globalErrorTitle').innerText = title || "SYSTEM ALERT";
+        document.getElementById('globalErrorMessage').innerText = message || "An unknown error has occurred.";
+        modal.classList.add('active');
+    }
+};
+
+window.closeGlobalError = function() {
+    const modal = document.getElementById('globalErrorModal');
+    if(modal) {
+        modal.classList.remove('active');
+    }
+};

@@ -351,9 +351,19 @@
         background: rgba(255,255,255,0.05);
     }
 
-    /* Hide original select */
+    /* Hide original select but keep it accessible for form submission/validation */
     .form-group select {
-        display: none;
+        display: block;
+        height: 1px;
+        width: 1px;
+        opacity: 0;
+        pointer-events: none;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        padding: 0;
+        margin: 0;
+        border: none;
     }
 </style>
 

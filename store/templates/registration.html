@@ -48,7 +48,7 @@
             <p class="text-muted-theme" style="font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Create Signal ID</p>
         </div>
         
-        <form id="registerForm" method="POST" novalidate onsubmit="startRegAnimation(event)">
+        <form id="registerForm" method="POST" onsubmit="startRegAnimation(event)">
             {% csrf_token %}
             <div class="row-group mb-3">
                 <div class="form-group">
@@ -132,15 +132,26 @@
                 const confirmPassword = document.getElementById('confirmPassword').value;
                 const messageDiv = document.getElementById('register-message');
                 messageDiv.innerText = '';
+                const btn = document.getElementById('regBtn'); // Get button reference
+
+                function resetBtn() {
+                    btn.disabled = false;
+                    btn.innerText = "INITIALIZE ACCOUNT";
+                    btn.style.opacity = "1";
+                }
 
                 if (password !== confirmPassword) {
-                    messageDiv.innerText = 'Passwords do not match.';
+                    if(window.showGlobalError) window.showGlobalError("SECURITY ALERT", "Passwords do not match.");
+                    else alert("Passwords do not match.");
+                    resetBtn();
                     return;
                 }
 
                 // Ensure firebase is loaded
                 if (typeof firebase === 'undefined') {
-                    messageDiv.innerText = 'System Error: Auth provider not loaded.';
+                    if(window.showGlobalError) window.showGlobalError("SYSTEM ERROR", "Auth provider not loaded.");
+                    else alert("Auth provider not loaded.");
+                    resetBtn();
                     return;
                 }
 
@@ -169,19 +180,25 @@
                         if (data.status === 'success') {
                             window.location.href = data.redirect_url;
                         } else {
-                            messageDiv.innerText = 'Registration failed: ' + data.message;
-                            // If backend registration failed, we should probably delete the firebase user cleanup
-                            // But keeping it simple for now as per original code logic, or improving it?
-                            // Original code had user.delete(), let's keep that safely
+                            if(window.showGlobalError) window.showGlobalError("REGISTRATION FAILED", data.message);
+                            else alert(data.message);
+                            
                             const currentUser = firebase.auth().currentUser;
                             if (currentUser) currentUser.delete(); 
+                            resetBtn();
                         }
                     })
                     .catch((error) => {
                         console.error('Registration Error:', error);
-                        messageDiv.innerText = 'Registration failed: ' + (error.message || error);
+                        let msg = error.message;
+                        if(error.code === 'auth/email-already-in-use') msg = "This email identity is already registered.";
+                        
+                        if(window.showGlobalError) window.showGlobalError("REGISTRATION ERROR", msg);
+                        else alert(msg);
+
                         const currentUser = firebase.auth().currentUser;
                         if (currentUser) currentUser.delete();
+                        resetBtn();
                     });
             });
         }
