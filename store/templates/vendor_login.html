@@ -1,44 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendor Panel Login</title>
-    {% load static %}
-    <link href="{% static 'css/style.css' %}" rel="stylesheet">
-    <style>
-        /* Overrides since we are not extending base */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-    </style>
-</head>
-<body>
+{% extends 'base.html' %}
+{% load static %}
 
-<div class="glass-panel" style="width: 100%; max-width: 400px; border-color: var(--color-secondary);">
-    <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="font-family: 'Oswald', sans-serif; font-size: 2rem; color: white;">SELLER PORTAL</h2>
-        <div style="width: 40px; height: 2px; background: var(--color-secondary); margin: 0.5rem auto;"></div>
-    </div>
+{% block title %}Vendor Portal | FootFront{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Minimal overrides for auth layout */
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-top: 150px;
+        padding-bottom: 150px;
+        position: relative;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
     
-    <form method="POST" action="{% url 'vendor_login' %}">
-        {% csrf_token %}
-        <div style="margin-bottom: 1rem;">
-            <input type="text" class="tech-input" id="username" name="username" placeholder="VENDOR ID" required>
+    @media (max-width: 576px) {
+        .auth-glass-panel {
+            padding: 1.5rem !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="glass-panel auth-glass-panel" style="width: 100%; max-width: 450px; position: relative; z-index: 2; border-color: var(--color-secondary);">
+        <div class="text-center mb-4">
+            <h2 style="font-family: var(--font-heading); font-size: clamp(2rem, 10vw, 3rem); margin: 0; line-height: 1;">SELLER</h2>
+            <div style="width: 50px; height: 3px; background: var(--color-secondary); margin: 0.5rem auto;"></div>
+            <p style="color: #888; font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Partner Portal</p>
         </div>
-        <div style="margin-bottom: 2rem;">
-            <input type="password" class="tech-input" id="password" name="password" placeholder="ACCESS KEY" required>
+        
+        <form method="POST" action="{% url 'vendor_login' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <input type="text" class="tech-input" id="username" name="username" placeholder="VENDOR ID" required>
+            </div>
+            <div class="mb-4">
+                <input type="password" class="tech-input" id="password" name="password" placeholder="ACCESS KEY" required>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width: 100%; background-color: var(--color-secondary);">ENTER MARKET</button>
+        </form>
+
+        <div class="mt-4 text-center">
+            <a href="{% url 'vendor_forgot_password' %}" style="color: var(--color-text-muted); font-size: 0.8rem; text-decoration: none;">Forgot Key?</a>
         </div>
-        <button type="submit" class="btn-primary" style="width: 100%; background-color: var(--color-secondary);">ENTER MARKET</button>
-    </form>
-    
-    <div style="text-align: center; margin-top: 2rem; color: #666; font-size: 0.8rem; font-family: monospace;">
-        &copy; FOOTFRONT SYSTEM
+        
+        <div class="mt-4 text-center">
+             <p class="mb-2" style="font-size: 0.9rem; color: #666;">NOT A PARTNER?</p>
+             <a href="{% url 'become_vendor' %}" style="color: var(--color-secondary); text-transform: uppercase; font-weight: bold; font-size: 0.9rem;">JOIN THE NETWORK ></a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem; color: #666; font-size: 0.8rem; font-family: monospace;">
+            &copy; FOOTFRONT SYSTEM
+        </div>
     </div>
 </div>
+{% endblock %}
 
-</body>
-</html>
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof gsap !== 'undefined') {
+            gsap.from(".glass-panel", { 
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
+        }
+    });
+</script>
+{% endblock %}

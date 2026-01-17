@@ -16,28 +16,40 @@
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row g-3">
+                    <!-- Basic Info -->
                     <div class="col-md-6">
                         <label class="form-label">Product Name</label>
                         <input type="text" class="form-control-custom" name="name" value="{{ product.name }}" placeholder="Enter product name">
                     </div>
                     
                     <div class="col-md-6">
-                        <label class="form-label">Category</label>
-                        <select class="form-select-custom" name="category">
-                            <option value="Sneakers" {% if product.category == 'Sneakers' %}selected{% endif %}>Sneakers</option>
-                            <option value="Running" {% if product.category == 'Running' %}selected{% endif %}>Running</option>
-                            <option value="Casual" {% if product.category == 'Casual' %}selected{% endif %}>Casual</option>
+                        <label class="form-label">Vendor</label>
+                        <select class="form-select-custom" name="vendor">
+                            <option value="">Select Vendor</option>
+                            {% for v in vendors %}
+                            <option value="{{ v.pk }}" {% if product.vendor == v.shopName %}selected{% endif %}>{{ v.shopName }}</option>
+                            {% endfor %}
                         </select>
                     </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label">Price ($)</label>
-                        <input type="number" class="form-control-custom" name="price" value="{{ product.price }}" placeholder="0.00">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Category</label>
+                        <select class="form-select-custom" name="category">
+                            <option value="">Select Category</option>
+                            {% for c in categories %}
+                            <option value="{{ c.pk }}" {% if product.category == c.name %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">Stock Quantity</label>
-                        <input type="number" class="form-control-custom" name="stock" value="{{ product.stock }}" placeholder="0">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select-custom" name="gender">
+                            <option value="U" {% if product.gender == 'U' %}selected{% endif %}>Unisex</option>
+                            <option value="M" {% if product.gender == 'M' %}selected{% endif %}>Men</option>
+                            <option value="W" {% if product.gender == 'W' %}selected{% endif %}>Women</option>
+                            <option value="K" {% if product.gender == 'K' %}selected{% endif %}>Kids</option>
+                        </select>
                     </div>
 
                     <div class="col-md-4">
@@ -47,20 +59,99 @@
                             <option value="Inactive" {% if product.status == 'Inactive' %}selected{% endif %}>Inactive</option>
                         </select>
                     </div>
-
-                    <div class="col-12">
-                        <label class="form-label">Product Images</label>
-                        <input type="file" class="form-control-custom" name="images" multiple>
-                        <div class="form-text">You can select multiple images.</div>
+                    
+                    <div class="col-md-4 d-flex align-items-center mt-4 pt-2">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="isTrending" name="is_trending" {% if product.is_trending %}checked{% endif %}>
+                            <label class="form-check-label ms-2" for="isTrending">Is Trending?</label>
+                        </div>
                     </div>
-
+                    
                     <div class="col-12">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control-custom" name="description" rows="5" placeholder="Enter full product description">{{ product.description }}</textarea>
+                        <textarea class="form-control-custom" name="description" rows="4" placeholder="Enter product description">{{ product.description }}</textarea>
+                    </div>
+                    
+                    <div class="col-md-12">
+                         <label class="form-label">Main Image</label>
+                         <input type="file" class="form-control-custom" name="product_image">
+                    </div>
+
+                    <!-- Variants Section -->
+                    <div class="col-12 mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-primary mb-0">Product Variants (Size & Color)</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVariantRow()">
+                                <i class="fas fa-plus me-1"></i> Add Variant
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table-custom" id="variantTable">
+                                <thead class="bg-light-custom">
+                                    <tr>
+                                        <th style="min-width: 100px;">Size</th>
+                                        <th style="min-width: 100px;">Color</th>
+                                        <th style="min-width: 100px;">Price</th>
+                                        <th style="min-width: 80px;">Stock</th>
+                                        <th style="min-width: 150px;">Image</th>
+                                        <th style="width: 50px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for v in product.variants %}
+                                    <tr>
+                                        <td>
+                                            <select class="form-select-custom form-select-sm" name="variant_size[]">
+                                                {% for s in sizes %}
+                                                <option value="{{ s.pk }}" {% if v.size == s.size_label %}selected{% endif %}>{{ s.size_label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select-custom form-select-sm" name="variant_color[]">
+                                                {% for c in colors %}
+                                                <option value="{{ c.pk }}" {% if v.color == c.name %}selected{% endif %}>{{ c.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" value="{{ v.price }}" step="0.01"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" value="{{ v.stock }}"></td>
+                                        <td><input type="file" class="form-control-custom form-control-sm" name="variant_image[]"></td>
+                                        <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                    {% empty %}
+                                    <!-- Empty row template if no variants exist -->
+                                    <tr id="emptyRow">
+                                        <td>
+                                            <select class="form-select-custom form-select-sm" name="variant_size[]">
+                                                 <option value="">Select</option>
+                                                {% for s in sizes %}
+                                                <option value="{{ s.pk }}">{{ s.size_label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-select-custom form-select-sm" name="variant_color[]">
+                                                <option value="">Select</option>
+                                                {% for c in colors %}
+                                                <option value="{{ c.pk }}">{{ c.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" placeholder="0"></td>
+                                        <td><input type="file" class="form-control-custom form-control-sm" name="variant_image[]"></td>
+                                        <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     
                     <div class="col-12 mt-4 text-end">
-                        <a href="{% url 'manage_products' %}" class="btn btn-light me-2">Cancel</a>
+                        <a href="{% url 'manage_products' %}" class="btn btn-light-custom me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary-custom px-4">{{ action }} Product</button>
                     </div>
                 </div>
@@ -68,4 +159,42 @@
         </div>
     </div>
 </div>
+
+<script>
+function addVariantRow() {
+    // Clone the first row (or a hidden template)
+    // For simplicity in this mock, we'll just clone the last row or the empty row.
+    // In a real app, a hidden template is better.
+    let table = document.getElementById("variantTable").getElementsByTagName('tbody')[0];
+    let rows = table.rows;
+    let lastRow = rows[rows.length - 1];
+    let newRow = lastRow.cloneNode(true);
+    
+    // Clear inputs in the new row
+    let inputs = newRow.getElementsByTagName('input');
+    for (let i = 0; i < inputs.length; i++) {
+        inputs[i].value = '';
+    }
+    let selects = newRow.getElementsByTagName('select');
+    for(let i=0; i<selects.length; i++){
+        selects[i].selectedIndex = 0;
+    }
+
+    table.appendChild(newRow);
+}
+
+function removeRow(btn) {
+    let row = btn.parentNode.parentNode;
+    let table = row.parentNode;
+    if(table.rows.length > 1){
+        table.removeChild(row);
+    } else {
+        // Just clear the last remaining row instead of deleting it
+        let inputs = row.getElementsByTagName('input');
+        for (let i = 0; i < inputs.length; i++) inputs[i].value = '';
+        let selects = row.getElementsByTagName('select');
+        for (let i = 0; i < selects.length; i++) selects[i].selectedIndex = 0;
+    }
+}
+</script>
 {% endblock %}

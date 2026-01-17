@@ -12,11 +12,20 @@ from django.conf import settings
 from .models import User, Customer, Category, Product, Color, Size
 from .decorators import redirect_special_users
 from django.db.models import Min, Q
+from django.contrib.auth.forms import PasswordResetForm
+from django.template.loader import render_to_string
+from django.db.models.query_utils import Q
+from django.utils.http import urlsafe_base64_encode
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.core.mail import send_mail, BadHeaderError
+from django.http import HttpResponse
 from .forms import ComplaintForm, UserUpdateForm, ShippingAddressForm
 from .models import User, Customer, Category, Product, Color, Size, ShippingAddress, Review
 
 
 
+@redirect_special_users
 def admin_login(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -24,7 +33,7 @@ def admin_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('/admin/')
+            return redirect('admin_dashboard')
     return render(request, 'admin_login.html')
 
 
@@ -51,6 +60,54 @@ def vendor_login(request):
             print(request, 'Invalid username or password.')
     
     return render(request, 'vendor_login.html')
+
+def password_reset_request(request, template_name, role_check):
+    if request.method == "POST":
+        password_reset_form = PasswordResetForm(request.POST)
+        if password_reset_form.is_valid():
+            data = password_reset_form.cleaned_data['email']
+            print(f"DEBUG: Attempting password reset for email: {data} with role: {role_check}")
+            associated_users = User.objects.filter(Q(email=data) & Q(role=role_check))
+            if associated_users.exists():
+                print(f"DEBUG: Found {associated_users.count()} user(s).")
+                for user in associated_users:
+                    print(f"DEBUG: Preparing email for user: {user.email}")
+                    subject = "Password Reset Requested"
+                    email_template_name = "password_reset_email.txt"
+                    c = {
+                        "email": user.email,
+                        'domain': request.META['HTTP_HOST'],
+                        'site_name': 'FootFront',
+                        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                        "user": user,
+                        'token': default_token_generator.make_token(user),
+                        'protocol': 'http',
+                    }
+                    email = render_to_string(email_template_name, c)
+                    try:
+                        print("DEBUG: Calling send_mail...")
+                        send_mail(subject, email, 'admin@footfront.com' , [user.email], fail_silently=False)
+                        print("DEBUG: send_mail called successfully (check console output below)")
+                    except BadHeaderError:
+                        print("DEBUG: BadHeaderError")
+                        return HttpResponse('Invalid header found.')
+                    except Exception as e:
+                         print(f"DEBUG: Error sending email: {e}")
+                
+                messages.success(request, 'A message with reset instructions has been sent to your inbox.')
+                return redirect(request.path)
+            else:
+                 print(f"DEBUG: No user found with email {data} and role {role_check}")
+                 messages.error(request, 'This email is not registered as a ' + role_check + '.')
+    return render(request, template_name)
+
+@redirect_special_users
+def admin_forgot_password(request):
+    return password_reset_request(request, 'admin_forgot_password.html', 'admin')
+
+@redirect_special_users
+def vendor_forgot_password(request):
+    return password_reset_request(request, 'vendor_forgot_password.html', 'vendor')
 
 
 def initialize_firebase():
@@ -544,10 +601,20 @@ def complaint_view(request):
         else:
             messages.error(request, "Please correct the errors below.")
 
+    # Fetch User's Complaints
+    user_complaints = []
+    if request.user.is_authenticated:
+        try:
+            customer = request.user.customer_profile
+            user_complaints = Complaint.objects.filter(customer=customer, is_deleted=False).order_by('-created_at')
+        except:
+            pass
+
     context = {
         'company_details': company_details,
         'faqs': faqs,
-        'form': form
+        'form': form,
+        'user_complaints': user_complaints
     }
     return render(request, 'complaint.html', context)
 

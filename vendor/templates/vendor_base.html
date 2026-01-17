@@ -28,6 +28,10 @@
             --shadow-sm: 0px 18px 40px rgba(112, 144, 176, 0.12);
             --sidebar-width: 280px;
             --glass-bg: rgba(255, 255, 255, 0.8);
+            --bg-light-custom: #f8f9fa;
+            --btn-light-bg: #e2e6ea;
+            --btn-light-color: #2b3674;
+            --btn-light-hover: #dbe0e5;
         }
 
         [data-theme="dark"] {
@@ -43,6 +47,10 @@
             --border-color: #1b254b;
             --shadow-sm: 0px 18px 40px rgba(0, 0, 0, 0.2);
             --glass-bg: rgba(17, 28, 68, 0.8);
+            --bg-light-custom: #1b254b; /* Darker shade for table headers */
+            --btn-light-bg: #1b254b;
+            --btn-light-color: #ffffff;
+            --btn-light-hover: #263364;
         }
 
         body {
@@ -456,6 +464,28 @@
             font-size: 14px;
             margin-bottom: 8px;
         }
+        
+         .bg-light-custom {
+            background-color: var(--bg-light-custom) !important;
+            color: var(--text-main);
+        }
+
+        .btn-light-custom {
+            background-color: var(--btn-light-bg);
+            color: var(--btn-light-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-light-custom:hover {
+            background-color: var(--btn-light-hover);
+            color: var(--btn-light-color);
+        }
     </style>
 </head>
 
@@ -474,10 +504,7 @@
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_products' %}active{% endif %}">
                 <i class="fas fa-box-open"></i> Products
             </a>
-            <a href="{% url 'vendor_orders' %}"
-                class="menu-item {% if request.resolver_match.url_name == 'vendor_orders' %}active{% endif %}">
-                <i class="fas fa-shopping-cart"></i> Orders
-            </a>
+            <!-- Orders Link Removed -->
             <a href="{% url 'vendor_categories' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_categories' %}active{% endif %}">
                 <i class="fas fa-list"></i> Categories
@@ -485,6 +512,10 @@
             <a href="{% url 'vendor_shipments' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_shipments' %}active{% endif %}">
                 <i class="fas fa-shipping-fast"></i> Shipments
+            </a>
+            <a href="{% url 'vendor_reviews' %}"
+                class="menu-item {% if request.resolver_match.url_name == 'vendor_reviews' %}active{% endif %}">
+                <i class="fas fa-star"></i> Reviews
             </a>
             <a href="{% url 'vendor_analytics' %}" class="menu-item {% if request.resolver_match.url_name == 'vendor_analytics' %}active{% endif %}">
                 <i class="fas fa-chart-line"></i> Analytics
@@ -535,6 +566,7 @@
                     <ul class="dropdown-menu dropdown-menu-end"
                         style="background-color: var(--bg-card); border-color: var(--border-color);">
                         <li><a class="dropdown-item" style="color: var(--text-main);" href="{% url 'vendor_profile' %}">Profile</a></li>
+                        <li><a class="dropdown-item" style="color: var(--text-main);" href="{% url 'vendor_change_password' %}">Change Password</a></li>
                         <li>
                             <hr class="dropdown-divider" style="border-color: var(--border-color);">
                         </li>

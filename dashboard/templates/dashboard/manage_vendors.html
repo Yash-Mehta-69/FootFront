@@ -1,0 +1,75 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Manage Vendors | Admin Panel{% endblock %}
+
+{% block header_title %}Manage Vendors{% endblock %}
+{% block breadcrumb %}Vendors{% endblock %}
+
+{% block admin_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">All Vendors</h5>
+        <a href="{% url 'add_vendor' %}" class="btn btn-primary-custom">
+            <i class="fas fa-plus me-2"></i> Add Vendor
+        </a>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Shop / Owner</th>
+                    <th>Contact</th>
+                    <th>Bank Details</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vendor in vendors %}
+                <tr>
+                    <td>#{{ vendor.pk }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 12px; background-color: #707ebd;">
+                                {{ vendor.shopName|slice:":1" }}
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ vendor.shopName }}</div>
+                                <div class="small text-muted">{{ vendor.name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                         <div><i class="fas fa-envelope me-1 text-muted"></i> {{ vendor.email }}</div>
+                         <div><i class="fas fa-phone me-1 text-muted"></i> {{ vendor.business_phone }}</div>
+                    </td>
+                    <td>
+                        <div class="small">
+                            <div class="fw-bold">{{ vendor.bank_detail.bank_name }}</div>
+                            <div>{{ vendor.bank_detail.account_number }}</div>
+                            <div class="text-muted">{{ vendor.bank_detail.ifsc_code }}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge {% if vendor.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
+                            <i class="fas {% if vendor.status == 'Active' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+                            {{ vendor.status }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'edit_vendor' vendor.pk %}" class="btn-icon-soft me-1" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button class="btn-icon-soft text-danger" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

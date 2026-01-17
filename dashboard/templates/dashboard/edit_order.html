@@ -1,0 +1,67 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Edit Order | Admin Panel{% endblock %}
+
+{% block header_title %}Edit Order #{{ order.pk }}{% endblock %}
+{% block breadcrumb %}Orders / Edit{% endblock %}
+
+{% block admin_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Update Order Details</h5>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Order ID</label>
+                        <input type="text" class="form-control-custom" value="#{{ order.pk }}" disabled>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Customer</label>
+                        <input type="text" class="form-control-custom" value="{{ order.customer }}" disabled>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Date</label>
+                        <input type="text" class="form-control-custom" value="{{ order.date }}" disabled>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Total Amount</label>
+                        <input type="text" class="form-control-custom" value="{{ order.total }}" disabled>
+                    </div>
+
+                    <div class="col-md-6">
+                         <label class="form-label">Order Status</label>
+                         <select class="form-select-custom" name="status">
+                             <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                             <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                             <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                             <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                         </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Status</label>
+                         <select class="form-select-custom" name="payment_status">
+                             <option value="Paid" {% if order.payment_status == 'Paid' %}selected{% endif %}>Paid</option>
+                             <option value="Unpaid" {% if order.payment_status == 'Unpaid' %}selected{% endif %}>Unpaid</option>
+                             <option value="Refunded" {% if order.payment_status == 'Refunded' %}selected{% endif %}>Refunded</option>
+                         </select>
+                    </div>
+
+                    <div class="col-12 mt-4 text-end">
+                        <a href="{% url 'manage_orders' %}" class="btn btn-light-custom me-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4">Update Order</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

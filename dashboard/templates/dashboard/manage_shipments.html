@@ -1,26 +1,42 @@
-{% extends 'vendor_base.html' %}
+{% extends 'dashboard/admin_base.html' %}
 
-{% block title %}Shipments | Vendor Panel{% endblock %}
+{% block title %}Manage Shipments | Admin Panel{% endblock %}
 
-{% block header_title %}Shipments{% endblock %}
+{% block header_title %}Manage Shipments{% endblock %}
 {% block breadcrumb %}Shipments{% endblock %}
 
-{% block vendor_content %}
+{% block admin_content %}
 <div class="custom-card">
     <div class="card-header-custom">
-        <h5 class="card-title-custom">All Shipments</h5>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control-custom" placeholder="Search tracking..." style="width: 200px;">
+            <input type="text" class="form-control-custom" placeholder="Order ID" style="width: 120px;">
+            <select class="form-select-custom" style="width: 150px;">
+                <option value="">Vendor</option>
+                {% for vendor in vendors %}
+                <option value="{{ vendor.pk }}">{{ vendor.shopName }}</option>
+                {% endfor %}
+            </select>
+            <select class="form-select-custom" style="width: 150px;">
+                <option value="">Status</option>
+                <option value="pending">Pending</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+        </div>
     </div>
-
+    
     <div class="table-responsive">
         <table class="table-custom">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Order ID</th>
-                    <th scope="col">Product</th>
                     <th scope="col">Tracking Number</th>
+                    <th scope="col">Vendor</th>
                     <th scope="col">Courier</th>
-                    <th scope="col">Date</th>
+                    <th scope="col">Shipped Date</th>
                     <th scope="col">Status</th>
                     <th scope="col">Actions</th>
                 </tr>
@@ -31,13 +47,8 @@
                     <tr>
                         <td>#{{ shipment.pk }}</td>
                         <td><a href="#" class="text-primary-custom fw-bold">#{{ shipment.order_item.order.pk }}</a></td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <span class="fw-bold">{{ shipment.order_item.product_variant.product.name }}</span>
-                            </div>
-                             <small class="text-muted">{{ shipment.order_item.product_variant.size.size_label }} | {{ shipment.order_item.product_variant.color.name }}</small>
-                        </td>
                         <td>{{ shipment.tracking_number }}</td>
+                        <td>{{ shipment.vendor.shopName }}</td>
                         <td>{{ shipment.courier_name }}</td>
                         <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
                         <td>
@@ -67,14 +78,6 @@
                                 </span>
                             {% endif %}
                         </td>
-                        <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
-                        <td>
-                            {% if shipment.expected_delivery %}
-                                {{ shipment.expected_delivery|date:"M d, Y" }}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
                         <td>
                              <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
                                 data-bs-target="#updateStatusModal{{ shipment.pk }}">
@@ -89,7 +92,7 @@
                                             <h5 class="modal-title">Update Status</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(var(--invert-value));"></button>
                                         </div>
-                                        <form method="POST" action="{% url 'update_shipment_status' shipment.pk %}">
+                                        <form method="POST" action="{% url 'admin_update_shipment_status' shipment.pk %}">
                                             {% csrf_token %}
                                             <div class="modal-body">
                                                 <div class="mb-3">
@@ -116,7 +119,7 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="7" class="text-center py-4">
+                        <td colspan="8" class="text-center py-4">
                             <h6 class="text-muted">No shipments found.</h6>
                         </td>
                     </tr>

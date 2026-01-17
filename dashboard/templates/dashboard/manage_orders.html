@@ -8,9 +8,15 @@
 {% block admin_content %}
 <div class="custom-card">
     <div class="card-header-custom">
-        <h5 class="card-title-custom">All Orders</h5>
         <div class="d-flex gap-2">
+            <!-- Add Order Removed -->
             <input type="text" class="form-control-custom" placeholder="Search orders..." style="width: 200px;">
+            <select class="form-select-custom" style="width: 150px;">
+                <option value="">Vendor</option>
+                {% for vendor in vendors %}
+                <option value="{{ vendor.pk }}">{{ vendor.shopName }}</option>
+                {% endfor %}
+            </select>
             <select class="form-select-custom" style="width: 150px;">
                 <option value="">Status</option>
                 <option value="processing">Processing</option>
@@ -60,9 +66,17 @@
                         </span>
                     </td>
                     <td>
-                        <a href="{% url 'admin_order_detail' order.pk %}" class="btn-icon-soft" title="View Detail">
-                            <i class="fas fa-eye"></i>
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'admin_order_detail' order.pk %}" class="btn-icon-soft" title="View Detail">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'admin_edit_order' order.pk %}" class="btn-icon-soft text-primary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="#" class="btn-icon-soft text-danger" title="Delete" onclick="return confirm('Are you sure?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

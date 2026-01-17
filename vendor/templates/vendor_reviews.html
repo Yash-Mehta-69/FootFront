@@ -1,0 +1,57 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}My Product Reviews | Vendor Panel{% endblock %}
+
+{% block header_title %}Product Reviews{% endblock %}
+{% block breadcrumb %}Reviews{% endblock %}
+
+{% block vendor_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">Reviews on My Products</h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>User</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <tr>
+                        <td class="fw-bold">{{ review.product }}</td>
+                        <td>{{ review.user }}</td>
+                        <td>
+                            <span class="text-warning">
+                                 {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                 {% endfor %}
+                            </span>
+                        </td>
+                        <td>{{ review.comment }}</td>
+                        <td>{{ review.date }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                             <h6 class="text-muted">No reviews found for your products.</h6>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

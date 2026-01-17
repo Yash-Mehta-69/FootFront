@@ -19,8 +19,9 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Icon</th>
+                    <th>Image</th>
                     <th>Name</th>
+                    <th>Parent Category</th>
                     <th>Description</th>
                     <th>Products</th>
                     <th>Status</th>
@@ -32,13 +33,20 @@
                 <tr>
                     <td>#{{ category.pk }}</td>
                     <td>
-                        <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width: 40px; height: 40px;">
-                            <i class="fas fa-tag text-secondary"></i>
+                        <div class="rounded bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-shoe-prints text-secondary"></i>
                         </div>
                     </td>
-                    <td>{{ category.name }}</td>
-                    <td>{{ category.description|truncatechars:50 }}</td>
-                    <td>{{ category.product_count }}</td>
+                    <td class="fw-bold">{{ category.name }}</td>
+                    <td>
+                        {% if category.parent %}
+                        <span class="badge bg-light text-dark border">{{ category.parent }}</span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ category.description|truncatechars:30 }}</td>
+                    <td>{{ category.count }}</td>
                     <td>
                         <span class="status-badge {% if category.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
                             <i class="fas {% if category.status == 'Active' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>

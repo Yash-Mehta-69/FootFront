@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from datetime import datetime, timedelta
 
 class MockObj:
@@ -34,68 +35,163 @@ def dashboard(request):
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
 
-def manage_users(request):
-    users = [
-        MockObj(pk=1, name="John Doe", email="john@example.com", role="Customer", status="Active", join_date="Jan 10, 2023"),
-        MockObj(pk=2, name="Jane Smith", email="jane@example.com", role="Vendor", status="Active", join_date="Feb 15, 2023"),
-        MockObj(pk=3, name="Mike Ross", email="mike@example.com", role="Customer", status="Inactive", join_date="Mar 05, 2023"),
+def manage_customers(request):
+    customers = [
+        MockObj(pk=1, name="John Doe", email="john@example.com", phone="1234567890", role="Customer", status="Active", join_date="Jan 10, 2023", is_blocked=False, firebase_uid="uid_12345"),
+        MockObj(pk=3, name="Mike Ross", email="mike@example.com", phone="9876543210", role="Customer", status="Inactive", join_date="Mar 05, 2023", is_blocked=True, firebase_uid="uid_67890"),
     ]
-    return render(request, 'dashboard/manage_users.html', {'users': users})
+    return render(request, 'dashboard/manage_customers.html', {'customers': customers})
 
-def add_user(request):
+def add_customer(request):
     if request.method == "POST":
-        messages.success(request, "User added successfully (Mock)")
-        return redirect('manage_users')
-    return render(request, 'dashboard/user_form.html', {'action': 'Add'})
+        messages.success(request, "Customer added successfully (Mock)")
+        return redirect('manage_customers')
+    return render(request, 'dashboard/user_form.html', {'action': 'Add', 'role': 'Customer', 'return_url': 'manage_customers'})
 
-def edit_user(request, pk):
+def edit_customer(request, pk):
     if request.method == "POST":
-        messages.success(request, "User updated successfully (Mock)")
-        return redirect('manage_users')
-    user = MockObj(pk=pk, name="John Doe", email="john@example.com", role="Customer", status="Active")
-    return render(request, 'dashboard/user_form.html', {'action': 'Edit', 'user': user})
+        messages.success(request, "Customer updated successfully (Mock)")
+        return redirect('manage_customers')
+    user = MockObj(pk=pk, name="John Doe", email="john@example.com", phone="1234567890", role="Customer", status="Active", is_blocked=False, firebase_uid="uid_12345")
+    return render(request, 'dashboard/user_form.html', {'action': 'Edit', 'role': 'Customer', 'user': user, 'return_url': 'manage_customers'})
+
+def manage_vendors(request):
+    vendors = [
+        MockObj(
+            pk=2, 
+            name="Jane Smith", 
+            email="jane@example.com", 
+            shopName="Kicks Palace", 
+            shopAddress="123 Sneaker St, NY",
+            business_phone="1122334455",
+            description="Best sneakers in town",
+            role="Vendor", 
+            status="Active", 
+            join_date="Feb 15, 2023", 
+            is_blocked=False,
+            profile_picture="path/to/img",
+            panCard="path/to/img",
+            adharCard="path/to/img",
+            bank_detail=MockObj(bank_name="HDFC Bank", account_number="1234567890", ifsc_code="HDFC000123", beneficiary_name="Jane Smith")
+        ),
+        MockObj(
+            pk=4, 
+            name="Peter Parker", 
+            email="peter@example.com", 
+            shopName="Spidey Shoes", 
+            shopAddress="20 Ingram St, Queens",
+            business_phone="5566778899",
+            description="Friendly neighborhood shoe seller",
+            role="Vendor", 
+            status="Active", 
+            join_date="Oct 20, 2023", 
+            is_blocked=False,
+            profile_picture="path/to/img",
+            panCard="path/to/img",
+            adharCard="path/to/img",
+            bank_detail=MockObj(bank_name="SBI", account_number="0987654321", ifsc_code="SBIN000456", beneficiary_name="Peter Parker")
+        ),
+    ]
+    return render(request, 'dashboard/manage_vendors.html', {'vendors': vendors})
+
+def add_vendor(request):
+    if request.method == "POST":
+        messages.success(request, "Vendor added successfully (Mock)")
+        return redirect('manage_vendors')
+    return render(request, 'dashboard/user_form.html', {'action': 'Add', 'role': 'Vendor', 'return_url': 'manage_vendors'})
+
+def edit_vendor(request, pk):
+    if request.method == "POST":
+        messages.success(request, "Vendor updated successfully (Mock)")
+        return redirect('manage_vendors')
+    user = MockObj(
+        pk=pk, 
+        name="Jane Smith", 
+        email="jane@example.com", 
+        shopName="Kicks Palace", 
+        shopAddress="123 Sneaker St, NY",
+        business_phone="1122334455",
+        description="Best sneakers in town",
+        role="Vendor", 
+        status="Active",
+        is_blocked=False,
+        profile_picture="path/to/img",
+        panCard="path/to/img",
+        adharCard="path/to/img",
+        bank_detail=MockObj(bank_name="HDFC Bank", account_number="1234567890", ifsc_code="HDFC000123", beneficiary_name="Jane Smith")
+    )
+    return render(request, 'dashboard/user_form.html', {'action': 'Edit', 'role': 'Vendor', 'user': user, 'return_url': 'manage_vendors'})
 
 def manage_categories(request):
     categories = [
-        MockObj(pk=1, name="Sneakers", description="All kinds of sneakers", product_count=120, status="Active"),
-        MockObj(pk=2, name="Running", description="Performance running shoes", product_count=85, status="Active"),
-        MockObj(pk=3, name="Casual", description="Everyday casual wear", product_count=200, status="Inactive"),
+        MockObj(pk=1, name="Sneakers", parent="Men", description="Casual daily wear shoes", status="Active", count=120),
+        MockObj(pk=2, name="Running", parent="Sports", description="Performance running shoes", status="Active", count=85),
     ]
     return render(request, 'dashboard/manage_categories.html', {'categories': categories})
 
 def add_category(request):
+    parents = [MockObj(pk=10, name="Men"), MockObj(pk=11, name="Women"), MockObj(pk=12, name="Sports")]
     if request.method == "POST":
         messages.success(request, "Category added successfully (Mock)")
         return redirect('manage_categories')
-    return render(request, 'dashboard/category_form.html', {'action': 'Add'})
+    return render(request, 'dashboard/category_form.html', {'action': 'Add', 'parents': parents})
 
 def edit_category(request, pk):
+    parents = [MockObj(pk=10, name="Men"), MockObj(pk=11, name="Women"), MockObj(pk=12, name="Sports")]
     if request.method == "POST":
         messages.success(request, "Category updated successfully (Mock)")
         return redirect('manage_categories')
-    category = MockObj(pk=pk, name="Sneakers", description="All kinds of sneakers", status="Active")
-    return render(request, 'dashboard/category_form.html', {'action': 'Edit', 'category': category})
+    category = MockObj(pk=pk, name="Sneakers", parent="Men", description="Casual daily wear shoes", status="Active")
+    return render(request, 'dashboard/category_form.html', {'action': 'Edit', 'category': category, 'parents': parents})
 
 def manage_products(request):
     products = [
-        MockObj(pk=1, name="Nike Air Max", category="Sneakers", price="$120", stock=50, vendor="Kicks Palace", status="Active", image="/static/images/hero-shoe.png"),
-        MockObj(pk=2, name="Adidas UltraBoost", category="Running", price="$180", stock=30, vendor="Run World", status="Active", image="/static/images/hero-shoe.png"),
-        MockObj(pk=3, name="Puma Suede", category="Casual", price="$90", stock=0, vendor="Style Hub", status="Out of Stock", image="/static/images/hero-shoe.png"),
+        MockObj(pk=1, name="Nike Air Max", category="Sneakers", vendor="Kicks Palace", price="120.00", stock=50, status="Active", image="path/to/img", gender="M", is_trending=True),
+        MockObj(pk=2, name="Adidas Ultraboost", category="Running", vendor="Spidey Shoes", price="180.00", stock=30, status="Active", image="path/to/img", gender="U", is_trending=False),
+        MockObj(pk=3, name="Puma Suede", category="Sneakers", vendor="Kicks Palace", price="85.00", stock=0, status="Inactive", image="path/to/img", gender="W", is_trending=False),
     ]
     return render(request, 'dashboard/manage_products.html', {'products': products})
 
 def add_product(request):
+    context = {
+        'action': 'Add',
+        'vendors': [MockObj(pk=1, shopName="Kicks Palace"), MockObj(pk=2, shopName="Spidey Shoes")],
+        'categories': [MockObj(pk=1, name="Sneakers"), MockObj(pk=2, name="Running"), MockObj(pk=3, name="Casual")],
+        'sizes': [MockObj(pk=1, size_label="US 7"), MockObj(pk=2, size_label="US 8"), MockObj(pk=3, size_label="US 9"), MockObj(pk=4, size_label="US 10")],
+        'colors': [MockObj(pk=1, name="Red", hex_code="#FF0000"), MockObj(pk=2, name="Blue", hex_code="#0000FF"), MockObj(pk=3, name="Black", hex_code="#000000")],
+    }
     if request.method == "POST":
         messages.success(request, "Product added successfully (Mock)")
         return redirect('manage_products')
-    return render(request, 'dashboard/product_form.html', {'action': 'Add'})
+    return render(request, 'dashboard/product_form.html', context)
 
 def edit_product(request, pk):
+    product = MockObj(
+        pk=pk, 
+        name="Nike Air Max", 
+        category="Sneakers", 
+        vendor="Kicks Palace", 
+        description="Classic air cushioning.",
+        status="Active", 
+        gender="M", 
+        is_trending=True,
+        variants=[
+            MockObj(size="US 8", color="Red", price="120.00", stock=15),
+            MockObj(size="US 9", color="Black", price="120.00", stock=35),
+        ]
+    )
+    context = {
+        'action': 'Edit',
+        'product': product,
+        'vendors': [MockObj(pk=1, shopName="Kicks Palace"), MockObj(pk=2, shopName="Spidey Shoes")],
+        'categories': [MockObj(pk=1, name="Sneakers"), MockObj(pk=2, name="Running"), MockObj(pk=3, name="Casual")],
+        'sizes': [MockObj(pk=1, size_label="US 7"), MockObj(pk=2, size_label="US 8"), MockObj(pk=3, size_label="US 9"), MockObj(pk=4, size_label="US 10")],
+        'colors': [MockObj(pk=1, name="Red", hex_code="#FF0000"), MockObj(pk=2, name="Blue", hex_code="#0000FF"), MockObj(pk=3, name="Black", hex_code="#000000")],
+    }
     if request.method == "POST":
         messages.success(request, "Product updated successfully (Mock)")
         return redirect('manage_products')
-    product = MockObj(pk=pk, name="Nike Air Max", category="Sneakers", price=120, stock=50, description="Great shoe", status="Active")
-    return render(request, 'dashboard/product_form.html', {'action': 'Edit', 'product': product})
+    return render(request, 'dashboard/product_form.html', context)
 
 def manage_orders(request):
     orders = [
@@ -103,7 +199,27 @@ def manage_orders(request):
         MockObj(pk=1002, customer="Bob Jones", date="2023-10-19", total="$220", status="Shipped", payment_status="Paid"),
         MockObj(pk=1003, customer="Charlie Brown", date="2023-10-18", total="$80", status="Cancelled", payment_status="Refunded"),
     ]
-    return render(request, 'dashboard/manage_orders.html', {'orders': orders})
+    vendors = [MockObj(pk=1, shopName="Kicks Palace"), MockObj(pk=2, shopName="Sporty Shoes")]
+    return render(request, 'dashboard/manage_orders.html', {'orders': orders, 'vendors': vendors})
+
+def admin_edit_order(request, pk):
+    # Mock order fetching
+    order = MockObj(
+        pk=pk, 
+        customer="Alice Smith", 
+        date="2023-10-20", 
+        total="$150", 
+        status="Processing", 
+        payment_status="Paid"
+    )
+    
+    if request.method == "POST":
+        new_status = request.POST.get('status')
+        new_payment = request.POST.get('payment_status')
+        messages.success(request, f"Order #{pk} updated successfully (Status: {new_status}, Payment: {new_payment}) - Mock")
+        return redirect('manage_orders')
+        
+    return render(request, 'dashboard/edit_order.html', {'order': order})
 
 def order_detail(request, pk):
     order = MockObj(
@@ -122,6 +238,57 @@ def order_detail(request, pk):
     )
     return render(request, 'dashboard/order_detail.html', {'order': order})
 
+def manage_shipments(request):
+    # Mock Data
+    shipments = [
+        MockObj(
+            pk=501,
+            order_item=MockObj(
+                order=MockObj(pk=1001),
+                product_variant=MockObj(product=MockObj(name="Nike Air Max"), size=MockObj(size_label="US 9"), color=MockObj(name="Red"))
+            ),
+            tracking_number="TRK9988776655",
+            vendor=MockObj(shopName="Kicks Palace"),
+            courier_name="UPS",
+            status="pending",
+            shipped_at=datetime.now(),
+            expected_delivery=datetime.now() + timedelta(days=5)
+        ),
+        MockObj(
+            pk=502,
+            order_item=MockObj(
+                order=MockObj(pk=1002),
+                product_variant=MockObj(product=MockObj(name="Adidas UltraBoost"), size=MockObj(size_label="US 10"), color=MockObj(name="Black"))
+            ),
+            tracking_number="TRK1122334455",
+            vendor=MockObj(shopName="Sporty Shoes"),
+            courier_name="DHL",
+            status="delivered",
+            shipped_at=datetime.now() - timedelta(days=3),
+            expected_delivery=datetime.now() - timedelta(days=1)
+        )
+    ]
+    vendors = [MockObj(pk=1, shopName="Kicks Palace"), MockObj(pk=2, shopName="Sporty Shoes")]
+    return render(request, 'dashboard/manage_shipments.html', {'shipments': shipments, 'vendors': vendors})
+
+def admin_update_shipment_status(request, pk):
+    try:
+        if request.user.role != 'admin':
+             # Note: In real app, check permissions properly
+             pass
+
+        if request.method == "POST":
+            new_status = request.POST.get('status')
+            messages.success(request, f"Shipment #{pk} status updated to '{new_status}' successfully (Mock)")
+            return redirect('manage_shipments')
+
+        return redirect('manage_shipments')
+
+    except Exception as e:
+        print(f"Error in admin_update_shipment_status: {e}")
+        messages.error(request, 'An error occurred.')
+        return redirect('manage_shipments')
+
 def manage_payments(request):
     payments = [
         MockObj(pk="PAY-12345", user="Alice Smith", amount="$150", method="Credit Card", status="Success", date="2023-10-20"),
@@ -137,12 +304,36 @@ def view_reviews(request):
     ]
     return render(request, 'dashboard/view_reviews.html', {'reviews': reviews})
 
+def delete_review(request, pk):
+    try:
+        # Mock deletion logic
+        if request.method == "POST":
+            messages.success(request, f"Review #{pk} deleted successfully (Mock)")
+            return redirect('view_reviews')
+        return redirect('view_reviews')
+    except Exception as e:
+        print(f"Error in delete_review: {e}")
+        messages.error(request, 'An error occurred.')
+        return redirect('view_reviews')
+
 def view_complaints(request):
     complaints = [
         MockObj(pk=1, user="Mike Ross", subject="Late Delivery", message="My order is 3 days late.", date="2023-10-21", status="Open"),
         MockObj(pk=2, user="Rachel Green", subject="Wrong Item", message="I received the wrong size.", date="2023-10-19", status="Resolved"),
     ]
     return render(request, 'dashboard/view_complaints.html', {'complaints': complaints})
+
+def delete_complaint(request, pk):
+    try:
+        # Mock deletion logic
+        if request.method == "POST":
+            messages.success(request, f"Complaint #{pk} deleted successfully (Mock)")
+            return redirect('view_complaints')
+        return redirect('view_complaints')
+    except Exception as e:
+        print(f"Error in delete_complaint: {e}")
+        messages.error(request, 'An error occurred.')
+        return redirect('view_complaints')
 
 def admin_profile(request):
     if request.method == "POST":
@@ -158,6 +349,19 @@ def admin_profile(request):
 
 def change_password(request):
     if request.method == "POST":
-        messages.success(request, "Password changed successfully (Mock)")
-        return redirect('admin_profile')
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if not request.user.check_password(current_password):
+            messages.error(request, "Incorrect current password.")
+        elif new_password != confirm_password:
+            messages.error(request, "New passwords do not match.")
+        else:
+            request.user.set_password(new_password)
+            request.user.save()
+            update_session_auth_hash(request, request.user)  # Important!
+            messages.success(request, "Password changed successfully.")
+            return redirect('admin_profile')
+
     return render(request, 'dashboard/change_password.html')

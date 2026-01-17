@@ -146,6 +146,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 # Firebase Admin SDK configuration
 FIREBASE_ADMIN_CONFIG = os.path.join(BASE_DIR, 'firebase-config.json')
 
+# Email Backend for Testing
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

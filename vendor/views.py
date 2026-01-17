@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
 from store.models import Category
 from cart.models import Shipment, OrderItem
 from django.utils import timezone
@@ -31,9 +32,9 @@ def vendor_products(request):
         if role == 'vendor':
             # Mock Data
             products = [
-                MockObj(name="Nike Air Max", price=120, stock=50, category=MockObj(name="Sneakers"), image=MockObj(url="/static/images/hero-shoe.png"), is_active=True),
-                MockObj(name="Adidas UltraBoost", price=180, stock=30, category=MockObj(name="Running"), image=MockObj(url="/static/images/hero-shoe.png"), is_active=True),
-                MockObj(name="Puma Suede", price=90, stock=100, category=MockObj(name="Casual"), image=MockObj(url="/static/images/hero-shoe.png"), is_active=False),
+                MockObj(pk=1, name="Nike Air Max", category="Sneakers", price=120.00, stock=50, image=MockObj(url="/static/images/hero-shoe.png"), status="Active", gender="M", is_trending=True),
+                MockObj(pk=2, name="Adidas UltraBoost", category="Running", price=180.00, stock=30, image=MockObj(url="/static/images/hero-shoe.png"), status="Active", gender="U", is_trending=False),
+                MockObj(pk=3, name="Puma Suede", category="Casual", price=90.00, stock=100, image=MockObj(url="/static/images/hero-shoe.png"), status="Inactive", gender="W", is_trending=False),
             ]
             return render(request, 'vendor_products.html', {'products': products})
         else:
@@ -47,63 +48,7 @@ def vendor_orders(request):
     try:
         role = request.user.role
         if role == 'vendor':
-            # Mock Data
-            order_items = [
-                MockObj(
-                    pk=1,
-                    price=150,
-                    quantity=1,
-                    order=MockObj(
-                        pk=1001,
-                        order_date=datetime.now(),
-                        customer=MockObj(
-                            user=MockObj(first_name="Alice", last_name="Smith", email="alice@example.com"),
-                            phone="1234567890"
-                        ),
-                        shipping_address=MockObj(
-                            address_line1="123 Maple St", city="New York", state="NY", postal_code="10001"
-                        ),
-                        payment=MockObj(status="success")
-                    ),
-                    product_variant=MockObj(
-                        product=MockObj(name="Nike Air Max"),
-                        size=MockObj(size_label="US 9"),
-                        color=MockObj(name="Red"),
-                        image=MockObj(url="/static/images/hero-shoe.png")
-                    ),
-                    shipment=None
-                ),
-                MockObj(
-                    pk=2,
-                    price=220,
-                    quantity=2,
-                    order=MockObj(
-                        pk=1002,
-                        order_date=datetime.now() - timedelta(days=1),
-                        customer=MockObj(
-                            user=MockObj(first_name="Bob", last_name="Jones", email="bob@example.com"),
-                            phone="9876543210"
-                        ),
-                        shipping_address=MockObj(
-                            address_line1="456 Oak Ave", city="Los Angeles", state="CA", postal_code="90001"
-                        ),
-                        payment=MockObj(status="success")
-                    ),
-                    product_variant=MockObj(
-                        product=MockObj(name="Adidas UltraBoost"),
-                        size=MockObj(size_label="US 10"),
-                        color=MockObj(name="Black"),
-                        image=MockObj(url="/static/images/hero-shoe.png")
-                    ),
-                    shipment=MockObj(
-                        pk=501,
-                        tracking_number="TRK123456789",
-                        courier_name="FedEx",
-                        status="shipped"
-                    )
-                )
-            ]
-            return render(request, 'vendor_orders.html', {'order_items': order_items})
+            return redirect('vendor_shipments') # Orders are now managed via Shipments
         else:
             messages.info(request, f'Unaccessible page. Your role is {request.user.role}')
             return redirect('home')
@@ -115,7 +60,16 @@ def add_product(request):
     try:
         role = request.user.role
         if role == 'vendor':
-            return render(request, 'vendor_add_product.html')
+            context = {
+                'action': 'Add',
+                'categories': [MockObj(pk=1, name="Sneakers"), MockObj(pk=2, name="Running"), MockObj(pk=3, name="Casual")],
+                'sizes': [MockObj(pk=1, size_label="US 7"), MockObj(pk=2, size_label="US 8"), MockObj(pk=3, size_label="US 9"), MockObj(pk=4, size_label="US 10")],
+                'colors': [MockObj(pk=1, name="Red", hex_code="#FF0000"), MockObj(pk=2, name="Blue", hex_code="#0000FF"), MockObj(pk=3, name="Black", hex_code="#000000")],
+            }
+            if request.method == "POST":
+                messages.success(request, "Product added successfully (Mock)")
+                return redirect('vendor_products')
+            return render(request, 'vendor_add_product.html', context)
         else:
             messages.info(request, f'Unaccessible page. Your role is {request.user.role}')
             return redirect('home')
@@ -127,7 +81,30 @@ def edit_product(request):
     try:
         role = request.user.role
         if role == 'vendor':
-            return render(request, 'vendor_edit_product.html')
+            product = MockObj(
+                pk=1, 
+                name="Nike Air Max", 
+                category="Sneakers", 
+                description="Classic air cushioning.",
+                status="Active", 
+                gender="M", 
+                is_trending=True,
+                variants=[
+                    MockObj(size="US 8", color="Red", price="120.00", stock=15),
+                    MockObj(size="US 9", color="Black", price="120.00", stock=35),
+                ]
+            )
+            context = {
+                'action': 'Edit',
+                'product': product,
+                'categories': [MockObj(pk=1, name="Sneakers"), MockObj(pk=2, name="Running"), MockObj(pk=3, name="Casual")],
+                'sizes': [MockObj(pk=1, size_label="US 7"), MockObj(pk=2, size_label="US 8"), MockObj(pk=3, size_label="US 9"), MockObj(pk=4, size_label="US 10")],
+                'colors': [MockObj(pk=1, name="Red", hex_code="#FF0000"), MockObj(pk=2, name="Blue", hex_code="#0000FF"), MockObj(pk=3, name="Black", hex_code="#000000")],
+            }
+            if request.method == "POST":
+                messages.success(request, "Product updated successfully (Mock)")
+                return redirect('vendor_products')
+            return render(request, 'vendor_edit_product.html', context)
         else:
             messages.info(request, f'Unaccessible page. Your role is {request.user.role}')
             return redirect('home')
@@ -173,7 +150,14 @@ def vendor_shipments(request):
             shipments = [
                 MockObj(
                     pk=101,
-                    order_item=MockObj(product_variant=MockObj(product=MockObj(name="Nike Air Max"), size=MockObj(size_label="US 9"), color=MockObj(name="Red"))),
+                    order_item=MockObj(
+                        product_variant=MockObj(
+                            product=MockObj(name="Nike Air Max"), 
+                            size=MockObj(size_label="US 9"), 
+                            color=MockObj(name="Red")
+                        ),
+                        order=MockObj(pk=1001)
+                    ),
                     tracking_number="TRK9988776655",
                     courier_name="UPS",
                     status="pending",
@@ -182,7 +166,14 @@ def vendor_shipments(request):
                 ),
                 MockObj(
                     pk=102,
-                    order_item=MockObj(product_variant=MockObj(product=MockObj(name="Adidas UltraBoost"), size=MockObj(size_label="US 10"), color=MockObj(name="Black"))),
+                    order_item=MockObj(
+                        product_variant=MockObj(
+                            product=MockObj(name="Adidas UltraBoost"), 
+                            size=MockObj(size_label="US 10"), 
+                            color=MockObj(name="Black")
+                        ),
+                        order=MockObj(pk=1002)
+                    ),
                     tracking_number="TRK1122334455",
                     courier_name="DHL",
                     status="delivered",
@@ -292,4 +283,49 @@ def vendor_help(request):
             return redirect('home')
     except Exception as e:
         print(f"Error in vendor_help: {e}")
+        return redirect('vendor_login')
+
+def vendor_reviews(request):
+    try:
+        role = request.user.role
+        if role == 'vendor':
+            # Mock Data
+            reviews = [
+                MockObj(pk=1, product="Nike Air Max", user="John Doe", rating=5, comment="Great quality!", date="2023-10-21"),
+                MockObj(pk=2, product="Adidas UltraBoost", user="Jane Smith", rating=4, comment="Good, but shipping was slow.", date="2023-10-20"),
+            ]
+            return render(request, 'vendor_reviews.html', {'reviews': reviews})
+        else:
+            messages.info(request, f'Unaccessible page. Your role is {request.user.role}')
+            return redirect('home')
+    except Exception as e:
+        print(f"Error in vendor_reviews: {e}")
+        return redirect('vendor_login')
+
+def vendor_change_password(request):
+    try:
+        role = request.user.role
+        if role == 'vendor':
+            if request.method == "POST":
+                current_password = request.POST.get('current_password')
+                new_password = request.POST.get('new_password')
+                confirm_password = request.POST.get('confirm_password')
+
+                if not request.user.check_password(current_password):
+                    messages.error(request, "Incorrect current password.")
+                elif new_password != confirm_password:
+                    messages.error(request, "New passwords do not match.")
+                else:
+                    request.user.set_password(new_password)
+                    request.user.save()
+                    update_session_auth_hash(request, request.user)
+                    messages.success(request, "Password changed successfully.")
+                    return redirect('vendor_profile')
+            
+            return render(request, 'vendor_change_password.html')
+        else:
+            messages.info(request, f'Unaccessible page. Your role is {request.user.role}')
+            return redirect('home')
+    except Exception as e:
+        print(f"Error in vendor_change_password: {e}")
         return redirect('vendor_login')
