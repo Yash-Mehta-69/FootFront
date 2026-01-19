@@ -1,139 +1,154 @@
 {% extends 'dashboard/admin_base.html' %}
 
-{% block title %}{{ action }} User | Admin Panel{% endblock %}
+{% block title %}{{ action }} {{ role }} | Admin Panel{% endblock %}
 
-{% block header_title %}{{ action }} User{% endblock %}
-{% block breadcrumb %}Users / {{ action }}{% endblock %}
+{% block header_title %}{{ action }} {{ role }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url return_url|default:'dashboard' %}" style="text-decoration: none; color: var(--text-secondary);">{{ role }}s</a> / {{ action }}
+{% endblock %}
 
 {% block admin_content %}
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-10">
         <div class="custom-card">
-            <div class="card-header-custom">
-                <h5 class="card-title-custom">User Details</h5>
-            </div>
-            
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">First Name</label>
-                        <input type="text" class="form-control-custom" name="first_name" value="{{ user.first_name }}" placeholder="Enter first name">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" class="form-control-custom" name="last_name" value="{{ user.last_name }}" placeholder="Enter last name">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" class="form-control-custom" name="email" value="{{ user.email }}" placeholder="Enter email">
-                    </div>
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
                     
-                    <div class="col-md-6">
-                        <label class="form-label">Role</label>
-                         <input type="text" class="form-control-custom" value="{{ role }}" disabled readonly>
-                         <input type="hidden" name="role" value="{{ role }}">
+                    <h6 class="text-primary-custom mb-3">User Information</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control-custom {% if errors.first_name %}is-invalid{% endif %}" name="first_name" value="{{ form_data.first_name|default:'' }}" placeholder="e.g. John">
+                            {% if errors.first_name %}<div class="invalid-feedback">{{ errors.first_name }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control-custom {% if errors.last_name %}is-invalid{% endif %}" name="last_name" value="{{ form_data.last_name|default:'' }}" placeholder="e.g. Doe">
+                            {% if errors.last_name %}<div class="invalid-feedback">{{ errors.last_name }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control-custom {% if errors.email %}is-invalid{% endif %}" name="email" value="{{ form_data.email|default:'' }}" placeholder="name@example.com">
+                            {% if errors.email %}<div class="invalid-feedback">{{ errors.email }}</div>{% endif %}
+                        </div>
+                        
+                        {% if role == 'Customer' %}
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control-custom {% if errors.phone %}is-invalid{% endif %}" name="phone" value="{{ form_data.phone|default:'' }}" placeholder="e.g. 9876543210" maxlength="10">
+                            {% if errors.phone %}<div class="invalid-feedback">{{ errors.phone }}</div>{% endif %}
+                        </div>
+                        {% if customer_obj.firebase_uid %}
+                        <div class="col-md-6">
+                            <label class="form-label">Firebase UID</label>
+                            <input type="text" class="form-control-custom" value="{{ customer_obj.firebase_uid }}" readonly>
+                        </div>
+                        {% endif %}
+                        {% endif %}
                     </div>
-                    
-                    <div class="col-md-6">
-                        <label class="form-label">Status</label>
-                        <select class="form-select-custom" name="status">
-                            <option value="Active" {% if user.status == 'Active' %}selected{% endif %}>Active</option>
-                            <option value="Inactive" {% if user.status == 'Inactive' %}selected{% endif %}>Inactive</option>
-                        </select>
-                    </div>
-
-                    {% if role == 'Customer' %}
-                    <div class="col-md-6">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" class="form-control-custom" name="phone" value="{{ user.phone }}" placeholder="Enter phone number">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Firebase UID</label>
-                        <input type="text" class="form-control-custom" name="firebase_uid" value="{{ user.firebase_uid }}" placeholder="Enter Firebase UID">
-                    </div>
-                    {% endif %}
 
                     {% if role == 'Vendor' %}
-                     <div class="col-12"><h6 class="mt-3 mb-0 text-primary">Business Information</h6><hr class="mt-1"></div>
-                     <div class="col-md-6">
-                        <label class="form-label">Shop Name</label>
-                        <input type="text" class="form-control-custom" name="shopName" value="{{ user.shopName }}" placeholder="Enter shop name">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Business Phone</label>
-                        <input type="text" class="form-control-custom" name="business_phone" value="{{ user.business_phone }}" placeholder="Enter business phone">
-                    </div>
-                    <div class="col-12">
-                         <label class="form-label">Shop Address</label>
-                         <textarea class="form-control-custom" name="shopAddress" rows="2" placeholder="Enter shop address">{{ user.shopAddress }}</textarea>
-                    </div>
-                    <div class="col-12">
-                         <label class="form-label">Shop Description</label>
-                         <textarea class="form-control-custom" name="description" rows="3" placeholder="Enter shop description">{{ user.description }}</textarea>
+                    <h6 class="text-primary-custom mt-4 mb-3">Business Details</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Shop Name</label>
+                            <input type="text" class="form-control-custom {% if errors.shopName %}is-invalid{% endif %}" name="shopName" value="{{ form_data.shopName|default:'' }}" placeholder="Enter shop name">
+                            {% if errors.shopName %}<div class="invalid-feedback">{{ errors.shopName }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Business Phone</label>
+                            <input type="text" class="form-control-custom {% if errors.business_phone %}is-invalid{% endif %}" name="business_phone" value="{{ form_data.business_phone|default:'' }}" placeholder="10-digit number" maxlength="10">
+                            {% if errors.business_phone %}<div class="invalid-feedback">{{ errors.business_phone }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Shop Address</label>
+                            <textarea class="form-control-custom" name="shopAddress" rows="2" placeholder="Full address">{{ form_data.shopAddress|default:'' }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control-custom" name="description" rows="3" placeholder="Shop description">{{ form_data.description|default:'' }}</textarea>
+                        </div>
                     </div>
 
-                    <div class="col-12"><h6 class="mt-3 mb-0 text-primary">Documents & Images</h6><hr class="mt-1"></div>
-                    <div class="col-md-4">
-                        <label class="form-label">Profile Picture</label>
-                        <input type="file" class="form-control" name="profile_picture">
-                         {% if user.profile_picture %}
-                         <small class="text-muted">Current: {{ user.profile_picture }}</small>
-                         {% endif %}
+                    <h6 class="text-primary-custom mt-4 mb-3">Documents & Media</h6>
+                    <div class="row g-3">
+                         <div class="col-md-4">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" class="form-control-custom" name="profile_picture" style="padding: 7px;">
+                            {% if vendor_obj.profile_picture %}
+                            <div class="mt-1"><a href="{{ vendor_obj.profile_picture.url }}" target="_blank" class="small text-decoration-none text-primary-custom">View Current</a></div>
+                            {% endif %}
+                         </div>
+                         <div class="col-md-4">
+                            <label class="form-label">PAN Card</label>
+                            <input type="file" class="form-control-custom" name="panCard" style="padding: 7px;">
+                            {% if vendor_obj.panCard %}
+                            <div class="mt-1"><a href="{{ vendor_obj.panCard.url }}" target="_blank" class="small text-decoration-none text-primary-custom">View Current</a></div>
+                            {% endif %}
+                         </div>
+                         <div class="col-md-4">
+                            <label class="form-label">Adhaar Card</label>
+                            <input type="file" class="form-control-custom" name="adharCard" style="padding: 7px;">
+                            {% if vendor_obj.adharCard %}
+                            <div class="mt-1"><a href="{{ vendor_obj.adharCard.url }}" target="_blank" class="small text-decoration-none text-primary-custom">View Current</a></div>
+                            {% endif %}
+                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">PAN Card</label>
-                        <input type="file" class="form-control" name="panCard">
-                         {% if user.panCard %}
-                         <small class="text-muted">Current: {{ user.panCard }}</small>
-                         {% endif %}
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Adhaar Card</label>
-                        <input type="file" class="form-control" name="adharCard">
-                         {% if user.adharCard %}
-                         <small class="text-muted">Current: {{ user.adharCard }}</small>
-                         {% endif %}
-                    </div>
-                    
-                    <div class="col-12"><h6 class="mt-3 mb-0 text-primary">Bank Details</h6><hr class="mt-1"></div>
-                    <div class="col-md-6">
-                        <label class="form-label">Beneficiary Name</label>
-                        <input type="text" class="form-control-custom" name="beneficiary_name" value="{{ user.bank_detail.beneficiary_name }}" placeholder="Beneficiary Name">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Bank Name</label>
-                        <input type="text" class="form-control-custom" name="bank_name" value="{{ user.bank_detail.bank_name }}" placeholder="Bank Name">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Account Number</label>
-                        <input type="text" class="form-control-custom" name="account_number" value="{{ user.bank_detail.account_number }}" placeholder="Account Number">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">IFSC Code</label>
-                        <input type="text" class="form-control-custom" name="ifsc_code" value="{{ user.bank_detail.ifsc_code }}" placeholder="IFSC Code">
+
+                    <h6 class="text-primary-custom mt-4 mb-3">Bank Details</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Bank Name</label>
+                            <input type="text" class="form-control-custom" name="bank_name" value="{{ form_data.bank_name|default:'' }}" placeholder="Bank Name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Account Number</label>
+                            <input type="text" class="form-control-custom" name="account_number" value="{{ form_data.account_number|default:'' }}" placeholder="Account Number">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">IFSC Code</label>
+                            <input type="text" class="form-control-custom" name="ifsc_code" value="{{ form_data.ifsc_code|default:'' }}" placeholder="IFSC Code">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Beneficiary Name</label>
+                            <input type="text" class="form-control-custom" name="beneficiary_name" value="{{ form_data.beneficiary_name|default:'' }}" placeholder="Beneficiary Name">
+                        </div>
                     </div>
                     {% endif %}
 
                     {% if action == 'Add' %}
-                    <div class="col-12"><hr class="mt-3"></div>
-                    <div class="col-md-6">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-control-custom" name="password" placeholder="Enter password">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control-custom" name="confirm_password" placeholder="Confirm password">
+                    <h6 class="text-primary-custom mt-4 mb-3">Security</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control-custom {% if errors.confirm_password %}is-invalid{% endif %}" name="password" placeholder="Create password">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control-custom {% if errors.confirm_password %}is-invalid{% endif %}" name="confirm_password" placeholder="Repeat password">
+                            {% if errors.confirm_password %}<div class="invalid-feedback">{{ errors.confirm_password }}</div>{% endif %}
+                        </div>
                     </div>
                     {% endif %}
-                    
-                    <div class="col-12 mt-4 text-end">
-                        <a href="{% url return_url %}" class="btn btn-light me-2">Cancel</a>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Account Status</label>
+                            <select class="form-select-custom" name="status">
+                                <option value="Active" {% if form_data.status == 'Active' %}selected{% endif %}>Active</option>
+                                <option value="Blocked" {% if form_data.status == 'Blocked' %}selected{% endif %}>Blocked</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 text-end">
+                        <a href="{% url return_url|default:'dashboard' %}" class="btn btn-light-custom me-2">Cancel</a>
                         <button type="submit" class="btn btn-primary-custom px-4">{{ action }} {{ role }}</button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>

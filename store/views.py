@@ -41,23 +41,29 @@ def vendor_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        print(f"Attempting login for vendor username: {username}"
-              f" and password: {password}")
         
         user = authenticate(request, username=username, password=password)
         
         if user is not None:
             # Ensure the user is a vendor
-            if hasattr(user, 'vendor_profile'):  # Check if the user has a vendor profile
-                login(request, user)
+            if hasattr(user, 'vendor_profile'):
+                vendor = user.vendor_profile
                 
-                print(request, 'Login successful!')
-               
-                return redirect('vendordashboard')  # Redirect to vendor dashboard
+                # Security Checks
+                if vendor.is_blocked:
+                    messages.error(request, 'Your vendor account has been suspended. Please contact support.')
+                    return render(request, 'vendor_login.html')
+                
+                if vendor.is_deleted:
+                    messages.error(request, 'Vendor account not found.')
+                    return render(request, 'vendor_login.html')
+
+                login(request, user)
+                return redirect('vendordashboard')
             else:
-                print(request, 'You are not authorized as a vendor.')
+                messages.error(request, 'You are not authorized as a vendor.')
         else:
-            print(request, 'Invalid username or password.')
+            messages.error(request, 'Invalid username or password.')
     
     return render(request, 'vendor_login.html')
 
@@ -86,8 +92,8 @@ def password_reset_request(request, template_name, role_check):
                     email = render_to_string(email_template_name, c)
                     try:
                         print("DEBUG: Calling send_mail...")
-                        send_mail(subject, email, 'admin@footfront.com' , [user.email], fail_silently=False)
-                        print("DEBUG: send_mail called successfully (check console output below)")
+                        send_mail(subject, email, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+                        print("DEBUG: send_mail called successfully")
                     except BadHeaderError:
                         print("DEBUG: BadHeaderError")
                         return HttpResponse('Invalid header found.')
@@ -159,19 +165,45 @@ def login_view(request):
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token['uid']
 
-            # Get the customer profile using firebase_uid, then get the user
-            customer = Customer.objects.get(firebase_uid=uid)
-            user = customer.user
-            login(request, user)
-            
-            return JsonResponse({'status': 'success', 'redirect_url': '/'})
+            # Authenticate based on role
+            user = None
+            if User.objects.filter(email=email).exists():
+               user = User.objects.get(email=email)
+               
+               # Check Role Consistency
+               if user.role == 'customer':
+                   if hasattr(user, 'customer_profile'):
+                       cust = user.customer_profile
+                       if cust.is_blocked:
+                           return JsonResponse({'status': 'error', 'message': 'Your account is suspended.'}, status=403)
+                       if cust.is_deleted:
+                           return JsonResponse({'status': 'error', 'message': 'Account deleted. Please register again.'}, status=403)
+               elif user.role == 'vendor':
+                   if hasattr(user, 'vendor_profile'):
+                       vend = user.vendor_profile
+                       if vend.is_blocked:
+                           return JsonResponse({'status': 'error', 'message': 'Vendor account suspended. Contact Admin.'}, status=403)
+                       if vend.is_deleted:
+                            return JsonResponse({'status': 'error', 'message': 'Vendor account deleted.'}, status=403)
+               
+               login(request, user)
+               return JsonResponse({'status': 'success', 'redirect_url': '/'})
+            else:
+                 # No user found with this email
+                 return JsonResponse({'status': 'error', 'message': 'User not registered.'}, status=404)
 
         except Customer.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'User not found in our database. Please register first.'}, status=404)
+            return JsonResponse({'status': 'error', 'message': 'Account not found. Please register explicitly.'}, status=404)
+        except auth.ExpiredIdTokenError:
+            return JsonResponse({'status': 'error', 'message': 'Session expired. Please try logging in again.'}, status=401)
+        except auth.RevokedIdTokenError:
+            return JsonResponse({'status': 'error', 'message': 'Session revoked. Please login again.'}, status=401)
         except auth.InvalidIdTokenError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid ID token.'}, status=401)
+            print(f"DEBUG: InvalidIdTokenError during login.") # Log for admin
+            return JsonResponse({'status': 'error', 'message': 'Authentication failed (Invalid Token). Please refresh and try again.'}, status=401)
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            print(f"DEBUG: Login Error: {e}") # Log full error
+            return JsonResponse({'status': 'error', 'message': "An system error occurred during login. Please contact support."}, status=500)
             
     return render(request, 'login.html')
 
@@ -193,15 +225,50 @@ def registration_view(request):
             if not all([id_token, first_name, phone]):
                 return JsonResponse({'status': 'error', 'message': 'First name and phone number are required.'}, status=400)
 
-            decoded_token = auth.verify_id_token(id_token)
+            # Debugging: Log token verification attempt
+            # print(f"DEBUG: Verifying token for registration...") 
+            
+            try:
+                decoded_token = auth.verify_id_token(id_token)
+            except Exception as token_error:
+                print(f"DEBUG: Token Verification Failed: {token_error}")
+                raise token_error # Re-raise to be caught below
+
             uid = decoded_token['uid']
             email = decoded_token.get('email')
 
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({'status': 'error', 'message': 'A user with this email already exists.'}, status=409)
+            existing_user = User.objects.filter(email=email).first()
+            if existing_user:
+                # Check for soft-deleted customer
+                try:
+                    customer = existing_user.customer_profile
+                    if customer.is_deleted:
+                        # Reactivate
+                        customer.is_deleted = False
+                        customer.firebase_uid = uid
+                        customer.phone = phone # accurate phone from new reg
+                        customer.is_blocked = False # Unblock on new registration if desired
+                        customer.save()
+                        
+                        existing_user.first_name = first_name
+                        existing_user.last_name = last_name
+                        existing_user.save()
+                        
+                        login(request, existing_user)
+                        return JsonResponse({'status': 'success', 'redirect_url': '/'})
+                    else:
+                        return JsonResponse({'status': 'error', 'message': 'A user with this email already exists.'}, status=409)
+                except Customer.DoesNotExist:
+                     # User exists but no customer profile?
+                     return JsonResponse({'status': 'error', 'message': 'User profile inconsistency. Contact support.'}, status=500)
             
-            if Customer.objects.filter(phone=phone).exists() or Customer.objects.filter(firebase_uid=uid).exists():
-                return JsonResponse({'status': 'error', 'message': 'This phone number or account is already in use.'}, status=409)
+            if Customer.objects.filter(phone=phone).exists():
+                 # Handle phone number reuse or conflict?
+                 # If phone exists but not email, another user has it.
+                 return JsonResponse({'status': 'error', 'message': 'This phone number is listed with another account.'}, status=409)
+
+            if Customer.objects.filter(firebase_uid=uid).exists():
+                 return JsonResponse({'status': 'error', 'message': 'Account already exists.'}, status=409)
 
             user = User.objects.create_user(email=email, first_name=first_name, last_name=last_name, role='user')
             Customer.objects.create(user=user, phone=phone, firebase_uid=uid)
@@ -209,10 +276,14 @@ def registration_view(request):
 
             return JsonResponse({'status': 'success', 'redirect_url': '/'})
 
+        except auth.ExpiredIdTokenError:
+            return JsonResponse({'status': 'error', 'message': 'Registration session expired. Please try again.'}, status=401)
         except auth.InvalidIdTokenError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid ID token.'}, status=401)
+             print(f"DEBUG: InvalidIdTokenError during registration.")
+             return JsonResponse({'status': 'error', 'message': 'Invalid authentication token. Please refresh the page.'}, status=401)
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            print(f"DEBUG: Registration Error: {e}")
+            return JsonResponse({'status': 'error', 'message': "Registration failed due to a system error."}, status=500)
 
     return render(request, 'registration.html')
 

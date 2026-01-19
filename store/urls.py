@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path
+from django.contrib.auth import views as auth_views
+import django.shortcuts # For test-404 lambda
 from . import views
 
 urlpatterns = [
@@ -33,5 +35,8 @@ urlpatterns = [
     path('profile/change-password/', views.change_password, name='change_password'),
     path('profile/reviews/', views.my_reviews, name='my_reviews'),
     path('api/search/', views.api_search, name='api_search'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
+    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
+    path('test-404/', lambda request: django.shortcuts.render(request, '404.html')), # Temporary Test Route
 ]
 

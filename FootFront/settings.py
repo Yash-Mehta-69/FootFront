@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'store.middleware.BlockedUserMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -146,8 +147,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 # Firebase Admin SDK configuration
 FIREBASE_ADMIN_CONFIG = os.path.join(BASE_DIR, 'firebase-config.json')
 
-# Email Backend for Testing
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
+
+# Debug Email Configuration (Safe to keep in dev)
+# if DEBUG:
+    # print(f"DEBUG: Email Config Loaded? User: {'YES' if EMAIL_HOST_USER else 'NO'}, Password: {'YES' if EMAIL_HOST_PASSWORD else 'NO'}")
 
 
 # Default primary key field type

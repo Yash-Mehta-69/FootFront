@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 | Signal Lost{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-container {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 2rem;
+        padding-top: 15vh; /* Added space at top */
+        position: relative;
+        overflow: hidden;
+    }
+
+    .error-code {
+        font-family: var(--font-heading);
+        font-size: clamp(6rem, 20vw, 12rem);
+        line-height: 0.8;
+        font-weight: 800;
+        color: var(--text-main);
+        position: relative;
+        letter-spacing: -5px;
+    }
+
+    .error-code span {
+        display: inline-block;
+        position: relative;
+    }
+
+    /* Glitch Effect Layer */
+    .glitch-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-body);
+        mix-blend-mode: overlay;
+        opacity: 0;
+        z-index: -1;
+    }
+
+    .error-message {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: clamp(1rem, 2vw, 1.5rem);
+        color: var(--color-secondary); /* Using accent color for tech feel */
+        margin-top: 1rem;
+        margin-bottom: 2rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .tech-divider {
+        width: 100px;
+        height: 2px;
+        background: var(--color-primary);
+        margin: 2rem auto;
+        position: relative;
+    }
+    
+    .tech-divider::before, .tech-divider::after {
+        content: '';
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: var(--color-primary);
+        top: -2px;
+    }
+    .tech-divider::before { left: 0; }
+    .tech-divider::after { right: 0; }
+
+    .btn-return {
+        padding: 1rem 3rem;
+        font-family: var(--font-heading);
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid var(--text-main);
+        background: transparent;
+        color: var(--text-main);
+    }
+
+    .btn-return:hover {
+        background: var(--text-main);
+        color: var(--bg-body);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="glitch-layer w-100 h-100"></div>
+    
+    <h1 class="error-code">
+        <span class="digit-1">4</span>
+        <span class="digit-2">0</span>
+        <span class="digit-3">4</span>
+    </h1>
+
+    <div class="tech-divider"></div>
+
+    <p class="error-message">
+        &lt;SYSTEM ERROR: PAGE_NOT_FOUND /&gt;<br>
+        The requested coordinates do not exist in this sector.
+    </p>
+
+    <a href="{% url 'home' %}" class="btn btn-return">
+        Return to Base
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof gsap !== 'undefined') {
+            const tl = gsap.timeline();
+
+            // Entry Animation
+            tl.from(".digit-1", { y: -100, opacity: 0, duration: 0.8, ease: "bounce.out" })
+              .from(".digit-2", { y: -100, opacity: 0, duration: 0.8, ease: "bounce.out" }, "-=0.6")
+              .from(".digit-3", { y: -100, opacity: 0, duration: 0.8, ease: "bounce.out" }, "-=0.6");
+            
+            tl.from(".tech-divider", { scaleX: 0, duration: 0.5, ease: "power2.out" })
+              .from(".error-message", { opacity: 0, y: 20, duration: 0.5 }, "-=0.3")
+              .from(".btn-return", { opacity: 0, y: 20, duration: 0.5 }, "-=0.3");
+
+            // Glitch Interaction
+            const code = document.querySelector('.error-code');
+            code.addEventListener('mouseenter', () => {
+                gsap.to(".digit-1", { x: -5, duration: 0.1, yoyo: true, repeat: 3 });
+                gsap.to(".digit-3", { x: 5, duration: 0.1, yoyo: true, repeat: 3 });
+                gsap.to(".digit-2", { opacity: 0.5, duration: 0.1, yoyo: true, repeat: 3 });
+            });
+        }
+    });
+</script>
+{% endblock %}

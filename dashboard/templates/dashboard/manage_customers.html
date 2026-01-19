@@ -9,9 +9,6 @@
 <div class="custom-card">
     <div class="card-header-custom">
         <h5 class="card-title-custom">All Customers</h5>
-        <a href="{% url 'add_customer' %}" class="btn btn-primary-custom">
-            <i class="fas fa-plus me-2"></i> Add Customer
-        </a>
     </div>
     
     <div class="table-responsive">
@@ -23,48 +20,45 @@
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Status</th>
-                    <th>Blocked</th>
-                    <th>Join Date</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for customer in customers %}
+                {% if not customer.is_deleted %}
                 <tr>
                     <td>#{{ customer.pk }}</td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="user-avatar me-2" style="width: 32px; height: 32px; font-size: 12px;">
-                                {{ customer.name|slice:":1" }}
+                                {{ customer.user.first_name|slice:":1" }}
                             </div>
-                            {{ customer.name }}
+                            {{ customer.user.first_name }} {{ customer.user.last_name }}
                         </div>
                     </td>
-                    <td>{{ customer.email }}</td>
+                    <td>{{ customer.user.email }}</td>
                     <td>{{ customer.phone }}</td>
                     <td>
-                        <span class="status-badge {% if customer.status == 'Active' %}status-active{% else %}status-inactive{% endif %}">
-                            <i class="fas {% if customer.status == 'Active' %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
-                            {{ customer.status }}
-                        </span>
-                    </td>
-                    <td>
                         {% if customer.is_blocked %}
-                        <span class="badge bg-danger">Blocked</span>
+                            <span class="status-badge status-inactive">
+                                <i class="fas fa-ban"></i> Blocked
+                            </span>
                         {% else %}
-                        <span class="badge bg-success">Active</span>
+                            <span class="status-badge status-active">
+                                <i class="fas fa-check-circle"></i> Active
+                            </span>
                         {% endif %}
                     </td>
-                    <td>{{ customer.join_date }}</td>
                     <td>
                         <a href="{% url 'edit_customer' customer.pk %}" class="btn-icon-soft me-1" title="Edit">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <button class="btn-icon-soft text-danger" title="Delete">
+                        <a href="{% url 'delete_customer' customer.pk %}" class="btn-icon-soft text-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this customer?');">
                             <i class="fas fa-trash"></i>
-                        </button>
+                        </a>
                     </td>
                 </tr>
+                {% endif %}
                 {% endfor %}
             </tbody>
         </table>

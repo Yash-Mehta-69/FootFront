@@ -93,6 +93,37 @@
     .process-step:hover .step-number {
         color: rgba(204, 255, 0, 0.1);
     }
+    
+    /* Light Mode Overrides */
+    [data-theme="light"] .step-number {
+        color: rgba(0,0,0,0.25); /* Much more visible */
+    }
+    
+    [data-theme="light"] .process-step {
+        background: #ffffff; /* Clean white card */
+        border-color: rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05); /* Soft shadow for lift */
+    }
+
+    [data-theme="light"] .process-step:hover {
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        transform: translateY(-5px);
+        border-color: var(--color-accent);
+    }
+
+    [data-theme="light"] .process-step:hover .step-number {
+        color: rgba(0,0,0,0.4);
+    }
+    
+    [data-theme="light"] .pricing-card {
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    
+    [data-theme="light"] .glass-card-feature {
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
 
     .pricing-card {
         background: var(--glass-bg);
@@ -190,43 +221,6 @@
         display: block;
     }
 
-    /* Custom Popup */
-    .success-popup {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(10px);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .success-popup.active {
-        display: flex;
-        opacity: 1;
-    }
-    
-    .popup-content {
-        background: #0f0f0f;
-        border: 1px solid var(--color-accent);
-        padding: 4rem;
-        border-radius: 24px;
-        text-align: center;
-        max-width: 500px;
-        box-shadow: 0 0 50px rgba(204, 255, 0, 0.2);
-        transform: scale(0.9);
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    
-    .success-popup.active .popup-content {
-        transform: scale(1);
-    }
     
     @media (max-width: 768px) {
         .feature-icon { font-size: 2.5rem; }
@@ -247,7 +241,7 @@
     </p>
     
     <div class="mt-5 d-flex justify-content-center gap-3">
-        <button onclick="document.getElementById('plans').scrollIntoView({behavior: 'smooth'})" class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.1rem;">
+        <button onclick="document.getElementById('inquiry').scrollIntoView({behavior: 'smooth'})" class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.1rem;">
             Start Selling
         </button>
     </div>
@@ -283,7 +277,7 @@
     </div>
 </div>
 
-<!-- HOW IT WORKS -->
+<!-- HOW It WORKS -->
 <div class="container section-padding pt-0">
     <div class="text-center mb-5">
         <h2 class="text-uppercase" style="font-family: var(--font-heading); font-size: 3rem; letter-spacing: 2px;">How It Works</h2>
@@ -335,7 +329,7 @@
             <div class="pricing-card highlight">
                 <div style="position: absolute; top:0; left:0; width:100%; background: var(--color-accent); color:black; font-weight:800; padding:0.6rem; font-size:0.9rem; letter-spacing: 1px;">RECOMMENDED</div>
                 <h3 class="mt-4 fw-bold text-uppercase">Standard Plan</h3>
-                <div class="price-tag">₹30<span class="price-period">per day</span></div>
+                <div class="price-tag">₹20<span class="price-period">per day</span></div>
                 <p class="text-muted-theme mb-4">Billed Monthly or Yearly</p>
                 
                 <hr style="border-color: var(--glass-border);">
@@ -356,69 +350,30 @@
 
 <!-- INQUIRY FORM -->
 <div class="container section-padding pt-0" id="inquiry">
-    <div class="vendor-form-container">
-        <div class="form-heading-wrapper">
-            <h2 class="text-uppercase mb-2" style="font-family: var(--font-heading); font-size: 2.5rem;">Vendor Application</h2>
-            <p class="text-muted-theme">Fill details to start your journey</p>
+    <div class="vendor-form-container text-center">
+        <div class="form-heading-wrapper mb-5">
+            <h2 class="text-uppercase mb-3" style="font-family: var(--font-heading); font-size: 2.5rem;">Vendor Application</h2>
+            <p class="text-muted-theme" style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                Ready to join the elite? Complete the verification process to activate your seller account. 
+                You will need your <strong>PAN Card</strong>, <strong>Aadhar Card</strong>, and <strong>Bank Details</strong> handy.
+            </p>
         </div>
         
-        <!-- We prevent default submission to show the popup solely for this static demo request -->
-        <form id="vendorForm" onsubmit="handleFormSubmit(event)">
-            {% csrf_token %}
-            <div class="row g-4">
-                <div class="col-12 col-md-6">
-                    <label class="tech-label">First Name</label>
-                    <input type="text" class="tech-input w-100" placeholder="ENTER FIRST NAME" required>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="tech-label">Last Name</label>
-                    <input type="text" class="tech-input w-100" placeholder="ENTER LAST NAME" required>
-                </div>
-                
-                <div class="col-12 col-md-6">
-                    <label class="tech-label">Phone Number</label>
-                    <input type="tel" class="tech-input w-100" placeholder="+1 (555) 000-0000" required>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label class="tech-label">Business Name</label>
-                    <input type="text" class="tech-input w-100" placeholder="YOUR STORE NAME" required>
-                </div>
-                
-                <div class="col-12">
-                    <label class="tech-label">Business Details</label>
-                    <textarea class="tech-input w-100" rows="12" placeholder="TELL US ABOUT YOUR INVENTORY AND GOALS..." required style="resize: none; overflow: hidden;"></textarea>
-                </div>
-                
-                <div class="col-12 text-center mt-4">
-                    <button type="submit" class="btn-primary w-100 py-3 fw-bold" style="font-size: 1.2rem;">SUBMIT APPLICATION</button>
-                </div>
-            </div>
-        </form>
+        <div class="glass-card-feature p-5 mx-auto" style="max-width: 600px; border-color: var(--color-accent);">
+            <i class="fab fa-google mb-4" style="font-size: 3rem; color: var(--color-text);"></i>
+            <h3 class="mb-4">Secure Application</h3>
+            
+            <a href="https://forms.gle/ijxN4fiFeiJLJ6Ha6" target="_blank" class="btn-primary w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2" style="font-size: 1.2rem; text-decoration: none;">
+                <i class="fas fa-external-link-alt"></i> OPEN APPLICATION FORM
+            </a>
+            
+            <p class="mt-4 text-muted-theme small">
+                <i class="fas fa-lock me-2"></i>You will be redirected to Google Forms for secure document upload.
+            </p>
+        </div>
     </div>
 </div>
 
-<!-- SUCCESS POPUP -->
-<div class="success-popup" id="successPopup">
-    <div class="popup-content">
-        <i class="fas fa-check-circle mb-4" style="font-size: 4rem; color: var(--color-accent);"></i>
-        <h3 class="mb-3 text-uppercase" style="font-family: var(--font-heading); color: white; font-size: 2rem;">Application Sent!</h3>
-        <p class="text-muted-theme mb-4" style="font-size: 1.1rem;">We have received your details. Our team will contact you shortly to finalize your onboarding.</p>
-        <button class="btn-primary w-100" onclick="closePopup()">BACK TO HOME</button>
-    </div>
-</div>
 
-<script>
-    function handleFormSubmit(e) {
-        e.preventDefault(); // Stop actual submission
-        // Show popup
-        const popup = document.getElementById('successPopup');
-        popup.classList.add('active'); // Use class for opacity transition
-    }
-    
-    function closePopup() {
-        // Redirect to home
-        window.location.href = "{% url 'home' %}";
-    }
-</script>
 
 {% endblock %}

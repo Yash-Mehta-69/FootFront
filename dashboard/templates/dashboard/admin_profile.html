@@ -2,7 +2,7 @@
 
 {% block title %}Admin Profile | Admin Panel{% endblock %}
 
-{% block header_title %}Profile{% endblock %}
+{% block header_title %}Admin{% endblock %}
 {% block breadcrumb %}Profile{% endblock %}
 
 {% block admin_content %}
@@ -10,29 +10,11 @@
     <!-- Profile Info -->
     <div class="col-lg-4 mb-4">
         <div class="custom-card text-center h-100">
-            <div class="position-relative d-inline-block mb-4 mt-2">
-                <img src="{{ admin.profile_picture }}" alt="Admin" class="rounded-circle border border-4 border-light shadow" style="width: 120px; height: 120px; object-fit: cover;">
-                <button class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle" style="width: 35px; height: 35px;">
-                    <i class="fas fa-camera"></i>
-                </button>
+            <div class="mb-4 mt-2">
+                <i class="fas fa-user-circle text-secondary" style="font-size: 120px;"></i>
             </div>
-            <h4 class="mb-1 fw-bold text-dark">{{ admin.first_name }} {{ admin.last_name }}</h4>
-            <p class="text-primary fw-medium mb-4">Super Admin</p>
-            
-            <div class="d-flex justify-content-center gap-3 text-secondary">
-                <div class="text-center">
-                    <h6 class="text-dark fw-bold mb-0">12</h6>
-                    <small>Projects</small>
-                </div>
-                <div class="text-center">
-                    <h6 class="text-dark fw-bold mb-0">850</h6>
-                    <small>Tasks</small>
-                </div>
-                <div class="text-center">
-                    <h6 class="text-dark fw-bold mb-0">4.9</h6>
-                    <small>Rating</small>
-                </div>
-            </div>
+            <h4 class="mb-1 fw-bold">{{ admin.first_name }} {{ admin.last_name }}</h4>
+            <p class="text-primary fw-medium mb-4">{{ admin.role|title }}</p>
         </div>
     </div>
 
@@ -51,20 +33,16 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">First Name</label>
-                        <input type="text" class="form-control-custom" name="first_name" value="{{ admin.first_name }}">
+                        <input type="text" class="form-control-custom" name="first_name" value="{{ admin.first_name }}" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Last Name</label>
-                        <input type="text" class="form-control-custom" name="last_name" value="{{ admin.last_name }}">
+                        <input type="text" class="form-control-custom" name="last_name" value="{{ admin.last_name }}" required>
                     </div>
                     
-                    <div class="col-md-6">
+                    <div class="col-12">
                         <label class="form-label">Email Address</label>
-                        <input type="email" class="form-control-custom" name="email" value="{{ admin.email }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" class="form-control-custom" name="phone" value="{{ admin.phone }}">
+                        <input type="email" class="form-control-custom" name="email" value="{{ admin.email }}" required>
                     </div>
 
                     <div class="col-12 text-end mt-4">

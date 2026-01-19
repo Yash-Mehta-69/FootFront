@@ -560,9 +560,15 @@
                 </label>
 
                 <div class="user-profile dropdown">
-                    <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0; overflow: hidden; background: transparent;">
-                        <img src="{% static 'images/hero-shoe.png' %}" alt="user" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
+                    {% if request.user.vendor_profile.profile_picture %}
+                        <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0; overflow: hidden; background: transparent;">
+                            <img src="{{ request.user.vendor_profile.profile_picture.url }}" alt="user" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    {% else %}
+                        <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ request.user.vendor_profile.shopName|make_list|first|upper|default:"V" }}
+                        </div>
+                    {% endif %}
                     <ul class="dropdown-menu dropdown-menu-end"
                         style="background-color: var(--bg-card); border-color: var(--border-color);">
                         <li><a class="dropdown-item" style="color: var(--text-main);" href="{% url 'vendor_profile' %}">Profile</a></li>

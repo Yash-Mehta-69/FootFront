@@ -449,13 +449,13 @@
             <div class="form-container">
                 <h2 class="section-heading" style="font-size: 2rem; margin-bottom: 2rem;">Submit a Ticket</h2>
                 
-                {% if messages %}
+                <!-- {% if messages %}
                     {% for message in messages %}
                         <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; {% if message.tags == 'error' %}background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444;{% else %}background: rgba(0,255,0,0.1); color: #00cc00; border: 1px solid #00cc00;{% endif %}">
                             {{ message }}
                         </div>
                     {% endfor %}
-                {% endif %}
+                {% endif %} -->
 
                 <form method="POST">
                     {% csrf_token %}

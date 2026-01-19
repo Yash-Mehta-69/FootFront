@@ -158,7 +158,7 @@
                 firebase.auth().createUserWithEmailAndPassword(email, password)
                     .then((userCredential) => {
                         var user = userCredential.user;
-                        return user.getIdToken();
+                        return user.getIdToken(true);
                     })
                     .then(function(idToken) {
                         return fetch("{% url 'register' %}", {
