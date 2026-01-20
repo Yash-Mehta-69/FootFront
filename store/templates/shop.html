@@ -495,15 +495,15 @@
                     <div class="glass-badge">NEW</div>
                 </div>
                 <div>
-                    <a href="{% url 'product_detail' %}?id={{ product.id }}">
+                    <a href="{% url 'product_detail' product.slug %}">
                         <h4 class="glass-card-title">{{ product.name }}</h4>
                     </a>
                     <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">
                         {% if product.category %}{{ product.category.name }}{% else %}Sneakers{% endif %}
                     </p>
                     <div class="glass-card-footer">
-                        <span class="glass-card-price">${{ product.price }}</span>
-                        <a href="{% url 'product_detail' %}?id={{ product.id }}" class="glass-btn">
+                        <span class="glass-card-price">₹{{ product.price }}</span>
+                        <a href="{% url 'product_detail' product.slug %}" class="glass-btn">
                             Details
                         </a>
                     </div>

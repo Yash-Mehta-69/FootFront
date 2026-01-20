@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -21,7 +21,7 @@ from django.utils.encoding import force_bytes
 from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse
 from .forms import ComplaintForm, UserUpdateForm, ShippingAddressForm
-from .models import User, Customer, Category, Product, Color, Size, ShippingAddress, Review
+from .models import User, Customer, Category, Product, Color, Size, ShippingAddress, Review, ProductVariant, Complaint
 
 
 
@@ -137,8 +137,8 @@ def initialize_firebase():
 @redirect_special_users
 def index(request):
     categories = Category.objects.filter(is_deleted=False)
-    trending_products = Product.objects.filter(is_deleted=False, is_trending=True)[:8]
-    all_products = Product.objects.filter(is_deleted=False).order_by('-created_at')[:12] # Optimized sort
+    trending_products = Product.objects.filter(is_deleted=False, is_trending=True).annotate(price=Min('productvariant__price'))[:8]
+    all_products = Product.objects.filter(is_deleted=False).annotate(price=Min('productvariant__price')).order_by('-created_at')[:12] # Optimized sort
     context = {
         'categories': categories,
         'trending_products': trending_products,
@@ -164,6 +164,7 @@ def login_view(request):
             # Verify the ID token
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token['uid']
+            email = decoded_token['email']
 
             # Authenticate based on role
             user = None
@@ -549,7 +550,7 @@ def api_search(request):
             'price': float(product.min_price) if product.min_price else 0,
             'image': product.product_image.url if product.product_image else '/static/images/placeholder-shoe.png',
             'category': product.category.name if product.category else 'Sneakers',
-            'url': f"/product-detail/?id={product.id}"
+            'url': f"/product/{product.slug}/"
         })
     
     return JsonResponse({'products': results})
@@ -590,22 +591,17 @@ def my_reviews(request):
         
     return render(request, 'my_reviews.html', {'reviews': reviews})
 
-def product_detail(request):
-    product_id = request.GET.get('id')
-    product = None
-    if product_id:
-        try:
-            product = Product.objects.annotate(price=Min('productvariant__price')).get(id=product_id, is_deleted=False)
-            
-            # Fetch variants
-            variants = product.productvariant_set.filter(is_deleted=False)
-            
-            # Get unique colors and sizes available for this product
-            colors = sorted(list(set(v.color for v in variants)), key=lambda c: c.name)
-            sizes = sorted(list(set(v.size for v in variants)), key=lambda s: s.size_label)
-            
-        except Product.DoesNotExist:
-            return redirect('shop')
+def product_detail(request, slug):
+    try:
+        product = Product.objects.annotate(price=Min('productvariant__price')).get(slug=slug, is_deleted=False)
+        variants = product.productvariant_set.filter(is_deleted=False)
+        
+        # Get unique colors and sizes available for this product
+        colors = sorted(list(set(v.color for v in variants)), key=lambda c: c.name)
+        sizes = sorted(list(set(v.size for v in variants)), key=lambda s: s.size_label)
+        
+    except Product.DoesNotExist:
+        return redirect('shop')
             
     context = {
         'product': product,
@@ -710,7 +706,73 @@ def cookie_policy_view(request):
 def become_vendor(request):
     return render(request, 'become_vendor.html')
 
+from vendor.models import Vendor
 def vendor_shop(request):
-    return render(request, 'vendor_shop.html')
+    vendor_id = request.GET.get('id')
+    try:
+        vendor = Vendor.objects.get(pk=vendor_id, is_deleted=False, is_blocked=False)
+    except (Vendor.DoesNotExist, ValueError):
+        return redirect('shop')
+        
+    products = Product.objects.filter(vendor=vendor, is_deleted=False).select_related('category')
+    
+    # Calculate Stats
+    products_count = products.count()
+    # Mock data for now, real orders require complex aggregation
+    sold_count = 120 # Placeholder or aggregate OrderItems
+    rating_avg = 4.9 # Placeholder or aggregate Reviews
+    
+    # Filtering/Sorting Logic (Reuse from shop view)
+    from django.db.models import Min
+    products = products.annotate(price=Min('productvariant__price'))
+    
+    # Sort
+    sort_by = request.GET.get('sort')
+    if sort_by == 'price_asc':
+        products = products.order_by('price')
+    elif sort_by == 'price_desc':
+        products = products.order_by('-price')
+    else: # Default: Newest
+        products = products.order_by('-created_at')
+
+    context = {
+        'vendor': vendor,
+        'products': products,
+        'products_count': products_count,
+        'sold_count': sold_count,
+        'rating_avg': rating_avg,
+    }
+    return render(request, 'vendor_shop.html', context)
+
+@login_required(login_url='login')
+def toggle_wishlist(request):
+    import json
+    from django.http import JsonResponse
+    from cart.models import Wishlist
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            variant_id = data.get('variant_id')
+            variant = get_object_or_404(ProductVariant, id=variant_id)
+            customer = request.user.customer_profile
+            
+            wishlist_item, created = Wishlist.objects.get_or_create(
+                customer=customer,
+                product_variant=variant
+            )
+            
+            if not created:
+                # If it already exists, remove it (toggle)
+                wishlist_item.delete()
+                action = 'removed'
+            else:
+                action = 'added'
+                
+            return JsonResponse({'success': True, 'action': action})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+            
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 

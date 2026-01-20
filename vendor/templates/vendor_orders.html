@@ -40,7 +40,7 @@
                         <td style="font-weight: 700;">#ORD-{{ item.order.pk }}</td>
                         <td>{{ item.order.customer.user.first_name }} {{ item.order.customer.user.last_name }}</td>
                         <td>{{ item.order.order_date|date:"M d, Y" }}</td>
-                        <td>${{ item.price }}</td> <!-- Showing item price as it's vendor view -->
+                        <td>₹{{ item.price }}</td> <!-- Showing item price as it's vendor view -->
                         <td>
                             {% if item.order.payment %}
                                 {% if item.order.payment.status == 'success' %}

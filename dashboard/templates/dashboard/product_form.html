@@ -19,62 +19,62 @@
                     <!-- Basic Info -->
                     <div class="col-md-6">
                         <label class="form-label">Product Name</label>
-                        <input type="text" class="form-control-custom" name="name" value="{{ product.name }}" placeholder="Enter product name">
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     
                     <div class="col-md-6">
                         <label class="form-label">Vendor</label>
-                        <select class="form-select-custom" name="vendor">
-                            <option value="">Select Vendor</option>
-                            {% for v in vendors %}
-                            <option value="{{ v.pk }}" {% if product.vendor == v.shopName %}selected{% endif %}>{{ v.shopName }}</option>
-                            {% endfor %}
-                        </select>
+                        {{ form.vendor }}
+                         {% if form.vendor.errors %}
+                        <div class="text-danger small">{{ form.vendor.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Category</label>
-                        <select class="form-select-custom" name="category">
-                            <option value="">Select Category</option>
-                            {% for c in categories %}
-                            <option value="{{ c.pk }}" {% if product.category == c.name %}selected{% endif %}>{{ c.name }}</option>
-                            {% endfor %}
-                        </select>
+                        {{ form.category }}
+                         {% if form.category.errors %}
+                        <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label">Gender</label>
-                        <select class="form-select-custom" name="gender">
-                            <option value="U" {% if product.gender == 'U' %}selected{% endif %}>Unisex</option>
-                            <option value="M" {% if product.gender == 'M' %}selected{% endif %}>Men</option>
-                            <option value="W" {% if product.gender == 'W' %}selected{% endif %}>Women</option>
-                            <option value="K" {% if product.gender == 'K' %}selected{% endif %}>Kids</option>
-                        </select>
+                        {{ form.gender }}
+                         {% if form.gender.errors %}
+                        <div class="text-danger small">{{ form.gender.errors.0 }}</div>
+                        {% endif %}
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label">Status</label>
-                        <select class="form-select-custom" name="status">
-                            <option value="Active" {% if product.status == 'Active' %}selected{% endif %}>Active</option>
-                            <option value="Inactive" {% if product.status == 'Inactive' %}selected{% endif %}>Inactive</option>
-                        </select>
-                    </div>
-                    
                     <div class="col-md-4 d-flex align-items-center mt-4 pt-2">
                         <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="isTrending" name="is_trending" {% if product.is_trending %}checked{% endif %}>
+                            {{ form.is_trending }}
                             <label class="form-check-label ms-2" for="isTrending">Is Trending?</label>
                         </div>
                     </div>
                     
                     <div class="col-12">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control-custom" name="description" rows="4" placeholder="Enter product description">{{ product.description }}</textarea>
+                        {{ form.description }}
+                         {% if form.description.errors %}
+                        <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     
                     <div class="col-md-12">
                          <label class="form-label">Main Image</label>
-                         <input type="file" class="form-control-custom" name="product_image">
+                         {{ form.product_image }}
+                          {% if form.product_image.errors %}
+                        <div class="text-danger small">{{ form.product_image.errors.0 }}</div>
+                        {% endif %}
+                         {% if product.product_image %}
+                         <div class="mt-2">
+                             <img src="{{ product.product_image.url }}" alt="Product Image" style="height: 60px; border-radius: 5px;">
+                         </div>
+                         {% endif %}
                     </div>
 
                     <!-- Variants Section -->
@@ -99,25 +99,29 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for v in product.variants %}
+                                    {% for v in variants %}
                                     <tr>
+                                        <input type="hidden" name="variant_id[]" value="{{ v.pk }}">
                                         <td>
                                             <select class="form-select-custom form-select-sm" name="variant_size[]">
                                                 {% for s in sizes %}
-                                                <option value="{{ s.pk }}" {% if v.size == s.size_label %}selected{% endif %}>{{ s.size_label }}</option>
+                                                <option value="{{ s.pk }}" {% if v.size.pk == s.pk %}selected{% endif %}>{{ s.size_label }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
                                         <td>
                                             <select class="form-select-custom form-select-sm" name="variant_color[]">
                                                 {% for c in colors %}
-                                                <option value="{{ c.pk }}" {% if v.color == c.name %}selected{% endif %}>{{ c.name }}</option>
+                                                <option value="{{ c.pk }}" {% if v.color.pk == c.pk %}selected{% endif %}>{{ c.name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" value="{{ v.price }}" step="0.01"></td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" value="{{ v.stock }}"></td>
-                                        <td><input type="file" class="form-control-custom form-control-sm" name="variant_image[]"></td>
+                                        <td>
+                                            <input type="file" class="form-control-custom form-control-sm" name="variant_image[]">
+                                            {% if v.image %}<small class="text-muted d-block">Current: {{ v.image.name|truncatechars:10 }}</small>{% endif %}
+                                        </td>
                                         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
                                     </tr>
                                     {% empty %}
@@ -125,7 +129,7 @@
                                     <tr id="emptyRow">
                                         <td>
                                             <select class="form-select-custom form-select-sm" name="variant_size[]">
-                                                 <option value="">Select</option>
+                                                <option value="">Select</option>
                                                 {% for s in sizes %}
                                                 <option value="{{ s.pk }}">{{ s.size_label }}</option>
                                                 {% endfor %}
@@ -139,7 +143,7 @@
                                                 {% endfor %}
                                             </select>
                                         </td>
-                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00" step="0.01"></td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" placeholder="0"></td>
                                         <td><input type="file" class="form-control-custom form-control-sm" name="variant_image[]"></td>
                                         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>

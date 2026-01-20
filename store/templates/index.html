@@ -640,7 +640,7 @@
 <!-- Grey Marquee -->
 <div class="marquee-gray">
     <div class="divider-text" style="animation: marquee 30s linear infinite;">
-        FREE SHIPPING ON ALL ORDERS OVER $150  •  NEW DROPS EVERY FRIDAY  •  JOIN THE 50K+ STRONG COMMUNITY  •  AUTHENTICITY GUARANTEED  •  FREE SHIPPING ON ALL ORDERS OVER $150  •  
+        FREE SHIPPING ON ALL ORDERS OVER ₹150  •  NEW DROPS EVERY FRIDAY  •  JOIN THE 50K+ STRONG COMMUNITY  •  AUTHENTICITY GUARANTEED  •  FREE SHIPPING ON ALL ORDERS OVER ₹150  •  
     </div>
 </div>
 
@@ -695,7 +695,7 @@
 
     <div class="glass-grid">
         <!-- HARDCODED BACKUP CARD 1 (Guaranteed to show) -->
-        <div class="glass-card">
+        <!-- <div class="glass-card">
             <div class="glass-card-image-wrapper">
                 <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Fallback" loading="lazy">
                 <div class="glass-badge">NEW</div>
@@ -706,11 +706,11 @@
                 </a>
                 <p class="glass-card-category">Running</p>
                 <div class="glass-card-footer">
-                    <span class="glass-card-price">$180</span>
+                    <span class="glass-card-price">₹180</span>
                     <a href="#" class="glass-btn">Details</a>
                 </div>
             </div>
-       </div>
+       </div> -->
 
         <!-- REAL DJANGO LOOP -->
         {% for product in trending_products %}
@@ -724,13 +724,13 @@
                 <div class="glass-badge">HOT</div>
             </div>
             <div>
-                <a href="{% url 'product_detail' %}?id={{product.id}}">
+                <a href="{% url 'product_detail' product.slug %}">
                     <h4 class="glass-card-title">{{ product.name }}</h4>
                 </a>
                 <p class="glass-card-category">{{ product.category.name }}</p>
                 <div class="glass-card-footer">
-                    <span class="glass-card-price">${{ product.price }}</span>
-                    <a href="{% url 'product_detail' %}?id={{product.id}}" class="glass-btn">Details</a>
+                    <span class="glass-card-price">₹{{ product.price }}</span>
+                    <a href="{% url 'product_detail' product.slug %}" class="glass-btn">Details</a>
                 </div>
             </div>
         </div>
@@ -842,13 +842,13 @@
                 <div class="glass-badge">NEW</div>
             </div>
             <div>
-                <a href="{% url 'product_detail' %}?id={{product.id}}"> 
+                <a href="{% url 'product_detail' product.slug %}"> 
                     <h4 class="glass-card-title">{{ product.name }}</h4>
                 </a>
                 <p class="glass-card-category">{{ product.category.name }}</p>
                 <div class="glass-card-footer">
                     <span class="glass-card-price">${{ product.price }}</span>
-                    <a href="{% url 'product_detail' %}?id={{product.id}}" class="glass-btn">Details</a>
+                    <a href="{% url 'product_detail' product.slug %}" class="glass-btn">Details</a>
                 </div>
             </div>
         </div>

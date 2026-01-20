@@ -239,10 +239,10 @@
                                 Carrier: FedEx | #TRK8829302
                             </div>
                         </td>
-                        <td style="font-family: monospace;">${{ item.price }}</td>
+                        <td style="font-family: monospace;">₹{{ item.price }}</td>
                         <td style="font-family: monospace;">{{ item.quantity }}</td>
                         <td style="font-family: monospace; text-align: right; font-weight: bold;">
-                             ${% widthratio item.price 1 item.quantity %}
+                             ₹{% widthratio item.price 1 item.quantity %}
                         </td>
                     </tr>
                 {% empty %}
@@ -285,10 +285,10 @@
                                 Carrier: UPS | #1Z999EA10293
                             </div>
                         </td>
-                        <td style="font-family: monospace;">$149.00</td>
+                        <td style="font-family: monospace;">₹149.00</td>
                         <td style="font-family: monospace;">1</td>
                         <td style="font-family: monospace; text-align: right; font-weight: bold;">
-                             $149.00
+                             ₹149.00
                         </td>
                     </tr>
                 {% endfor %}
@@ -299,19 +299,19 @@
     <div class="summary-box">
         <div class="summary-row">
             <span>Subtotal</span>
-            <span>${{ order.total_amount }}</span>
+            <span>₹{{ order.total_amount }}</span>
         </div>
         <div class="summary-row">
             <span>Shipping</span>
-            <span>$0.00</span>
+            <span>₹0.00</span>
         </div>
         <div class="summary-row">
             <span>Tax</span>
-            <span>$0.00</span>
+            <span>₹0.00</span>
         </div>
         <div class="summary-row summary-total">
             <span>TOTAL</span>
-            <span style="color: var(--color-accent);">${{ order.total_amount }}</span>
+            <span style="color: var(--color-accent);">₹{{ order.total_amount }}</span>
         </div>
     </div>
 </div>

@@ -73,6 +73,8 @@
             padding: 20px;
             z-index: 1000;
             transition: all 0.3s ease;
+            overflow-y: auto;
+            max-height: 100vh;
         }
 
         .sidebar-brand {
@@ -534,9 +536,21 @@
                 class="menu-item {% if 'categor' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-list"></i> Categories
             </a>
+            <a href="{% url 'manage_requests' %}"
+                class="menu-item {% if 'request' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-tasks"></i> Requests
+            </a>
              <a href="{% url 'manage_products' %}"
                 class="menu-item {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
                 <i class="fas fa-box-open"></i> Products
+            </a>
+            <a href="{% url 'manage_sizes' %}"
+                class="menu-item {% if 'size' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-ruler"></i> Sizes
+            </a>
+            <a href="{% url 'manage_colors' %}"
+                class="menu-item {% if 'color' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-palette"></i> Colors
             </a>
             <a href="{% url 'manage_orders' %}"
                 class="menu-item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">

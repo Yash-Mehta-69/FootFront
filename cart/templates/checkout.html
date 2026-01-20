@@ -257,14 +257,14 @@
                                 <div style="color: var(--color-text); font-weight: 600;">{{ item.product_variant.product.name }}</div>
                                 <small class="text-muted-theme">QTY: {{ item.quantity }}</small>
                             </div>
-                            <div style="color: var(--color-text);">${{ item.sub_total }}</div>
+                            <div style="color: var(--color-text);">₹{{ item.sub_total }}</div>
                         </div>
                         {% endfor %}
                     </div>
                     
                     <div class="summary-row">
                         <span>SUBTOTAL</span>
-                        <span>${{ total }}</span>
+                        <span>₹{{ total }}</span>
                     </div>
                     <div class="summary-row">
                         <span>SHIPPING</span>
@@ -272,12 +272,12 @@
                     </div>
                     <div class="summary-row">
                         <span>TAX</span>
-                        <span>$0.00</span>
+                        <span>₹0.00</span>
                     </div>
                     
                     <div class="summary-total">
                         <span>TOTAL</span>
-                        <span>${{ total }}</span>
+                        <span>₹{{ total }}</span>
                     </div>
                     
                     <button type="button" class="btn-primary w-100 mt-4" onclick="alert('Payment Integration Pending!')">

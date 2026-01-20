@@ -1,0 +1,67 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Manage Sizes | Admin Panel{% endblock %}
+
+{% block header_title %}Manage Sizes{% endblock %}
+{% block breadcrumb %}Sizes{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <!-- List Column -->
+    <div class="col-lg-8">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Size List</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Size Label</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for size in sizes %}
+                        <tr>
+                            <td class="fw-bold">{{ size.size_label }}</td>
+                            <td>
+                                <a href="{% url 'delete_size' size.pk %}" class="btn-icon-soft text-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this size?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4 text-muted">No sizes found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Form Column -->
+    <div class="col-lg-4">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Add New Size</h5>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Size Label</label>
+                    {{ form.size_label }}
+                    {% if form.size_label.errors %}
+                        <div class="text-danger small">{{ form.size_label.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary-custom w-100">Add Size</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Attribute Requests | Admin Panel{% endblock %}
+
+{% block header_title %}Attribute Requests{% endblock %}
+{% block breadcrumb %}Requests{% endblock %}
+
+{% block admin_content %}
+<div class="custom-card">
+    <div class="card-header-custom">
+        <h5 class="card-title-custom">Pending Attribute Requests</h5>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Vendor</th>
+                    <th>Type</th>
+                    <th>Requested Value</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if req.vendor.profile_picture %}
+                            <img src="{{ req.vendor.profile_picture.url }}" class="rounded-circle me-2" alt="Vendor" style="width: 32px; height: 32px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                <i class="fas fa-store text-muted"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold">{{ req.vendor.shopName }}</div>
+                                <div class="small text-muted">{{ req.vendor.user.get_full_name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if req.attribute_type == 'Category' %}
+                        <span class="badge bg-info text-dark">Category</span>
+                        {% elif req.attribute_type == 'Size' %}
+                        <span class="badge bg-warning text-dark">Size</span>
+                        {% elif req.attribute_type == 'Color' %}
+                        <span class="badge bg-success">Color</span>
+                        {% endif %}
+                    </td>
+                    <td class="fw-bold">{{ req.attribute_value }}</td>
+                    <td>{{ req.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <a href="{% url 'approve_request' req.pk %}" class="btn btn-sm btn-success me-1" title="Approve">
+                            <i class="fas fa-check"></i> Approve
+                        </a>
+                        <a href="{% url 'reject_request' req.pk %}" class="btn btn-sm btn-danger" title="Reject" onclick="return confirm('Are you sure you want to reject this request?');">
+                            <i class="fas fa-times"></i> Reject
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center">
+                            <div class="mb-3" style="font-size: 3rem; color: var(--text-muted);">
+                                <i class="fas fa-inbox"></i>
+                            </div>
+                            <h6 class="text-muted">No pending requests</h6>
+                            <p class="small text-muted mb-0">You're all caught up!</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

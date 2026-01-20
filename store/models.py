@@ -127,7 +127,6 @@ class Product(SoftDeleteModel):
         ('M', 'Men'),
         ('W', 'Women'),
         ('U', 'Unisex'),
-        ('K', 'Kids'),
     )
     name = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, unique=True)
@@ -158,6 +157,26 @@ class ProductVariant(SoftDeleteModel):
 
     def __str__(self):
         return f"{self.product.name} - {self.size} - {self.color}"
+
+class AttributeRequest(models.Model):
+    REQUEST_TYPES = (
+        ('Category', 'Category'),
+        ('Size', 'Size'),
+        ('Color', 'Color'),
+    )
+    STATUS_CHOICES = (
+        ('Pending', 'Pending'),
+        ('Approved', 'Approved'),
+        ('Rejected', 'Rejected'),
+    )
+    vendor = models.ForeignKey('vendor.Vendor', on_delete=models.CASCADE)
+    attribute_type = models.CharField(max_length=20, choices=REQUEST_TYPES)
+    attribute_value = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.attribute_type}: {self.attribute_value} - {self.vendor}"
     
 class Review(SoftDeleteModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)

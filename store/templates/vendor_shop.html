@@ -133,7 +133,11 @@
         <div class="vendor-profile glass-panel p-4 p-md-5" style="border: 1px solid var(--glass-border); border-radius: 20px; background: rgba(0,0,0,0.4);">
             <div class="d-flex flex-column flex-md-row align-items-center gap-4 w-100">
                 <div class="position-relative">
-                    <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=300&auto=format&fit=crop" class="vendor-avatar" alt="Vendor Avatar" style="width: 140px; height: 140px; border-width: 3px;" loading="lazy">
+                    {% if vendor.profile_picture %}
+                    <img src="{{ vendor.profile_picture.url }}" class="vendor-avatar" alt="Vendor Avatar" style="width: 140px; height: 140px; border-width: 3px;" loading="lazy">
+                    {% else %}
+                    <img src="https://ui-avatars.com/api/?name={{ vendor.shopName|urlencode }}&background=random" class="vendor-avatar" alt="Vendor Avatar" style="width: 140px; height: 140px; border-width: 3px;" loading="lazy">
+                    {% endif %}
                     <div class="position-absolute bottom-0 end-0 bg-black rounded-circle p-2 border border-secondary" style="--bs-bg-opacity: 1;">
                         <i class="fas fa-check-circle text-accent" style="font-size: 1.2rem;"></i>
                     </div>
@@ -144,19 +148,19 @@
                         <span class="vendor-badge">VERIFIED SELLER</span>
                         <span class="vendor-badge" style="background: transparent; border: 1px solid var(--color-accent); color: var(--color-accent);">PRO TIER</span>
                     </div>
-                    <h1 class="glitch-text mb-3" style="font-size: clamp(2.5rem, 5vw, 4rem);">NEXUS SUPPLY CO.</h1>
+                    <h1 class="glitch-text mb-3" style="font-size: clamp(2.5rem, 5vw, 4rem);">{{ vendor.shopName }}</h1>
                     <p style="color: var(--color-text-muted); max-width: 600px; margin-bottom: 1.5rem; line-height: 1.6;">
-                        Premium athletic wear and limited edition drops. Sourcing the rarest kicks from across the grid since 2024. All items authenticated by our expert team.
+                        {{ vendor.description|default:"No description available." }}
                     </p>
                     
                     <div class="d-flex gap-4 justify-content-center justify-content-md-start border-top border-secondary pt-3 mt-3 d-inline-flex">
                         <div class="text-center text-md-start">
-                            <div class="h3 mb-0 text-white" style="font-family: var(--font-heading);">4.9</div>
+                            <div class="h3 mb-0 text-white" style="font-family: var(--font-heading);">{{ rating_avg }}</div>
                             <small class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Rating</small>
                         </div>
                         <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
                         <div class="text-center text-md-start">
-                            <div class="h3 mb-0 text-white" style="font-family: var(--font-heading);">1.2K</div>
+                            <div class="h3 mb-0 text-white" style="font-family: var(--font-heading);">{{ sold_count }}</div>
                             <small class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Sold</small>
                         </div>
                         <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
@@ -186,100 +190,49 @@
         <div class="shop-content">
             <!-- Filter/Sort Header Mockup -->
             <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <span class="text-accent" style="font-family: var(--font-heading); font-size: 1.2rem;">// VENDOR INVENTORY</span>
+                <span class="text-accent" style="font-family: var(--font-heading); font-size: 1.2rem;">// VENDOR INVENTORY ({{ products.count }})</span>
                 <div class="d-flex gap-3">
-                    <span style="font-family: monospace; color: #666;">SORT BY: NEWEST</span>
+                    <form action="" method="GET" id="sortForm">
+                        <input type="hidden" name="id" value="{{ vendor.id }}">
+                        <select name="sort" class="form-select-custom form-select-sm" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--color-text);" onchange="document.getElementById('sortForm').submit()">
+                            <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>NEWEST ARRIVALS</option>
+                            <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>PRICE: LOW TO HIGH</option>
+                            <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>PRICE: HIGH TO LOW</option>
+                        </select>
+                    </form>
                 </div>
             </div>
 
-            <!-- Static Product Grid -->
+            <!-- Dynamic Product Grid -->
             <div class="glass-grid">
-                <!-- Mock Product 1 -->
+                {% for product in products %}
                 <div class="glass-card">
                     <div class="glass-card-image-wrapper">
+                         {% if product.product_image %}
+                        <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}" loading="lazy">
+                        {% else %}
                         <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                        <div class="glass-badge">NEW DROP</div>
+                        {% endif %}
+                        <div class="glass-badge">{% if product.is_trending %}TRENDING{% else %}NEW{% endif %}</div>
                     </div>
                     <div>
-                        <a href="#">
-                            <h4 class="glass-card-title">Cyber Runner X1</h4>
+                        <a href="{% url 'product_detail' product.slug %}">
+                            <h4 class="glass-card-title">{{ product.name }}</h4>
                         </a>
-                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">RUNNING</p>
+                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">
+                            {% if product.category %}{{ product.category.name|upper }}{% else %}Sneakers{% endif %}
+                        </p>
                         <div class="glass-card-footer">
-                            <span class="glass-card-price">$189.00</span>
-                            <a href="#" class="glass-btn">Details</a>
+                            <span class="glass-card-price">{% if product.price %}₹{{ product.price }}{% else %}-{% endif %}</span>
+                            <a href="{% url 'product_detail' product.slug %}" class="glass-btn">Details</a>
                         </div>
                     </div>
                 </div>
-
-                <!-- Mock Product 2 -->
-                <div class="glass-card">
-                    <div class="glass-card-image-wrapper">
-                        <img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                    </div>
-                    <div>
-                        <a href="#">
-                            <h4 class="glass-card-title">Neon Force Low</h4>
-                        </a>
-                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">LIFESTYLE</p>
-                        <div class="glass-card-footer">
-                            <span class="glass-card-price">$145.00</span>
-                            <a href="#" class="glass-btn">Details</a>
-                        </div>
-                    </div>
+                {% empty %}
+                 <div class="col-12 text-center py-5">
+                    <p class="text-muted">No products found in this shop.</p>
                 </div>
-
-                <!-- Mock Product 3 -->
-                <div class="glass-card">
-                    <div class="glass-card-image-wrapper">
-                        <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                        <div class="glass-badge" style="background: var(--color-secondary); color: white;">HOT</div>
-                    </div>
-                    <div>
-                        <a href="#">
-                            <h4 class="glass-card-title">Urban Drift Pro</h4>
-                        </a>
-                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">SKATE</p>
-                        <div class="glass-card-footer">
-                            <span class="glass-card-price">$120.00</span>
-                            <a href="#" class="glass-btn">Details</a>
-                        </div>
-                    </div>
-                </div>
-
-                 <!-- Mock Product 4 -->
-                 <div class="glass-card">
-                    <div class="glass-card-image-wrapper">
-                        <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                    </div>
-                    <div>
-                        <a href="#">
-                            <h4 class="glass-card-title">Vortex High-Top</h4>
-                        </a>
-                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">BASKETBALL</p>
-                        <div class="glass-card-footer">
-                            <span class="glass-card-price">$210.00</span>
-                            <a href="#" class="glass-btn">Details</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mock Product 5 -->
-                <div class="glass-card">
-                    <div class="glass-card-image-wrapper">
-                        <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                    </div>
-                    <div>
-                        <a href="#">
-                            <h4 class="glass-card-title">Quantum Leap</h4>
-                        </a>
-                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">TRAINING</p>
-                        <div class="glass-card-footer">
-                            <span class="glass-card-price">$165.00</span>
-                            <a href="#" class="glass-btn">Details</a>
-                        </div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
 
             <!-- Pagination Mock -->

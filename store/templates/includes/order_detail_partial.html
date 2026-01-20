@@ -35,7 +35,7 @@
                 <div>
                    <div class="hud-tag">VALUATION_CREDITS</div>
                    <div class="text-accent mt-3" style="font-size: 1.8rem; font-weight: 800; font-family: 'Oswald';">
-                       ${% if order.id == "001234" %}249.00{% elif order.id == "001235" %}189.50{% elif order.id == "000123" %}438.50{% else %}{{ order.total_amount }}{% endif %}
+                       ₹{% if order.id == "001234" %}249.00{% elif order.id == "001235" %}189.50{% elif order.id == "000123" %}438.50{% else %}{{ order.total_amount }}{% endif %}
                    </div>
                 </div>
                 <div style="font-family: monospace; font-size: 0.7rem; color: var(--color-text-muted); text-align: right;">STATUS: ENCRYPTED_SETTLED</div>

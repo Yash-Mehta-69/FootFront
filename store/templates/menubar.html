@@ -777,7 +777,7 @@
 
                         <span class="cart-item-name">{{ item.product_variant.product.name }}</span>
                         <span class="cart-item-meta">{{ item.product_variant.size }} | {{ item.product_variant.color }} | QTY: {{ item.quantity }}</span>
-                        <div class="cart-item-price">${{ item.product_variant.price }}</div>
+                        <div class="cart-item-price">₹{{ item.product_variant.price }}</div>
                     </div>
                 </div>
             {% endfor %}
@@ -790,7 +790,7 @@
     <div class="drawer-footer">
         <div class="total-row">
             <span>TOTAL:</span>
-            <span>${% get_cart_total request %}</span>
+            <span>₹{% get_cart_total request %}</span>
         </div>
         <a href="{% url 'cart_detail' %}" class="checkout-btn">VIEW FULL BAG</a>
     </div>

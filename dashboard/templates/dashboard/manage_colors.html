@@ -1,0 +1,83 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Manage Colors | Admin Panel{% endblock %}
+
+{% block header_title %}Manage Colors{% endblock %}
+{% block breadcrumb %}Colors{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <!-- List Column -->
+    <div class="col-lg-8">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Color List</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Color Name</th>
+                            <th>Code</th>
+                            <th>Preview</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for color in colors %}
+                        <tr>
+                            <td class="fw-bold">{{ color.name }}</td>
+                            <td>{{ color.hex_code }}</td>
+                            <td>
+                                <div class="rounded border" style="width: 30px; height: 30px; background-color: {{ color.hex_code }};"></div>
+                            </td>
+                            <td>
+                                <a href="{% url 'delete_color' color.pk %}" class="btn-icon-soft text-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this color?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted">No colors found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Form Column -->
+    <div class="col-lg-4">
+        <div class="custom-card">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Add New Color</h5>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Color Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Hex Code</label>
+                    <div class="d-flex align-items-center">
+                        {{ form.hex_code }}
+                        <span class="ms-2 text-muted small">Choose color</span>
+                    </div>
+                    {% if form.hex_code.errors %}
+                        <div class="text-danger small">{{ form.hex_code.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary-custom w-100">Add Color</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

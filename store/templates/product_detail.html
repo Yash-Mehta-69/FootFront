@@ -21,11 +21,11 @@
         align-items: center;
     }
 
-    /* Main Image */
+    /* Main Image and Ring Tweaks */
     .pd-main-image-wrapper {
         position: relative;
         width: 100%;
-        height: 450px;
+        height: 550px; /* Increased height */
         display: flex;
         justify-content: center;
         align-items: center;
@@ -34,31 +34,82 @@
     
     .pd-image {
         max-width: 90%;
-        max-height: 400px;
+        max-height: 450px;
         object-fit: contain;
-        transform: rotate(-15deg);
+        transform: rotate(-10deg) scale(1);
         filter: drop-shadow(0 30px 50px rgba(0,0,0,0.5));
-        transition: all 0.5s ease;
+        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
     }
     .pd-image.changing {
         opacity: 0;
-        transform: rotate(-15deg) scale(0.9);
+        transform: rotate(-5deg) scale(0.8);
     }
     
     .pd-media-container:hover .pd-image {
-        transform: rotate(0deg) scale(1.05);
+        transform: rotate(0deg) scale(1.2); /* Zoom more on hover */
     }
 
     /* Thumbnail Gallery */
     .pd-thumbnails {
         display: flex;
         gap: 12px;
-        margin-top: 2rem;
+        margin-top: 1rem;
         z-index: 3;
         overflow-x: auto;
         padding: 10px;
         max-width: 100%;
+        justify-content: center; /* Center thumbnails */
     }
+
+    /* Tech Ring - Adjusted to be a subtle background element */
+    .pd-tech-ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 650px; /* Increased Ring Size */
+        height: 650px;
+        border: 1px dashed var(--hud-ring-color, rgba(255,255,255,0.08));
+        border-radius: 50%;
+        z-index: 1;
+        animation: spin-slow 60s linear infinite; /* Slower spin */
+        pointer-events: none;
+        opacity: 0.6; /* Subtler */
+    }
+    .pd-tech-ring::after {
+        content: '';
+        position: absolute;
+        inset: -40px; /* Double Ring effect */
+        border: 1px solid rgba(255,255,255,0.03);
+        border-radius: 50%;
+    }
+
+    /* Toast Styles */
+    .tech-toast {
+        position: fixed;
+        bottom: 30px;
+        right: -400px;
+        background: rgba(10, 10, 10, 0.95);
+        color: white;
+        padding: 1rem 2rem;
+        border-left: 4px solid var(--color-accent);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        z-index: 10000;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-family: var(--font-heading);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        backdrop-filter: blur(10px);
+    }
+    .tech-toast.show {
+        right: 30px;
+    }
+    .tech-toast.error { border-color: #ff4d4d; }
+    .tech-toast.info { border-color: #ffaa00; }
+    .tech-toast.success { border-color: var(--color-success, #00ff88); }
+
     .pd-thumb {
         width: 70px;
         height: 70px;
@@ -589,12 +640,13 @@
                             </div>
 
                             <!-- Cart Button -->
-                            <button type="submit" id="add-btn" class="btn-add-cart" disabled>
+                            <!-- Cart Button -->
+                            <button type="button" id="add-btn" class="btn-add-cart" onclick="addToCart()" disabled>
                                 <span>SELECT OPTIONS</span> <i class="fas fa-shopping-bag"></i>
                             </button>
 
                             <!-- Wishlist -->
-                            <button type="button" class="btn-wishlist" title="Add to Wishlist">
+                            <button type="button" class="btn-wishlist" title="Add to Wishlist" onclick="toggleWishlist(this)">
                                 <i class="far fa-heart fa-lg"></i>
                             </button>
                         </div>
@@ -613,7 +665,7 @@
                             <p>Sold By Official Vendor</p>
                             <h6>{{ product.vendor.shopName }}</h6>
                         </div>
-                        <a href="{% url 'vendor_shop' %}" class="btn-visit-shop">Visit Shop</a> 
+                        <a href="{% url 'vendor_shop' %}?id={{ product.vendor.id }}" class="btn-visit-shop">Visit Shop</a> 
                         <!-- Note: Adjust view_shop URL arg as needed, usually vendor slug or user id -->
                     </div>
 
@@ -656,9 +708,10 @@
                     <div class="details-card">
                         <h4><i class="fas fa-truck"></i> Delivery & Care</h4>
                         <ul class="list-unstyled text-muted-theme">
-                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Free Shipping on orders over ₹999</li>
-                            <li class="mb-2"><i class="fas fa-undo text-info me-2"></i> 7 Day Replacement Policy</li>
-                            <li class="mb-2"><i class="fas fa-shield-alt text-warning me-2"></i> 100% Authentic Product</li>
+                            <li class="mb-3"><i class="fas fa-shipping-fast text-success me-2"></i> <strong>Delivery:</strong> Shipments are managed directly by verified vendors.</li>
+                            <li class="mb-3"><i class="fas fa-ban text-danger me-2"></i> <strong>No Returns:</strong> All sales are final. Please check sizing carefully.</li>
+                            <li class="mb-3"><i class="fas fa-shield-alt text-warning me-2"></i> <strong>Authenticity:</strong> 100% Verified Authentic. Every pair is inspected by verfied vendors.</li>
+                            <li class="mb-3"><i class="fas fa-hands-wash text-primary me-2"></i> <strong>Care:</strong> Wipe clean with a damp cloth. Do not machine wash.</li>
                         </ul>
                     </div>
                 </div>
@@ -821,7 +874,6 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // --- Navbar Padding Fix ---
-        // Basic padding added via CSS, but ensure dynamic adjustment if needed
         const navbar = document.querySelector('.navbar');
         const pageWrapper = document.querySelector('.pd-page-wrapper');
         if (navbar && pageWrapper) {
@@ -846,13 +898,18 @@
         const sizeLabel = document.getElementById('size-label');
         const stockFeedback = document.getElementById('stock-feedback');
 
-        // Initial Logic
-        if (colorOpts.length === 1) selectColor(colorOpts[0].dataset.color);
-
-        // --- Functions ---
+        // --- Core Functions ---
         window.selectColor = function(color) {
-            selectedColor = (selectedColor === color) ? null : color; // Toggle
+            // Prevent deselection if only one option exists
+            if (selectedColor === color && colorOpts.length === 1) return;
+            selectedColor = (selectedColor === color) ? null : color;
             
+            // Auto-select size if only one available for this color
+            const availableForColor = allVariants.filter(v => v.color === color && v.stock > 0);
+            if (availableForColor.length === 1 && !selectedSize) {
+                selectSize(availableForColor[0].size);
+            }
+
             // Validate Size Selection with new color
             if (selectedSize && !isVariantAvailable(selectedColor, selectedSize)) {
                 selectedSize = null;
@@ -861,8 +918,100 @@
         }
 
         window.selectSize = function(size) {
-            selectedSize = (selectedSize === size) ? null : size; // Toggle
+            if (selectedSize === size && sizeOpts.length === 1) return;
+            selectedSize = (selectedSize === size) ? null : size;
             updateUI();
+        }
+
+        window.addToCart = async function() {
+            if (!selectedColor || !selectedSize) {
+                showToast('Please select Color and Size', 'error');
+                return;
+            }
+
+            const variant = getVariant(selectedColor, selectedSize);
+            const qty = document.getElementById('qty-input').value;
+
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>ADDING...';
+
+            try {
+                const response = await fetch('{% url "add_to_cart_ajax" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        variant_id: variant.id,
+                        quantity: qty
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Item added to cart!', 'success');
+                    const cartCountBadge = document.getElementById('cart-count-badge');
+                    if (cartCountBadge) cartCountBadge.textContent = data.cart_count;
+                } else {
+                    showToast(data.message || 'Error adding to cart', 'error');
+                }
+            } catch (error) {
+                console.error("Cart AJAX error:", error);
+                showToast('Network error. Please try again.', 'error');
+            } finally {
+                addBtn.disabled = false;
+                updateUI();
+            }
+        }
+
+        window.toggleWishlist = async function(btn) {
+            if (!selectedColor || !selectedSize) {
+                showToast('Select variant first', 'info');
+                return;
+            }
+
+            const variant = getVariant(selectedColor, selectedSize);
+            const icon = btn.querySelector('i');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('{% url "toggle_wishlist" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ variant_id: variant.id })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    icon.classList.toggle('fas', data.action === 'added');
+                    icon.classList.toggle('far', data.action === 'removed');
+                    showToast(`Wishlist ${data.action}!`, 'success');
+                } else {
+                    showToast(data.message || 'Error updating wishlist', 'error');
+                }
+            } catch (error) {
+                showToast('Network error.', 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        window.showToast = function(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `tech-toast ${type}`;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000);
+            }, 100);
         }
         
         window.switchImage = function(src) {
@@ -872,8 +1021,6 @@
                 mainImage.src = src;
                 mainImage.classList.remove('changing');
             }, 300);
-            
-            // Update active state on thumbs
             document.querySelectorAll('.pd-thumb').forEach(img => {
                 img.classList.toggle('active', img.src === src);
             });
@@ -883,12 +1030,18 @@
             const input = document.getElementById('qty-input');
             let val = parseInt(input.value) + change;
             if(val < 1) val = 1;
-            if(val > 10) val = 10;
+            if (selectedColor && selectedSize) {
+                const variant = getVariant(selectedColor, selectedSize);
+                if (val > variant.stock) {
+                    val = variant.stock;
+                    showToast(`Only ${variant.stock} left in stock!`, 'info');
+                }
+            }
             input.value = val;
         }
 
         function isVariantAvailable(color, size) {
-            return allVariants.some(v => v.color === color && v.size === size);
+            return allVariants.some(v => v.color === color && v.size === size && v.stock > 0);
         }
         
         function getVariant(color, size) {
@@ -896,69 +1049,80 @@
         }
 
         function updateUI() {
-            // Update Colors
-            colorOpts.forEach(opt => {
-                const c = opt.dataset.color;
-                opt.classList.toggle('active', c === selectedColor);
-                
-                // Dim if not compatible with selected size
-                if (selectedSize) {
-                     const valid = allVariants.some(v => v.color === c && v.size === selectedSize);
-                     opt.classList.toggle('disabled', !valid);
-                } else {
-                    opt.classList.remove('disabled');
-                }
-            });
+            // Update Labels
             colorLabel.textContent = selectedColor || 'Select Color';
             colorLabel.style.color = selectedColor ? 'var(--color-accent)' : 'var(--color-text-muted)';
-
-            // Update Sizes
-            sizeOpts.forEach(opt => {
-                const s = opt.dataset.size;
-                opt.classList.toggle('active', s === selectedSize);
-                
-                if (selectedColor) {
-                    const valid = allVariants.some(v => v.color === selectedColor && v.size === s);
-                    opt.classList.toggle('disabled', !valid);
-                } else {
-                    opt.classList.remove('disabled');
-                }
-            });
             sizeLabel.textContent = selectedSize || 'Select Size';
             sizeLabel.style.color = selectedSize ? 'var(--color-accent)' : 'var(--color-text-muted)';
 
-            // Master Status
+            // Update Color Swatches
+            colorOpts.forEach(opt => {
+                const c = opt.dataset.color;
+                opt.classList.toggle('active', c === selectedColor);
+                if (selectedSize) {
+                    const valid = allVariants.some(v => v.color === c && v.size === selectedSize && v.stock > 0);
+                    opt.classList.toggle('disabled', !valid);
+                } else {
+                    const hasStock = allVariants.some(v => v.color === c && v.stock > 0);
+                    opt.classList.toggle('disabled', !hasStock);
+                }
+            });
+
+            // Update Size Buttons
+            sizeOpts.forEach(opt => {
+                const s = opt.dataset.size;
+                opt.classList.toggle('active', s === selectedSize);
+                if (selectedColor) {
+                    const valid = allVariants.some(v => v.color === selectedColor && v.size === s && v.stock > 0);
+                    opt.classList.toggle('disabled', !valid);
+                } else {
+                    const hasStock = allVariants.some(v => v.size === s && v.stock > 0);
+                    opt.classList.toggle('disabled', !hasStock);
+                }
+            });
+
+            // Master Button & Stock Feedback
             if (selectedColor && selectedSize) {
                 const variant = getVariant(selectedColor, selectedSize);
                 if (variant) {
                     displayPrice.textContent = `₹${variant.price}`;
                     variantInput.value = variant.id;
-                    
-                    // Auto-switch image if variant has specific one
+                    if (variant.stock <= 0) {
+                        stockFeedback.innerHTML = '<i class="fas fa-times-circle me-1"></i>OUT OF STOCK';
+                        stockFeedback.style.color = 'var(--text-danger, #ff4d4d)';
+                        addBtn.disabled = true;
+                        addBtn.innerHTML = 'OUT OF STOCK <i class="fas fa-ban ms-2"></i>';
+                    } else if (variant.stock < 5) {
+                        stockFeedback.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i>ONLY ${variant.stock} LEFT`;
+                        stockFeedback.style.color = 'var(--text-warning, #ffaa00)';
+                        addBtn.disabled = false;
+                        addBtn.innerHTML = 'ADD TO CART <i class="fas fa-shopping-bag ms-2"></i>';
+                    } else {
+                        stockFeedback.innerHTML = '<i class="fas fa-check-circle me-1"></i>IN STOCK';
+                        stockFeedback.style.color = 'var(--color-success, #00ff88)';
+                        addBtn.disabled = false;
+                        addBtn.innerHTML = 'ADD TO CART <i class="fas fa-shopping-bag ms-2"></i>';
+                    }
                     if (variant.image && variant.image !== '#') {
                         switchImage(variant.image);
                     }
-
-                    if (variant.stock > 0) {
-                        addBtn.disabled = false;
-                        addBtn.innerHTML = `ADD TO CART <i class="fas fa-shopping-bag"></i>`;
-                        stockFeedback.innerHTML = `<span class="text-accent"><i class="fas fa-check-circle"></i> In Stock (${variant.stock} available)</span>`;
-                        
-                        // Set max quantity
-                        document.getElementById('qty-input').max = variant.stock;
-                    } else {
-                        addBtn.disabled = true;
-                        addBtn.innerHTML = `OUT OF STOCK`;
-                        stockFeedback.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle"></i> Sold Out</span>`;
-                    }
                 }
             } else {
+                stockFeedback.textContent = '';
                 addBtn.disabled = true;
-                addBtn.innerHTML = `SELECT OPTIONS`;
-                stockFeedback.innerHTML = ``;
+                addBtn.innerHTML = 'SELECT OPTIONS <i class="fas fa-lock ms-2"></i>';
             }
         }
-        
+
+        // Initial Selection Logic (Run at end of block)
+        if (colorOpts.length === 1) {
+            selectColor(colorOpts[0].dataset.color);
+        }
+        if (sizeOpts.length === 1) {
+            selectSize(sizeOpts[0].dataset.size);
+        }
+
+        updateUI(); // Initial UI update
     });
 </script>
 {% endblock %}

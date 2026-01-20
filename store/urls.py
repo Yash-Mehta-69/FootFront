@@ -17,7 +17,7 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password_view, name='forgot_password'),
     path('profile/', views.profile_view, name='profile'),
     path('shop/', views.shop, name='shop'),
-    path('product-detail/', views.product_detail, name='product_detail'),
+    path('product/<slug:slug>/', views.product_detail, name='product_detail'),
     path('terms/', views.terms_view, name='terms'),
     path('privacy/', views.privacy_view, name='privacy'),
     path('complaint/', views.complaint_view, name='complaint'),
@@ -35,6 +35,7 @@ urlpatterns = [
     path('profile/change-password/', views.change_password, name='change_password'),
     path('profile/reviews/', views.my_reviews, name='my_reviews'),
     path('api/search/', views.api_search, name='api_search'),
+    path('api/wishlist/toggle/', views.toggle_wishlist, name='toggle_wishlist'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
     path('test-404/', lambda request: django.shortcuts.render(request, '404.html')), # Temporary Test Route

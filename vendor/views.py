@@ -1,8 +1,12 @@
 from django.shortcuts import redirect, render, get_object_or_404
+from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
+from django.db.models import Q, Min
+from django.core.paginator import Paginator
 from store.decorators import vendor_required
-from store.models import Category
+from store.models import Category, Product, ProductVariant, Size, Color
+from store.forms import VendorProductForm
 from cart.models import Shipment, OrderItem
 from django.utils import timezone
 from datetime import timedelta, datetime
@@ -21,13 +25,51 @@ def vendor_dashboard(request):
 
 @vendor_required
 def vendor_products(request):
-    # Mock Data
-    products = [
-        MockObj(pk=1, name="Nike Air Max", category="Sneakers", price=120.00, stock=50, image=MockObj(url="/static/images/hero-shoe.png"), status="Active", gender="M", is_trending=True),
-        MockObj(pk=2, name="Adidas UltraBoost", category="Running", price=180.00, stock=30, image=MockObj(url="/static/images/hero-shoe.png"), status="Active", gender="U", is_trending=False),
-        MockObj(pk=3, name="Puma Suede", category="Casual", price=90.00, stock=100, image=MockObj(url="/static/images/hero-shoe.png"), status="Inactive", gender="W", is_trending=False),
-    ]
-    return render(request, 'vendor_products.html', {'products': products})
+    from django.db.models import Prefetch
+    
+    # Prefetch only active variants
+    active_variants_prefetch = Prefetch(
+        'productvariant_set',
+        queryset=ProductVariant.objects.filter(is_deleted=False),
+        to_attr='active_variants'
+    )
+    
+    products = Product.objects.filter(vendor=request.user.vendor_profile, is_deleted=False).select_related('category').prefetch_related(active_variants_prefetch)
+    
+    # Filter by Category
+    category_id = request.GET.get('category')
+    if category_id:
+        products = products.filter(category_id=category_id)
+
+    # Search
+    query = request.GET.get('q')
+    if query:
+        products = products.filter(Q(name__icontains=query) | Q(description__icontains=query))
+
+    # Sort
+    sort_by = request.GET.get('sort')
+    if sort_by == 'price_low':
+        products = products.annotate(min_price=Min('productvariant__price')).order_by('min_price')
+    elif sort_by == 'price_high':
+        products = products.annotate(min_price=Min('productvariant__price')).order_by('-min_price')
+    elif sort_by == 'date_oldest':
+        products = products.order_by('created_at')
+    else: # Default: Newest
+        products = products.order_by('-created_at')
+
+    # Pagination
+    paginator = Paginator(products, 10)
+    page_number = request.GET.get('page')
+    products_page = paginator.get_page(page_number)
+
+    context = {
+        'products': products_page,
+        'categories': Category.objects.filter(is_deleted=False),
+        'search_query': query,
+        'current_category': int(category_id) if category_id else None,
+        'current_sort': sort_by,
+    }
+    return render(request, 'vendor_products.html', context)
 
 @vendor_required
 def vendor_orders(request):
@@ -35,43 +77,156 @@ def vendor_orders(request):
 
 @vendor_required
 def add_product(request):
+    if request.method == "POST":
+        form = VendorProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    product = form.save(commit=False)
+                    product.vendor = request.user.vendor_profile
+                    product.save()
+                    
+                    sizes = request.POST.getlist('variant_size[]')
+                    colors = request.POST.getlist('variant_color[]')
+                    prices = request.POST.getlist('variant_price[]')
+                    stocks = request.POST.getlist('variant_stock[]')
+
+                    for i in range(len(sizes)):
+                        if sizes[i] and colors[i]:
+                            ProductVariant.objects.create(
+                                product=product,
+                                size_id=sizes[i],
+                                color_id=colors[i],
+                                price=prices[i] or 0,
+                                stock=stocks[i] or 0
+                            )
+                    messages.success(request, "Product added successfully.")
+                    return redirect('vendor_products')
+            except Exception as e:
+                messages.error(request, f"Error adding product: {e}")
+        else:
+             messages.error(request, f"Form error: {form.errors}")
+    else:
+        form = VendorProductForm()
+
     context = {
         'action': 'Add',
-        'categories': [MockObj(pk=1, name="Sneakers"), MockObj(pk=2, name="Running"), MockObj(pk=3, name="Casual")],
-        'sizes': [MockObj(pk=1, size_label="US 7"), MockObj(pk=2, size_label="US 8"), MockObj(pk=3, size_label="US 9"), MockObj(pk=4, size_label="US 10")],
-        'colors': [MockObj(pk=1, name="Red", hex_code="#FF0000"), MockObj(pk=2, name="Blue", hex_code="#0000FF"), MockObj(pk=3, name="Black", hex_code="#000000")],
+        'form': form,
+        'categories': Category.objects.filter(is_deleted=False),
+        'sizes': Size.objects.all(),
+        'colors': Color.objects.all(),
     }
-    if request.method == "POST":
-        messages.success(request, "Product added successfully (Mock)")
-        return redirect('vendor_products')
     return render(request, 'vendor_add_product.html', context)
 
 @vendor_required
-def edit_product(request):
-    product = MockObj(
-        pk=1, 
-        name="Nike Air Max", 
-        category="Sneakers", 
-        description="Classic air cushioning.",
-        status="Active", 
-        gender="M", 
-        is_trending=True,
-        variants=[
-            MockObj(size="US 8", color="Red", price="120.00", stock=15),
-            MockObj(size="US 9", color="Black", price="120.00", stock=35),
-        ]
-    )
+def edit_product(request, pk):
+    try:
+        product = Product.objects.get(pk=pk, vendor=request.user.vendor_profile)
+    except Product.DoesNotExist:
+        messages.error(request, "Product not found or unauthorized.")
+        return redirect('vendor_products')
+
+    if request.method == "POST":
+        form = VendorProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    product = form.save()
+                    
+                    # 1. Get Lists from POST
+                    variant_ids = request.POST.getlist('variant_id[]')
+                    sizes = request.POST.getlist('variant_size[]')
+                    colors = request.POST.getlist('variant_color[]')
+                    prices = request.POST.getlist('variant_price[]')
+                    stocks = request.POST.getlist('variant_stock[]')
+                    
+                    # 2. Identify Kept IDs to detect Deletions
+                    # Filter out empty strings from variant_ids (which represent new rows)
+                    kept_ids = [int(vid) for vid in variant_ids if vid and vid.isdigit()]
+                    
+                    # 3. Soft Delete Removed Variants
+                    # Any variant currently active for this product that is NOT in kept_ids should be deleted
+                    product.productvariant_set.filter(is_deleted=False).exclude(id__in=kept_ids).update(is_deleted=True)
+
+                    # 4. Loop and Upsert (Update or Insert)
+                    for i in range(len(sizes)):
+                        if sizes[i] and colors[i]: # Basic validation
+                            current_id = variant_ids[i] if i < len(variant_ids) and variant_ids[i].isdigit() else None
+                            
+                            if current_id:
+                                # UPDATE existing
+                                variant = ProductVariant.objects.get(pk=current_id, product=product)
+                                variant.size_id = sizes[i]
+                                variant.color_id = colors[i]
+                                variant.price = prices[i] or 0
+                                variant.stock = stocks[i] or 0
+                                # Image handling can be added here if needed (check request.FILES)
+                                variant.save()
+                            else:
+                                # CREATE new
+                                ProductVariant.objects.create(
+                                    product=product,
+                                    size_id=sizes[i],
+                                    color_id=colors[i],
+                                    price=prices[i] or 0,
+                                    stock=stocks[i] or 0
+                                )
+                                
+                    messages.success(request, "Product updated successfully.")
+                    return redirect('vendor_products')
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f"Error updating product: {e}")
+    else:
+        form = VendorProductForm(instance=product)
+        
+    existing_variants = product.productvariant_set.filter(is_deleted=False)
+
     context = {
         'action': 'Edit',
+        'form': form,
         'product': product,
-        'categories': [MockObj(pk=1, name="Sneakers"), MockObj(pk=2, name="Running"), MockObj(pk=3, name="Casual")],
-        'sizes': [MockObj(pk=1, size_label="US 7"), MockObj(pk=2, size_label="US 8"), MockObj(pk=3, size_label="US 9"), MockObj(pk=4, size_label="US 10")],
-        'colors': [MockObj(pk=1, name="Red", hex_code="#FF0000"), MockObj(pk=2, name="Blue", hex_code="#0000FF"), MockObj(pk=3, name="Black", hex_code="#000000")],
+        'variants': existing_variants,
+        'categories': Category.objects.filter(is_deleted=False),
+        'sizes': Size.objects.all(),
+        'colors': Color.objects.all(),
     }
-    if request.method == "POST":
-        messages.success(request, "Product updated successfully (Mock)")
-        return redirect('vendor_products')
     return render(request, 'vendor_edit_product.html', context)
+
+@vendor_required
+def delete_product(request, pk):
+    try:
+        product = Product.objects.get(pk=pk, vendor=request.user.vendor_profile)
+        product.is_deleted = True
+        product.save()
+        messages.success(request, "Product soft-deleted successfully.")
+    except Product.DoesNotExist:
+        messages.error(request, "Product not found or unauthorized.")
+    return redirect('vendor_products')
+
+from django.http import JsonResponse
+from store.models import AttributeRequest
+
+@vendor_required
+def request_attribute(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        attr_type = data.get('type') # 'Category', 'Size', 'Color'
+        attr_value = data.get('value')
+        
+        if attr_type and attr_value:
+            # Check for duplicates (existing request or existing item)
+            # For MVP, just creating request logic
+            AttributeRequest.objects.create(
+                vendor=request.user.vendor_profile,
+                attribute_type=attr_type,
+                attribute_value=attr_value
+            )
+            return JsonResponse({'success': True, 'message': 'Request submitted successfully.'})
+        return JsonResponse({'success': False, 'message': 'Invalid data.'})
+    return JsonResponse({'success': False, 'message': 'Invalid method.'})
 
 @vendor_required
 def product_detail(request):
@@ -79,12 +234,7 @@ def product_detail(request):
 
 @vendor_required
 def vendor_categories(request):
-    # Mock Data
-    categories = [
-        MockObj(name="Sneakers", description="All kinds of sneakers", image=MockObj(url="/static/images/hero-shoe.png")),
-        MockObj(name="Running", description="Performance running shoes", image=MockObj(url="/static/images/hero-shoe.png")),
-        MockObj(name="Casual", description="Everyday casual wear", image=MockObj(url="/static/images/hero-shoe.png")),
-    ]
+    categories = Category.objects.filter(is_deleted=False).select_related('parent_category')
     return render(request, 'vendor_categories.html', {'categories': categories})
 
 @vendor_required
