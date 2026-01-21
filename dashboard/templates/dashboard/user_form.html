@@ -20,24 +20,24 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">First Name</label>
-                            <input type="text" class="form-control-custom {% if errors.first_name %}is-invalid{% endif %}" name="first_name" value="{{ form_data.first_name|default:'' }}" placeholder="e.g. John">
+                            <input type="text" class="form-control-custom {% if errors.first_name %}is-invalid{% endif %}" name="first_name" value="{{ form_data.first_name|default:'' }}" placeholder="e.g. John" required data-pattern="^[^0-9]+$" data-error="Name should not contain numbers">
                             {% if errors.first_name %}<div class="invalid-feedback">{{ errors.first_name }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Last Name</label>
-                            <input type="text" class="form-control-custom {% if errors.last_name %}is-invalid{% endif %}" name="last_name" value="{{ form_data.last_name|default:'' }}" placeholder="e.g. Doe">
+                            <input type="text" class="form-control-custom {% if errors.last_name %}is-invalid{% endif %}" name="last_name" value="{{ form_data.last_name|default:'' }}" placeholder="e.g. Doe" required data-pattern="^[^0-9]+$" data-error="Name should not contain numbers">
                             {% if errors.last_name %}<div class="invalid-feedback">{{ errors.last_name }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Email Address</label>
-                            <input type="email" class="form-control-custom {% if errors.email %}is-invalid{% endif %}" name="email" value="{{ form_data.email|default:'' }}" placeholder="name@example.com">
+                            <input type="email" class="form-control-custom {% if errors.email %}is-invalid{% endif %}" name="email" value="{{ form_data.email|default:'' }}" placeholder="name@example.com" required>
                             {% if errors.email %}<div class="invalid-feedback">{{ errors.email }}</div>{% endif %}
                         </div>
                         
                         {% if role == 'Customer' %}
                         <div class="col-md-6">
                             <label class="form-label">Phone Number</label>
-                            <input type="text" class="form-control-custom {% if errors.phone %}is-invalid{% endif %}" name="phone" value="{{ form_data.phone|default:'' }}" placeholder="e.g. 9876543210" maxlength="10">
+                            <input type="text" class="form-control-custom {% if errors.phone %}is-invalid{% endif %}" name="phone" value="{{ form_data.phone|default:'' }}" placeholder="e.g. 9876543210" maxlength="10" required>
                             {% if errors.phone %}<div class="invalid-feedback">{{ errors.phone }}</div>{% endif %}
                         </div>
                         {% if customer_obj.firebase_uid %}
@@ -54,21 +54,21 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Shop Name</label>
-                            <input type="text" class="form-control-custom {% if errors.shopName %}is-invalid{% endif %}" name="shopName" value="{{ form_data.shopName|default:'' }}" placeholder="Enter shop name">
+                            <input type="text" class="form-control-custom {% if errors.shopName %}is-invalid{% endif %}" name="shopName" value="{{ form_data.shopName|default:'' }}" placeholder="Enter shop name" required>
                             {% if errors.shopName %}<div class="invalid-feedback">{{ errors.shopName }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Business Phone</label>
-                            <input type="text" class="form-control-custom {% if errors.business_phone %}is-invalid{% endif %}" name="business_phone" value="{{ form_data.business_phone|default:'' }}" placeholder="10-digit number" maxlength="10">
+                            <input type="text" class="form-control-custom {% if errors.business_phone %}is-invalid{% endif %}" name="business_phone" value="{{ form_data.business_phone|default:'' }}" placeholder="10-digit number" maxlength="10" required>
                             {% if errors.business_phone %}<div class="invalid-feedback">{{ errors.business_phone }}</div>{% endif %}
                         </div>
                         <div class="col-12">
                             <label class="form-label">Shop Address</label>
-                            <textarea class="form-control-custom" name="shopAddress" rows="2" placeholder="Full address">{{ form_data.shopAddress|default:'' }}</textarea>
+                            <textarea class="form-control-custom" name="shopAddress" rows="2" placeholder="Full address" required>{{ form_data.shopAddress|default:'' }}</textarea>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Description</label>
-                            <textarea class="form-control-custom" name="description" rows="3" placeholder="Shop description">{{ form_data.description|default:'' }}</textarea>
+                            <textarea class="form-control-custom" name="description" rows="3" placeholder="Shop description" required>{{ form_data.description|default:'' }}</textarea>
                         </div>
                     </div>
 
@@ -76,21 +76,21 @@
                     <div class="row g-3">
                          <div class="col-md-4">
                             <label class="form-label">Profile Picture</label>
-                            <input type="file" class="form-control-custom" name="profile_picture" style="padding: 7px;">
+                            <input type="file" class="form-control-custom" name="profile_picture" style="padding: 7px;" {% if not vendor_obj.profile_picture %}required{% endif %}>
                             {% if vendor_obj.profile_picture %}
                             <div class="mt-1"><a href="{{ vendor_obj.profile_picture.url }}" target="_blank" class="small text-decoration-none text-primary-custom">View Current</a></div>
                             {% endif %}
                          </div>
                          <div class="col-md-4">
                             <label class="form-label">PAN Card</label>
-                            <input type="file" class="form-control-custom" name="panCard" style="padding: 7px;">
+                            <input type="file" class="form-control-custom" name="panCard" style="padding: 7px;" {% if not vendor_obj.panCard %}required{% endif %}>
                             {% if vendor_obj.panCard %}
                             <div class="mt-1"><a href="{{ vendor_obj.panCard.url }}" target="_blank" class="small text-decoration-none text-primary-custom">View Current</a></div>
                             {% endif %}
                          </div>
                          <div class="col-md-4">
                             <label class="form-label">Adhaar Card</label>
-                            <input type="file" class="form-control-custom" name="adharCard" style="padding: 7px;">
+                            <input type="file" class="form-control-custom" name="adharCard" style="padding: 7px;" {% if not vendor_obj.adharCard %}required{% endif %}>
                             {% if vendor_obj.adharCard %}
                             <div class="mt-1"><a href="{{ vendor_obj.adharCard.url }}" target="_blank" class="small text-decoration-none text-primary-custom">View Current</a></div>
                             {% endif %}
@@ -101,19 +101,19 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Bank Name</label>
-                            <input type="text" class="form-control-custom" name="bank_name" value="{{ form_data.bank_name|default:'' }}" placeholder="Bank Name">
+                            <input type="text" class="form-control-custom" name="bank_name" value="{{ form_data.bank_name|default:'' }}" placeholder="Bank Name" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Account Number</label>
-                            <input type="text" class="form-control-custom" name="account_number" value="{{ form_data.account_number|default:'' }}" placeholder="Account Number">
+                            <input type="text" class="form-control-custom" name="account_number" value="{{ form_data.account_number|default:'' }}" placeholder="Account Number" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">IFSC Code</label>
-                            <input type="text" class="form-control-custom" name="ifsc_code" value="{{ form_data.ifsc_code|default:'' }}" placeholder="IFSC Code">
+                            <input type="text" class="form-control-custom" name="ifsc_code" value="{{ form_data.ifsc_code|default:'' }}" placeholder="IFSC Code" data-pattern="^[A-Z]{4}0[A-Z0-9]{6}$" data-error="Invalid IFSC Code (e.g. SBIN0123456)" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Beneficiary Name</label>
-                            <input type="text" class="form-control-custom" name="beneficiary_name" value="{{ form_data.beneficiary_name|default:'' }}" placeholder="Beneficiary Name">
+                            <input type="text" class="form-control-custom" name="beneficiary_name" value="{{ form_data.beneficiary_name|default:'' }}" placeholder="Beneficiary Name" required>
                         </div>
                     </div>
                     {% endif %}
@@ -123,11 +123,11 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Password</label>
-                            <input type="password" class="form-control-custom {% if errors.confirm_password %}is-invalid{% endif %}" name="password" placeholder="Create password">
+                            <input type="password" class="form-control-custom {% if errors.confirm_password %}is-invalid{% endif %}" name="password" placeholder="Create password" required minlength="6">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Confirm Password</label>
-                            <input type="password" class="form-control-custom {% if errors.confirm_password %}is-invalid{% endif %}" name="confirm_password" placeholder="Repeat password">
+                            <input type="password" class="form-control-custom {% if errors.confirm_password %}is-invalid{% endif %}" name="confirm_password" placeholder="Repeat password" required>
                             {% if errors.confirm_password %}<div class="invalid-feedback">{{ errors.confirm_password }}</div>{% endif %}
                         </div>
                     </div>

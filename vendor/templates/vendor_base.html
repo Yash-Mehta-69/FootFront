@@ -486,6 +486,43 @@
             background-color: var(--btn-light-hover);
             color: var(--btn-light-color);
         }
+        /* Empty State Styling */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px dashed var(--border-color);
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            opacity: 0.8;
+            filter: drop-shadow(0 10px 15px rgba(67, 24, 255, 0.2));
+        }
+
+        [data-theme="dark"] .empty-state-icon {
+             filter: drop-shadow(0 10px 15px rgba(117, 81, 255, 0.3));
+        }
+
+        .empty-state-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .empty-state-text {
+            color: var(--text-secondary);
+            font-size: 16px;
+            max-width: 400px;
+            margin: 0 auto 30px auto;
+            line-height: 1.6;
+        }
     </style>
 </head>
 
@@ -500,14 +537,23 @@
                 class="menu-item {% if request.resolver_match.url_name == 'vendordashboard' %}active{% endif %}">
                 <i class="fas fa-home"></i> Dashboard
             </a>
-            <a href="{% url 'vendor_products' %}"
-                class="menu-item {% if request.resolver_match.url_name == 'vendor_products' %}active{% endif %}">
-                <i class="fas fa-box-open"></i> Products
-            </a>
+            
             <!-- Orders Link Removed -->
             <a href="{% url 'vendor_categories' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_categories' %}active{% endif %}">
                 <i class="fas fa-list"></i> Categories
+            </a>
+            <a href="{% url 'vendor_sizes' %}"
+                class="menu-item {% if request.resolver_match.url_name == 'vendor_sizes' %}active{% endif %}">
+                <i class="fas fa-ruler-combined"></i> Sizes
+            </a>
+            <a href="{% url 'vendor_colors' %}"
+                class="menu-item {% if request.resolver_match.url_name == 'vendor_colors' %}active{% endif %}">
+                <i class="fas fa-palette"></i> Colors
+            </a>
+            <a href="{% url 'vendor_products' %}"
+                class="menu-item {% if request.resolver_match.url_name == 'vendor_products' %}active{% endif %}">
+                <i class="fas fa-box-open"></i> Products
             </a>
             <a href="{% url 'vendor_shipments' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_shipments' %}active{% endif %}">
@@ -635,6 +681,103 @@
                 localStorage.setItem('theme', 'light');
             }
         });
+
+        // Shared Attribute Request Functions
+        function showMessage(title, message) {
+            document.getElementById('messageModalTitle').innerText = title;
+            document.getElementById('messageModalBody').innerText = message;
+            var myModal = new bootstrap.Modal(document.getElementById('messageModal'));
+            myModal.show();
+        }
+
+        function openRequestModal(type) {
+            document.getElementById('requestType').value = type;
+            document.getElementById('requestTypeLabel').innerText = type;
+            document.getElementById('requestModalTitle').innerText = 'Request New ' + type;
+            document.getElementById('requestValue').value = '';
+            
+            var myModal = new bootstrap.Modal(document.getElementById('requestAttributeModal'));
+            myModal.show();
+        }
+
+        function submitRequest() {
+            const type = document.getElementById('requestType').value;
+            const value = document.getElementById('requestValue').value;
+            
+            if(!value) {
+                showMessage("Input Required", "Please enter a value.");
+                return;
+            }
+            
+            fetch("{% url 'vendor_request_attribute' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ type: type, value: value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                var requestModalEl = document.getElementById('requestAttributeModal');
+                var requestModal = bootstrap.Modal.getInstance(requestModalEl);
+                requestModal.hide();
+                
+                if(data.success) {
+                    showMessage("Success", data.message);
+                } else {
+                    showMessage("Error", data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage("Error", "An error occurred.");
+            });
+        }
+    </script>
+
+    <!-- Request Attribute Modal -->
+    <div class="modal fade" id="requestAttributeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content custom-card">
+                <div class="modal-header">
+                    <h5 class="modal-title text-primary-custom" id="requestModalTitle">Request New Attribute</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="attributeRequestForm">
+                        <input type="hidden" id="requestType">
+                        <div class="mb-3">
+                            <label for="requestValue" class="form-label">New <span id="requestTypeLabel">Value</span> Name</label>
+                            <input type="text" class="form-control form-control-custom" id="requestValue" required>
+                            <div class="form-text" style="color: var(--text-secondary);">Your request will be sent to Admin for approval.</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light-custom" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="submitRequest()">Submit Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div class="modal fade" id="messageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content custom-card">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="messageModalTitle">Message</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="messageModalBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary-custom" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
     </script>
 </body>
 

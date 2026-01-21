@@ -80,7 +80,18 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center py-4">No vendors found.</td>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-store-slash"></i>
+                            </div>
+                            <h3 class="empty-state-title">No Vendors Found</h3>
+                            <p class="empty-state-text">There are currently no vendors registered. Click the button above to add a new vendor.</p>
+                            <a href="{% url 'add_vendor' %}" class="btn btn-primary-custom">
+                                <i class="fas fa-plus me-2"></i> Add First Vendor
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -79,6 +79,18 @@
                         </div>
                     </td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <h3 class="empty-state-title">No Orders Found</h3>
+                            <p class="empty-state-text">There are no orders recorded in the system yet.</p>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

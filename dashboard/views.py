@@ -54,7 +54,7 @@ from vendor.models import Vendor
 
 @admin_required
 def manage_customers(request):
-    customers = Customer.objects.select_related('user').all()
+    customers = Customer.objects.select_related('user').filter(is_deleted=False)
     return render(request, 'dashboard/manage_customers.html', {'customers': customers})
 
 @admin_required

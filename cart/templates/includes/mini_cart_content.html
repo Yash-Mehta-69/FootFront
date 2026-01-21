@@ -1,0 +1,34 @@
+{% load nav_tags %}
+{% load static %}
+
+<div class="drawer-content">
+    {% get_cart_items request as cart_items %}
+    {% if cart_items %}
+        {% for item in cart_items %}
+            <div class="cart-item-mini">
+                {% if item.product_variant.image %}
+                    <img src="{{ item.product_variant.image.url }}" alt="{{ item.product_variant.product.name }}">
+                {% else %}
+                    <img src="{% static 'images/placeholder-shoe.png' %}" alt="{{ item.product_variant.product.name }}">
+                {% endif %}
+                <div class="cart-item-details">
+                    <span class="cart-item-name">{{ item.product_variant.product.name }}</span>
+                    <span class="cart-item-meta">{{ item.product_variant.size }} | {{ item.product_variant.color }} | QTY: {{ item.quantity }}</span>
+                    <div class="cart-item-price">₹{{ item.product_variant.price }}</div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-results">SYSTEM: CART IS EMPTY. <br> START COLLECTING.</div>
+    {% endif %}
+</div>
+
+{% if cart_items %}
+<div class="drawer-footer">
+    <div class="total-row">
+        <span>TOTAL:</span>
+        <span>₹{% get_cart_total request %}</span>
+    </div>
+    <a href="{% url 'cart_detail' %}" class="checkout-btn">VIEW FULL BAG</a>
+</div>
+{% endif %}

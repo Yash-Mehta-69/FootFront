@@ -116,8 +116,12 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="7" class="text-center py-4">
-                            <h6 class="text-muted">No shipments found.</h6>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-shipping-fast empty-state-icon"></i>
+                                <h3 class="empty-state-title">No Shipments Found</h3>
+                                <p class="empty-state-text">You don't have any active or past shipments yet. When you process orders, they will appear here.</p>
+                            </div>
                         </td>
                     </tr>
                 {% endif %}

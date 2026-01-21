@@ -83,23 +83,17 @@ WSGI_APPLICATION = 'FootFront.wsgi.application'
 
 import dj_database_url
 
-# Use DATABASE_URL if available (Postgres), otherwise fall back to SQLite
-if os.environ.get('DATABASE_URL'):
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-            engine='django.db.backends.postgresql'
-        )
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'footfront',
+        'USER': 'root',
+        'PASSWORD': 'yash1234',  
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': '/tmp/db.sqlite3' if os.environ.get('VERCEL') else BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 
 # Password validation

@@ -45,8 +45,12 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="5" class="text-center py-4">
-                             <h6 class="text-muted">No reviews found for your products.</h6>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-star empty-state-icon"></i>
+                                <h3 class="empty-state-title">No Reviews Yet</h3>
+                                <p class="empty-state-text">Your products haven't received any reviews yet. Great products usually attract reviews soon!</p>
+                            </div>
                         </td>
                     </tr>
                 {% endif %}

@@ -951,10 +951,25 @@
                 const data = await response.json();
                 if (data.success) {
                     showToast('Item added to cart!', 'success');
-                    const cartCountBadge = document.getElementById('cart-count-badge');
-                    if (cartCountBadge) cartCountBadge.textContent = data.cart_count;
+                    
+                    // Update all cart badges (desktop + mobile)
+                    const cartBadges = document.querySelectorAll('.cart-badge');
+                    cartBadges.forEach(badge => {
+                        badge.textContent = data.cart_count;
+                        badge.style.display = data.cart_count > 0 ? 'flex' : 'none';
+                    });
+                    
+                    // Update mini cart content
+                    const cartBody = document.getElementById('mini-cart-body');
+                    if (cartBody && data.cart_html) {
+                        cartBody.innerHTML = data.cart_html;
+                    }
                 } else {
-                    showToast(data.message || 'Error adding to cart', 'error');
+                    if (data.message === 'login_required') {
+                        showToast('PLEASE <a href="{% url "login" %}" style="color:var(--color-accent);text-decoration:underline !important;cursor:pointer;">LOGIN</a> TO ADD TO CART', 'info');
+                    } else {
+                        showToast(data.message || 'Error adding to cart', 'error');
+                    }
                 }
             } catch (error) {
                 console.error("Cart AJAX error:", error);
@@ -991,7 +1006,11 @@
                     icon.classList.toggle('far', data.action === 'removed');
                     showToast(`Wishlist ${data.action}!`, 'success');
                 } else {
-                    showToast(data.message || 'Error updating wishlist', 'error');
+                    if (data.message === 'login_required') {
+                        showToast('PLEASE <a href="{% url "login" %}" style="color:var(--color-accent);text-decoration:underline !important;cursor:pointer;">LOGIN</a> TO ADD TO WISHLIST', 'info');
+                    } else {
+                        showToast(data.message || 'Error updating wishlist', 'error');
+                    }
                 }
             } catch (error) {
                 showToast('Network error.', 'error');
@@ -1005,12 +1024,23 @@
             toast.className = `tech-toast ${type}`;
             toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i> ${msg}`;
             document.body.appendChild(toast);
+            
+            // Handle custom cursor for dynamic links
+            const cursorOutline = document.querySelector('.cursor-outline');
+            if (cursorOutline) {
+                toast.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('mouseenter', () => cursorOutline.classList.add('hovered'));
+                    link.addEventListener('mouseleave', () => cursorOutline.classList.remove('hovered'));
+                });
+            }
+
             setTimeout(() => {
                 toast.classList.add('show');
+                const duration = (type === 'info') ? 5000 : 3000; // Longer for info/login prompts
                 setTimeout(() => {
                     toast.classList.remove('show');
                     setTimeout(() => toast.remove(), 500);
-                }, 3000);
+                }, duration);
             }, 100);
         }
         

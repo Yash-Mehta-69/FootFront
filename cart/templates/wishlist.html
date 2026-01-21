@@ -20,56 +20,39 @@
     </div>
     
     <div class="glass-grid">
-        <!-- Mock Item 1 -->
-        <div class="glass-card">
-            <div class="glass-card-image-wrapper">
-                 <img src="https://images.unsplash.com/photo-1600185365926-3a6d3de3ddaf?q=80&w=1925&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
-                <div class="glass-badge">SAVED</div>
-            </div>
-            <div>
-                <a href="#">
-                    <h4 class="glass-card-title">Nike Dunk Low Retro</h4>
-                </a>
-                <div class="glass-card-footer">
-                    <span class="glass-card-price">₹110.00</span>
-                    <a href="#" class="glass-btn">VIEW</a>
+        {% if items %}
+            {% for item in items %}
+                <div class="glass-card">
+                    <div class="glass-card-image-wrapper">
+                        {% if item.product_variant.image %}
+                            <img src="{{ item.product_variant.image.url }}" class="glass-card-img" alt="{{ item.product_variant.product.name }}">
+                        {% else %}
+                            <img src="{% static 'images/placeholder-shoe.png' %}" class="glass-card-img" alt="{{ item.product_variant.product.name }}">
+                        {% endif %}
+                        <div class="glass-badge">SAVED</div>
+                    </div>
+                    <div>
+                        <a href="{% url 'product_detail' item.product_variant.product.slug %}">
+                            <h4 class="glass-card-title">{{ item.product_variant.product.name }}</h4>
+                        </a>
+                        <div class="glass-card-category" style="font-size: 0.75rem; opacity: 0.7;">
+                            {{ item.product_variant.size }} | {{ item.product_variant.color }}
+                        </div>
+                        <div class="glass-card-footer">
+                            <span class="glass-card-price">₹{{ item.product_variant.price }}</span>
+                            <a href="{% url 'product_detail' item.product_variant.product.slug %}" class="glass-btn">VIEW</a>
+                        </div>
+                    </div>
                 </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state-box" style="grid-column: 1 / -1;">
+                <i class="far fa-heart mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                <h3>YOUR WISHLIST IS EMPTY</h3>
+                <p class="text-muted-theme">SAVE YOUR FAVORITES SYSTEM-WIDE TO SEE THEM HERE.</p>
+                <a href="{% url 'shop' %}" class="btn-primary mt-4">CONTINUE SHOPPING</a>
             </div>
-        </div>
-
-        <!-- Mock Item 2 -->
-        <div class="glass-card">
-            <div class="glass-card-image-wrapper">
-                 <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=2012&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
-                <div class="glass-badge">SAVED</div>
-            </div>
-            <div>
-                <a href="#">
-                    <h4 class="glass-card-title">Jordan 1 High OG</h4>
-                </a>
-                <div class="glass-card-footer">
-                    <span class="glass-card-price">₹170.00</span>
-                    <a href="#" class="glass-btn">VIEW</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mock Item 3 -->
-        <div class="glass-card">
-            <div class="glass-card-image-wrapper">
-                 <img src="https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?q=80&w=2070&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
-                <div class="glass-badge">SAVED</div>
-            </div>
-            <div>
-                <a href="#">
-                    <h4 class="glass-card-title">Asics Gel-Kayano</h4>
-                </a>
-                <div class="glass-card-footer">
-                    <span class="glass-card-price">₹160.00</span>
-                    <a href="#" class="glass-btn">VIEW</a>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

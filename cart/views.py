@@ -1,5 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.db.models import Sum
+from django.template.loader import render_to_string
+import json
 from .models import Cart, CartItem, Wishlist
 from store.models import Product, ProductVariant
 
@@ -19,10 +23,9 @@ def cart_detail(request):
     }
     return render(request, 'cart.html', context)
 
-@login_required(login_url='login')
 def add_to_cart_ajax(request):
-    import json
-    from django.http import JsonResponse
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'login_required'})
     
     if request.method == 'POST':
         try:
@@ -46,10 +49,17 @@ def add_to_cart_ajax(request):
             
             cart_item.save()
             
-            # Count items in cart
-            cart_count = cart.items.filter(is_deleted=False).count()
+            # Count items in cart (quantities sum)
+            cart_count = cart.items.filter(is_deleted=False).aggregate(total=Sum('quantity'))['total'] or 0
             
-            return JsonResponse({'success': True, 'cart_count': cart_count})
+            # Render updated mini cart HTML
+            cart_html = render_to_string('includes/mini_cart_content.html', request=request)
+            
+            return JsonResponse({
+                'success': True, 
+                'cart_count': cart_count,
+                'cart_html': cart_html
+            })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
             

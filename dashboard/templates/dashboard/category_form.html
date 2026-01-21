@@ -19,7 +19,7 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Category Name</label>
-                            <input type="text" class="form-control-custom {% if form.name.errors %}is-invalid{% endif %}" name="{{ form.name.name }}" value="{{ form.name.value|default:'' }}" placeholder="Category Name">
+                            <input type="text" class="form-control-custom {% if form.name.errors %}is-invalid{% endif %}" name="{{ form.name.name }}" value="{{ form.name.value|default:'' }}" placeholder="Category Name" required>
                             {% if form.name.errors %}
                             <div class="invalid-feedback">{{ form.name.errors.0 }}</div>
                             {% endif %}
@@ -38,7 +38,7 @@
                         
                         <div class="col-md-12">
                             <label class="form-label">Description</label>
-                            <textarea class="form-control-custom {% if form.description.errors %}is-invalid{% endif %}" name="{{ form.description.name }}" rows="4" placeholder="Description...">{{ form.description.value|default:'' }}</textarea>
+                            <textarea class="form-control-custom {% if form.description.errors %}is-invalid{% endif %}" name="{{ form.description.name }}" rows="4" placeholder="Description..." required>{{ form.description.value|default:'' }}</textarea>
                             {% if form.description.errors %}
                             <div class="invalid-feedback">{{ form.description.errors.0 }}</div>
                             {% endif %}
@@ -46,7 +46,7 @@
                         
                         <div class="col-md-12">
                             <label class="form-label">Category Image</label>
-                            <input type="file" class="form-control-custom {% if form.cat_image.errors %}is-invalid{% endif %}" name="{{ form.cat_image.name }}" style="padding: 7px;">
+                            <input type="file" class="form-control-custom {% if form.cat_image.errors %}is-invalid{% endif %}" name="{{ form.cat_image.name }}" style="padding: 7px;" {% if not category.cat_image %}required{% endif %}>
                             {% if form.cat_image.errors %}
                             <div class="invalid-feedback">{{ form.cat_image.errors.0 }}</div>
                             {% endif %}

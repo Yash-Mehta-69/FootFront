@@ -25,7 +25,6 @@
             </thead>
             <tbody>
                 {% for customer in customers %}
-                {% if not customer.is_deleted %}
                 <tr>
                     <td>#{{ customer.pk }}</td>
                     <td>
@@ -58,7 +57,18 @@
                         </a>
                     </td>
                 </tr>
-                {% endif %}
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-users-slash"></i>
+                            </div>
+                            <h3 class="empty-state-title">No Customers Found</h3>
+                            <p class="empty-state-text">It looks like there are no customers registered in the system yet.</p>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

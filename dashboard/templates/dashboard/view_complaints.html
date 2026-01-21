@@ -45,6 +45,18 @@
                         </form>
                     </td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <h3 class="empty-state-title">No Complaints Found</h3>
+                            <p class="empty-state-text">Everything looks good! There are currently no user complaints filed.</p>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

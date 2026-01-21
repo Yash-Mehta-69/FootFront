@@ -26,7 +26,10 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Category</label>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-label">Category</label>
+                            <a href="#" class="small text-decoration-none" onclick="openRequestModal('Category'); return false;">Request New?</a>
+                        </div>
                         {{ form.category }}
                          {% if form.category.errors %}
                         <div class="text-danger small">{{ form.category.errors.0 }}</div>
@@ -82,8 +85,12 @@
                             <table class="table-custom" id="variantTable">
                                 <thead class="bg-light-custom">
                                     <tr>
-                                        <th style="min-width: 100px;">Size</th>
-                                        <th style="min-width: 100px;">Color</th>
+                                        <th style="min-width: 100px;">
+                                            Size <a href="#" onclick="openRequestModal('Size'); return false;"><i class="fas fa-plus-circle fa-xs"></i></a>
+                                        </th>
+                                        <th style="min-width: 100px;">
+                                            Color <a href="#" onclick="openRequestModal('Color'); return false;"><i class="fas fa-plus-circle fa-xs"></i></a>
+                                        </th>
                                         <th style="min-width: 100px;">Price</th>
                                         <th style="min-width: 80px;">Stock</th>
                                         <th style="min-width: 150px;">Image</th>

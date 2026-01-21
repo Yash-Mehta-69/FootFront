@@ -125,12 +125,12 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = ['name', 'description', 'vendor', 'category', 'gender', 'product_image', 'is_trending']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Enter product name'}),
-            'description': forms.Textarea(attrs={'class': 'form-control-custom', 'rows': 4, 'placeholder': 'Enter product description'}),
-            'vendor': forms.Select(attrs={'class': 'form-select-custom'}),
-            'category': forms.Select(attrs={'class': 'form-select-custom'}),
-            'gender': forms.Select(attrs={'class': 'form-select-custom'}),
-            'product_image': forms.ClearableFileInput(attrs={'class': 'form-control-custom', 'style': 'padding: 7px;'}),
+            'name': forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Enter product name', 'required': 'required'}),
+            'description': forms.Textarea(attrs={'class': 'form-control-custom', 'rows': 4, 'placeholder': 'Enter product description', 'required': 'required'}),
+            'vendor': forms.Select(attrs={'class': 'form-select-custom', 'required': 'required'}),
+            'category': forms.Select(attrs={'class': 'form-select-custom', 'required': 'required'}),
+            'gender': forms.Select(attrs={'class': 'form-select-custom', 'required': 'required'}),
+            'product_image': forms.ClearableFileInput(attrs={'class': 'form-control-custom', 'style': 'padding: 7px;'}), # Note: image may be required only on Add, handled in view or client
             'is_trending': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'isTrending'}),
         }
 
@@ -148,7 +148,7 @@ class SizeForm(forms.ModelForm):
         model = Size
         fields = ['size_label']
         widgets = {
-            'size_label': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'placeholder': 'Enter Size Label'}),
+            'size_label': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'placeholder': 'Enter Size Label', 'required': 'required'}),
         }
 
 class ColorForm(forms.ModelForm):
@@ -156,8 +156,8 @@ class ColorForm(forms.ModelForm):
         model = Color
         fields = ['name', 'hex_code']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'placeholder': 'Color Name'}),
-            'hex_code': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'type': 'color', 'style': 'height: 40px; width: 60px; padding: 2px;'}),
+            'name': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'placeholder': 'Color Name', 'required': 'required'}),
+            'hex_code': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'type': 'color', 'style': 'height: 40px; width: 60px; padding: 2px;', 'required': 'required'}),
         }
 
 

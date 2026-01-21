@@ -103,6 +103,33 @@
                         </a>
                     </td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <h3 class="empty-state-title">No Products Found</h3>
+                            <p class="empty-state-text">
+                                {% if search_query or current_category or current_vendor %}
+                                No products match your search or filter criteria. Try adjusting your filters.
+                                {% else %}
+                                Your inventory is currently empty. Start by adding some products.
+                                {% endif %}
+                            </p>
+                            {% if search_query or current_category or current_vendor %}
+                            <a href="{% url 'manage_products' %}" class="btn btn-light-custom">
+                                Clear All Filters
+                            </a>
+                            {% else %}
+                            <a href="{% url 'admin_add_product' %}" class="btn btn-primary-custom">
+                                <i class="fas fa-plus me-2"></i> Add First Product
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>

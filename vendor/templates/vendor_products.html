@@ -97,7 +97,30 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-muted">No products found. Add your first product!</td>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fas fa-box-open empty-state-icon"></i>
+                            <h3 class="empty-state-title">
+                                {% if search_query or current_category %}
+                                No matching products found
+                                {% else %}
+                                No products in your inventory
+                                {% endif %}
+                            </h3>
+                            <p class="empty-state-text">
+                                {% if search_query or current_category %}
+                                We couldn't find any products matching your current filters. Try adjusting your search or category selection.
+                                {% else %}
+                                You haven't added any products to your store yet. Start adding products to showcase them to customers!
+                                {% endif %}
+                            </p>
+                            {% if not search_query and not current_category %}
+                            <a href="{% url 'vendor_add_product' %}" class="btn btn-primary-custom">
+                                <i class="fas fa-plus me-2"></i>Add Your First Product
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

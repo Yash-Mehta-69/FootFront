@@ -333,6 +333,17 @@ def vendor_reviews(request):
     ]
     return render(request, 'vendor_reviews.html', {'reviews': reviews})
 
+
+@vendor_required
+def vendor_sizes(request):
+    sizes = Size.objects.all()
+    return render(request, 'vendor_sizes.html', {'sizes': sizes})
+
+@vendor_required
+def vendor_colors(request):
+    colors = Color.objects.all()
+    return render(request, 'vendor_colors.html', {'colors': colors})
+
 @vendor_required
 def vendor_change_password(request):
     if request.method == "POST":

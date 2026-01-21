@@ -744,11 +744,13 @@ def vendor_shop(request):
     }
     return render(request, 'vendor_shop.html', context)
 
-@login_required(login_url='login')
 def toggle_wishlist(request):
     import json
     from django.http import JsonResponse
     from cart.models import Wishlist
+    
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'login_required'})
     
     if request.method == 'POST':
         try:

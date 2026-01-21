@@ -74,6 +74,8 @@
                          <div class="mt-2">
                              <img src="{{ product.product_image.url }}" alt="Product Image" style="height: 60px; border-radius: 5px;">
                          </div>
+                         {% else %}
+                            <script>document.getElementsByName('product_image')[0].setAttribute('required', 'required');</script>
                          {% endif %}
                     </div>
 
@@ -103,21 +105,21 @@
                                     <tr>
                                         <input type="hidden" name="variant_id[]" value="{{ v.pk }}">
                                         <td>
-                                            <select class="form-select-custom form-select-sm" name="variant_size[]">
+                                            <select class="form-select-custom form-select-sm" name="variant_size[]" required>
                                                 {% for s in sizes %}
                                                 <option value="{{ s.pk }}" {% if v.size.pk == s.pk %}selected{% endif %}>{{ s.size_label }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
                                         <td>
-                                            <select class="form-select-custom form-select-sm" name="variant_color[]">
+                                            <select class="form-select-custom form-select-sm" name="variant_color[]" required>
                                                 {% for c in colors %}
                                                 <option value="{{ c.pk }}" {% if v.color.pk == c.pk %}selected{% endif %}>{{ c.name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
-                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" value="{{ v.price }}" step="0.01"></td>
-                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" value="{{ v.stock }}"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" value="{{ v.price }}" step="0.01" required min="0"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" value="{{ v.stock }}" required min="0"></td>
                                         <td>
                                             <input type="file" class="form-control-custom form-control-sm" name="variant_image[]">
                                             {% if v.image %}<small class="text-muted d-block">Current: {{ v.image.name|truncatechars:10 }}</small>{% endif %}
@@ -128,7 +130,7 @@
                                     <!-- Empty row template if no variants exist -->
                                     <tr id="emptyRow">
                                         <td>
-                                            <select class="form-select-custom form-select-sm" name="variant_size[]">
+                                            <select class="form-select-custom form-select-sm" name="variant_size[]" required>
                                                 <option value="">Select</option>
                                                 {% for s in sizes %}
                                                 <option value="{{ s.pk }}">{{ s.size_label }}</option>
@@ -136,16 +138,16 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <select class="form-select-custom form-select-sm" name="variant_color[]">
+                                            <select class="form-select-custom form-select-sm" name="variant_color[]" required>
                                                 <option value="">Select</option>
                                                 {% for c in colors %}
                                                 <option value="{{ c.pk }}">{{ c.name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
-                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00" step="0.01"></td>
-                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" placeholder="0"></td>
-                                        <td><input type="file" class="form-control-custom form-control-sm" name="variant_image[]"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00" step="0.01" required min="0"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" placeholder="0" required min="0"></td>
+                                        <td><input type="file" class="form-control-custom form-control-sm" name="variant_image[]" required></td>
                                         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
                                     </tr>
                                     {% endfor %}
