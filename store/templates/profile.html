@@ -78,11 +78,11 @@
                 <div class="col-md-6 mb-4">
                     <div class="glass-panel text-center">
                         <div style="font-size: 3rem; color: var(--color-accent); margin-bottom: 1rem;">
-                            <i class="fas fa-crown"></i>
+                            <i class="fas fa-microchip"></i>
                         </div>
-                        <h3 class="stat-value">ELITE</h3>
-                        <p class="stat-label">Membership Tier</p>
-                        <p style="color: #666; font-size: 0.8rem;">Joined: {{ user.date_joined|date:"M Y" }}</p>
+                        <h3 class="stat-value">{{ tier_name }}</h3>
+                        <p class="stat-label">ACCESS LEVEL</p>
+                        <p style="color: #666; font-size: 0.8rem;">INGRESS DATE: {{ user.date_joined|date:"d.m.Y" }}</p>
                     </div>
                 </div>
                 <div class="col-md-6 mb-4">
@@ -90,9 +90,9 @@
                         <div style="font-size: 3rem; color: var(--color-secondary); margin-bottom: 1rem;">
                             <i class="fas fa-box-open"></i>
                         </div>
-                        <h3 class="stat-value">0</h3>
-                        <p class="stat-label">Active Orders</p>
-                        <a href="{% url 'order_list' %}" class="text-accent" style="font-size: 0.8rem; text-decoration: underline;">INITIATE NEW ORDER ></a>
+                        <h3 class="stat-value">{{ order_count }}</h3>
+                        <p class="stat-label">TOTAL OPERATIONS</p>
+                        <a href="{% url 'order_list' %}" class="text-accent" style="font-size: 0.8rem; text-decoration: underline;">VIEW ORDER LOGS ></a>
                     </div>
                 </div>
             </div>

@@ -55,10 +55,15 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'slug')
 
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
+
 class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'vendor', 'category', 'gender', 'is_trending')
     list_filter = ('gender', 'category', 'is_trending')
+    inlines = [ProductVariantInline]
 
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Color)

@@ -352,12 +352,20 @@
         right: 0;
     }
 
+    #mini-cart-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Constrain the height */
+    }
+
     .drawer-header {
         padding: 2rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid var(--nav-border);
+        flex-shrink: 0;
     }
 
     .drawer-header h3 {
@@ -382,12 +390,19 @@
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* IE and Edge */
+    }
+
+    .drawer-content::-webkit-scrollbar {
+        display: none; /* Chrome, Safari and Opera */
     }
 
     .cart-item-mini {
         display: flex;
         gap: 1rem;
         align-items: center;
+        flex-shrink: 0;
     }
 
     .cart-item-mini img {
@@ -419,11 +434,12 @@
     }
 
     .drawer-footer {
-        padding: 2rem;
+        padding: 1.5rem; /* Reduced padding slightly */
         border-top: 1px solid var(--nav-border);
         display: flex;
         flex-direction: column;
         gap: 1rem;
+        flex-shrink: 0;
     }
 
     .total-row {
@@ -753,7 +769,7 @@
 
 <!-- Mini Cart Drawer -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="toggleCartDrawer()"></div>
-<div class="mini-cart-drawer" id="cartDrawer">
+<div class="mini-cart-drawer" id="cartDrawer" data-lenis-prevent>
     <div class="drawer-header">
         <h3>YOUR SYSTEM BAG</h3>
         <button class="close-drawer" onclick="toggleCartDrawer()"><i class="fas fa-times"></i></button>

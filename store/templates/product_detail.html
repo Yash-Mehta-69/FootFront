@@ -11,21 +11,26 @@
         padding-top: 120px; Increased to 220px for clear visibility
     } */
 
+    /* --- Layout & Tech Background --- */
     .pd-media-container {
         position: relative;
-        height: 100%;
-        min-height: 500px;
         display: flex;
-        flex-direction: column;
-        justify-content: center;
+        flex-direction: column-reverse; /* Thumbs below image */
+        gap: 20px;
         align-items: center;
+        height: auto;
+        margin-bottom: 2rem;
     }
 
-    /* Main Image and Ring Tweaks */
+    /* Main Image Wrapper */
     .pd-main-image-wrapper {
         position: relative;
         width: 100%;
-        height: 550px; /* Increased height */
+        height: 550px; /* Consistent height viewport */
+        background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
+        border-radius: 20px;
+        border: 1px solid var(--glass-border);
+        overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -33,121 +38,76 @@
     }
     
     .pd-image {
-        max-width: 90%;
-        max-height: 450px;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
-        transform: rotate(-10deg) scale(1);
-        filter: drop-shadow(0 30px 50px rgba(0,0,0,0.5));
-        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s;
+        filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
     }
     .pd-image.changing {
         opacity: 0;
-        transform: rotate(-5deg) scale(0.8);
+        transform: scale(0.9);
     }
     
-    .pd-media-container:hover .pd-image {
-        transform: rotate(0deg) scale(1.2); /* Zoom more on hover */
+    /* Hover Zoom */
+    .pd-main-image-wrapper:hover .pd-image {
+        transform: scale(1.1);
+        cursor: crosshair;
     }
 
-    /* Thumbnail Gallery */
+    /* Thumbnails - Horizontal Style */
     .pd-thumbnails {
         display: flex;
-        gap: 12px;
-        margin-top: 1rem;
+        flex-direction: row; /* Horizontal */
+        gap: 15px;
+        width: 100%;
+        overflow-x: auto; /* Scroll horizontally */
+        padding-bottom: 10px; 
         z-index: 3;
-        overflow-x: auto;
-        padding: 10px;
-        max-width: 100%;
-        justify-content: center; /* Center thumbnails */
+        justify-content: center; /* Center thumbs */
     }
-
-    /* Tech Ring - Adjusted to be a subtle background element */
-    .pd-tech-ring {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 650px; /* Increased Ring Size */
-        height: 650px;
-        border: 1px dashed var(--hud-ring-color, rgba(255,255,255,0.08));
-        border-radius: 50%;
-        z-index: 1;
-        animation: spin-slow 60s linear infinite; /* Slower spin */
-        pointer-events: none;
-        opacity: 0.6; /* Subtler */
-    }
-    .pd-tech-ring::after {
-        content: '';
-        position: absolute;
-        inset: -40px; /* Double Ring effect */
-        border: 1px solid rgba(255,255,255,0.03);
-        border-radius: 50%;
-    }
-
-    /* Toast Styles */
-    .tech-toast {
-        position: fixed;
-        bottom: 30px;
-        right: -400px;
-        background: rgba(10, 10, 10, 0.95);
-        color: white;
-        padding: 1rem 2rem;
-        border-left: 4px solid var(--color-accent);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        z-index: 10000;
-        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        font-family: var(--font-heading);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        display: flex;
-        align-items: center;
-        backdrop-filter: blur(10px);
-    }
-    .tech-toast.show {
-        right: 30px;
-    }
-    .tech-toast.error { border-color: #ff4d4d; }
-    .tech-toast.info { border-color: #ffaa00; }
-    .tech-toast.success { border-color: var(--color-success, #00ff88); }
+    
+    .pd-thumbnails::-webkit-scrollbar { height: 4px; }
+    .pd-thumbnails::-webkit-scrollbar-thumb { background: var(--color-accent); border-radius: 2px; }
+    .pd-thumbnails::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
 
     .pd-thumb {
-        width: 70px;
-        height: 70px;
-        background: var(--glass-bg);
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0; /* Don't squash */
+        background: rgba(255,255,255,0.02);
         border: 1px solid var(--glass-border);
         border-radius: 12px;
         padding: 5px;
         cursor: pointer;
         transition: all 0.3s ease;
         object-fit: contain;
+        opacity: 0.6;
     }
-    .pd-thumb:hover, .pd-thumb.active {
+    .pd-thumb:hover {
+        opacity: 1;
+        border-color: var(--color-accent);
+        transform: translateY(-2px);
+    }
+    .pd-thumb.active {
+        opacity: 1;
         border-color: var(--color-accent);
         box-shadow: 0 0 15px rgba(204, 255, 0, 0.2);
-        transform: translateY(-5px);
+        background: rgba(255,255,255,0.05);
+        transform: scale(1.05);
     }
 
-    /* Tech Ring */
-    .pd-tech-ring {
+    /* Tech Frame - Background Accent */
+    .pd-tech-frame {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 500px;
-        height: 500px;
-        border: 1px dashed var(--hud-ring-color, rgba(255,255,255,0.1));
-        border-radius: 50%;
-        z-index: 1;
-        animation: spin-slow 30s linear infinite;
+        top: -10px; left: -10px; right: -10px; bottom: -10px;
+        border: 1px solid var(--glass-border);
+        z-index: 0;
         pointer-events: none;
+        opacity: 0.2;
+        border-radius: 24px;
     }
-    .pd-tech-ring::after {
-        content: '';
-        position: absolute;
-        inset: -20px;
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 50%;
-    }
+
 
     /* --- Info Section --- */
     .pd-info {
@@ -508,9 +468,21 @@
     }
     
     @media (max-width: 991px) {
-        .pd-page-wrapper { padding-top: 120px; }
-        .pd-media-container { min-height: 400px; margin-bottom: 2rem; }
-        .pd-image { max-height: 300px; }
+        .pd-page-wrapper { padding-top: 100px; }
+        .pd-media-container { 
+            margin-bottom: 2rem; 
+        }
+        .pd-main-image-wrapper { 
+            height: 400px; 
+        }
+        .pd-image { max-height: 90%; max-width: 90%; }
+        
+        .pd-thumb {
+            min-width: 70px;
+            width: 70px;
+            height: 70px;
+        }
+
         .action-row { grid-template-columns: 1fr 1fr; }
         .btn-wishlist { grid-column: 2; width: 100%; }
         .qty-selector { grid-column: 1; }
@@ -538,19 +510,9 @@
             <!-- LEFT: Media Gallery -->
             <div class="col-lg-7">
                 <div class="pd-media-container">
-                    <div class="pd-tech-ring"></div>
+                    <div class="pd-tech-frame"></div>
                     
-                    <div class="pd-main-image-wrapper">
-                        {% if product.product_image %}
-                            <img id="main-image" src="{{ product.product_image.url }}" class="pd-image" alt="{{ product.name }}">
-                        {% else %}
-                            <div class="text-muted text-center">
-                                <i class="fas fa-image fa-4x mb-3"></i><br>No Image Available
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Thumbnails (Main + Variants) -->
+                    <!-- Thumbnails (Left Side) -->
                     <div class="pd-thumbnails" id="thumbnail-container">
                          <!-- Main Image Thumb -->
                          {% if product.product_image %}
@@ -560,9 +522,20 @@
                          <!-- Variant Images (Unique Only) -->
                          {% for variant in variants %}
                             {% if variant.image and variant.image.url != product.product_image.url %}
-                             <img src="{{ variant.image.url }}" class="pd-thumb" onclick="switchImage(this.src)" data-variant-id="{{ variant.id }}">
+                             <img src="{{ variant.image.url }}" class="pd-thumb" onclick="switchImage(this.src, '{{ variant.id }}')" data-variant-id="{{ variant.id }}">
                             {% endif %}
                          {% endfor %}
+                    </div>
+
+                    <!-- Main Image Area -->
+                    <div class="pd-main-image-wrapper">
+                        {% if product.product_image %}
+                            <img id="main-image" src="{{ product.product_image.url }}" class="pd-image" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="text-muted text-center">
+                                <i class="fas fa-image fa-4x mb-3"></i><br>No Image Available
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -1044,7 +1017,7 @@
             }, 100);
         }
         
-        window.switchImage = function(src) {
+        window.switchImage = function(src, variantId = null) {
             if(!mainImage) return;
             mainImage.classList.add('changing');
             setTimeout(() => {
@@ -1054,6 +1027,16 @@
             document.querySelectorAll('.pd-thumb').forEach(img => {
                 img.classList.toggle('active', img.src === src);
             });
+
+            // Bi-directional sync: if thumbnail has variant ID, select it
+            if (variantId) {
+                const variant = allVariants.find(v => v.id == variantId);
+                if (variant) {
+                    selectedColor = variant.color;
+                    selectedSize = variant.size;
+                    updateUI();
+                }
+            }
         }
         
         window.updateQty = function(change) {
@@ -1138,6 +1121,11 @@
                     }
                 }
             } else {
+                // If only color is selected, show its first available variant image
+                if (selectedColor) {
+                    const firstVariant = allVariants.find(v => v.color === selectedColor && v.image !== '#');
+                    if (firstVariant) switchImage(firstVariant.image);
+                }
                 stockFeedback.textContent = '';
                 addBtn.disabled = true;
                 addBtn.innerHTML = 'SELECT OPTIONS <i class="fas fa-lock ms-2"></i>';

@@ -15,7 +15,6 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th scope="col">ID</th>
                     <th scope="col">Order ID</th>
                     <th scope="col">Product</th>
                     <th scope="col">Tracking Number</th>
@@ -29,7 +28,6 @@
                 {% if shipments %}
                     {% for shipment in shipments %}
                     <tr>
-                        <td>#{{ shipment.pk }}</td>
                         <td><a href="#" class="text-primary-custom fw-bold">#{{ shipment.order_item.order.pk }}</a></td>
                         <td>
                             <div class="d-flex align-items-center">
@@ -65,14 +63,6 @@
                                 <span class="status-badge text-muted">
                                     {{ shipment.status|title }}
                                 </span>
-                            {% endif %}
-                        </td>
-                        <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
-                        <td>
-                            {% if shipment.expected_delivery %}
-                                {{ shipment.expected_delivery|date:"M d, Y" }}
-                            {% else %}
-                                -
                             {% endif %}
                         </td>
                         <td>
@@ -116,7 +106,7 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="8">
+                        <td colspan="7">
                             <div class="empty-state">
                                 <i class="fas fa-shipping-fast empty-state-icon"></i>
                                 <h3 class="empty-state-title">No Shipments Found</h3>

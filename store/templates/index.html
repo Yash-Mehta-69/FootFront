@@ -441,74 +441,6 @@
         padding: 4rem 1rem;
     }
 
-    .product-card {
-        position: relative;
-        background: #111;
-        border: 1px solid rgba(255,255,255,0.05); /* Subtle border */
-        border-radius: 12px;
-        overflow: hidden;
-        transition: all 0.4s ease;
-    }
-
-    .product-card:hover {
-        transform: translateY(-10px);
-        border-color: var(--color-accent); /* Glow border on hover */
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-
-    .product-image {
-        width: 100%;
-        height: 400px;
-        object-fit: cover;
-        filter: grayscale(100%);
-        transition: filter 0.4s ease, transform 0.4s ease;
-    }
-
-    .product-card:hover .product-image {
-        filter: grayscale(0%);
-        transform: scale(1.05);
-    }
-
-    .product-info {
-        padding: 1.5rem;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: linear-gradient(to top, rgba(0,0,0,1), transparent);
-        transform: translateY(20px);
-        opacity: 0;
-        transition: all 0.3s ease;
-    }
-
-    .product-card:hover .product-info {
-        transform: translateY(0);
-        opacity: 1;
-    }
-    
-    .product-action-icon {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: var(--color-accent);
-        color: black;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        opacity: 0;
-        transform: scale(0);
-        transition: all 0.3s ease;
-        z-index: 5;
-    }
-    
-    .product-card:hover .product-action-icon {
-        opacity: 1;
-        transform: scale(1);
-    }
-
     /* Category Section */
     .category-section {
         min-height: 80vh;
@@ -714,26 +646,7 @@
 
         <!-- REAL DJANGO LOOP -->
         {% for product in trending_products %}
-        <div class="glass-card">
-            <div class="glass-card-image-wrapper">
-                {% if product.product_image %}
-                    <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}">
-                {% else %}
-                    <img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                {% endif %}
-                <div class="glass-badge">HOT</div>
-            </div>
-            <div>
-                <a href="{% url 'product_detail' product.slug %}">
-                    <h4 class="glass-card-title">{{ product.name }}</h4>
-                </a>
-                <p class="glass-card-category">{{ product.category.name }}</p>
-                <div class="glass-card-footer">
-                    <span class="glass-card-price">₹{{ product.price }}</span>
-                    <a href="{% url 'product_detail' product.slug %}" class="glass-btn">Details</a>
-                </div>
-            </div>
-        </div>
+            {% include 'includes/product_card.html' with product=product extra_badge="HOT" %}
         {% endfor %}
     </div>
 </section>
@@ -832,26 +745,7 @@
     <h2 class="section-title-large">FRESH KICKS</h2>
     <div class="glass-grid">
         {% for product in all_products %}
-        <div class="glass-card">
-            <div class="glass-card-image-wrapper">
-                {% if product.product_image %}
-                    <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}">
-                {% else %}
-                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2670&auto=format&fit=crop" class="glass-card-img" alt="Shoe">
-                {% endif %}
-                <div class="glass-badge">NEW</div>
-            </div>
-            <div>
-                <a href="{% url 'product_detail' product.slug %}"> 
-                    <h4 class="glass-card-title">{{ product.name }}</h4>
-                </a>
-                <p class="glass-card-category">{{ product.category.name }}</p>
-                <div class="glass-card-footer">
-                    <span class="glass-card-price">${{ product.price }}</span>
-                    <a href="{% url 'product_detail' product.slug %}" class="glass-btn">Details</a>
-                </div>
-            </div>
-        </div>
+            {% include 'includes/product_card.html' with product=product %}
         {% endfor %}
     </div>
     <div class="text-center mt-5">

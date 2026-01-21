@@ -52,13 +52,6 @@
                     <td>#{{ product.pk }}</td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <div class="rounded bg-light d-flex align-items-center justify-content-center me-2 overflow-hidden" style="width: 40px; height: 40px; border: 1px solid var(--border-color);">
-                                {% if product.product_image %}
-                                <img src="{{ product.product_image.url }}" alt="" class="img-fluid rounded" style="width: 100%; height: 100%; object-fit: cover;">
-                                {% else %}
-                                <i class="fas fa-box text-secondary fs-6"></i>
-                                {% endif %}
-                            </div>
                             <div>
                                 <div class="fw-bold">{{ product.name }}</div>
                                 {% if product.is_trending %}<span class="badge bg-warning text-dark" style="font-size: 10px;">Trending</span>{% endif %}
@@ -78,7 +71,16 @@
                         {% endwith %}
                     </td>
                     <td>
-                        <span class="text-secondary">{{ product.active_variants|length }} Variants</span>
+                        <div class="text-secondary small mb-1">{{ product.active_variants|length }} Variants</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for v in product.active_variants %}
+                                {% if v.image and v.image.url != product.product_image.url %}
+                                    <div class="variant-thumb-mini" title="{{ v.color.name }} - {{ v.size.size_label }}">
+                                        <img src="{{ v.image.url }}" alt="" class="rounded border" style="width: 25px; height: 25px; object-fit: cover;">
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </td>
                     <td>
                         <span class="status-badge status-active">

@@ -31,7 +31,6 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th>Order ID</th>
                     <th>Customer</th>
                     <th>Date</th>
                     <th>Amount</th>
@@ -43,7 +42,6 @@
             <tbody>
                 {% for order in orders %}
                 <tr>
-                    <td>#{{ order.pk }}</td>
                     <td>{{ order.customer }}</td>
                     <td>{{ order.date }}</td>
                     <td>{{ order.total }}</td>

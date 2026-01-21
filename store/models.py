@@ -56,6 +56,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(auto_now_add=True)
     
     objects = UserManager()
 
@@ -73,6 +74,7 @@ class Customer(models.Model):
     firebase_uid = models.CharField(max_length=128, unique=True, null=True, blank=True)
     is_blocked = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Customer: {self.user.email}"

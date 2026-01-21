@@ -22,6 +22,7 @@ from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse
 from .forms import ComplaintForm, UserUpdateForm, ShippingAddressForm
 from .models import User, Customer, Category, Product, Color, Size, ShippingAddress, Review, ProductVariant, Complaint
+from cart.models import Order
 
 
 
@@ -137,8 +138,8 @@ def initialize_firebase():
 @redirect_special_users
 def index(request):
     categories = Category.objects.filter(is_deleted=False)
-    trending_products = Product.objects.filter(is_deleted=False, is_trending=True).annotate(price=Min('productvariant__price'))[:8]
-    all_products = Product.objects.filter(is_deleted=False).annotate(price=Min('productvariant__price')).order_by('-created_at')[:12] # Optimized sort
+    trending_products = Product.objects.filter(is_deleted=False, is_trending=True).annotate(price=Min('productvariant__price'))[:10]
+    all_products = Product.objects.filter(is_deleted=False).annotate(price=Min('productvariant__price')).order_by('-created_at')[:10]
     context = {
         'categories': categories,
         'trending_products': trending_products,
@@ -322,8 +323,23 @@ def profile_view(request):
 
     user_form = UserUpdateForm(instance=request.user, initial={'phone': customer.phone})
 
+    # Order Statistics
+    order_count = Order.objects.filter(customer=customer).count()
+
+    # Tier Logic
+    if order_count >= 50:
+        tier_name = "LEGENDARY"
+    elif order_count >= 20:
+        tier_name = "ELITE"
+    elif order_count >= 5:
+        tier_name = "PRO"
+    else:
+        tier_name = "ROOKIE"
+
     context = {
         'user_form': user_form,
+        'order_count': order_count,
+        'tier_name': tier_name,
     }
     return render(request, 'profile.html', context)
 

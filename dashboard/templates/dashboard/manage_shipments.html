@@ -31,7 +31,6 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th scope="col">ID</th>
                     <th scope="col">Order ID</th>
                     <th scope="col">Tracking Number</th>
                     <th scope="col">Vendor</th>
@@ -45,7 +44,6 @@
                 {% if shipments %}
                     {% for shipment in shipments %}
                     <tr>
-                        <td>#{{ shipment.pk }}</td>
                         <td><a href="#" class="text-primary-custom fw-bold">#{{ shipment.order_item.order.pk }}</a></td>
                         <td>{{ shipment.tracking_number }}</td>
                         <td>{{ shipment.vendor.shopName }}</td>
@@ -119,7 +117,7 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="8" class="text-center py-4">
+                        <td colspan="7" class="text-center py-4">
                             <h6 class="text-muted">No shipments found.</h6>
                         </td>
                     </tr>

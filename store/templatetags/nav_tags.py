@@ -73,3 +73,15 @@ def is_active(request, url_pattern, **kwargs):
             return 'active'
     return ''
 
+
+@register.simple_tag
+def get_max_price():
+    """Returns the maximum price among all product variants."""
+    from store.models import ProductVariant
+    from django.db.models import Max
+    import math
+    max_price = ProductVariant.objects.aggregate(Max('price'))['price__max']
+    if max_price:
+        # Ceiling to nearest 100 or 1000 for cleaner UI
+        return math.ceil(float(max_price) / 100) * 100
+    return 10000 # Default fallback

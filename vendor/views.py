@@ -93,12 +93,14 @@ def add_product(request):
 
                     for i in range(len(sizes)):
                         if sizes[i] and colors[i]:
+                            variant_image = request.FILES.get(f'variant_image_{i}')
                             ProductVariant.objects.create(
                                 product=product,
                                 size_id=sizes[i],
                                 color_id=colors[i],
                                 price=prices[i] or 0,
-                                stock=stocks[i] or 0
+                                stock=stocks[i] or 0,
+                                image=variant_image if variant_image else product.product_image
                             )
                     messages.success(request, "Product added successfully.")
                     return redirect('vendor_products')
@@ -152,6 +154,7 @@ def edit_product(request, pk):
                     for i in range(len(sizes)):
                         if sizes[i] and colors[i]: # Basic validation
                             current_id = variant_ids[i] if i < len(variant_ids) and variant_ids[i].isdigit() else None
+                            variant_image = request.FILES.get(f'variant_image_{i}')
                             
                             if current_id:
                                 # UPDATE existing
@@ -160,7 +163,8 @@ def edit_product(request, pk):
                                 variant.color_id = colors[i]
                                 variant.price = prices[i] or 0
                                 variant.stock = stocks[i] or 0
-                                # Image handling can be added here if needed (check request.FILES)
+                                if variant_image:
+                                    variant.image = variant_image
                                 variant.save()
                             else:
                                 # CREATE new
@@ -169,7 +173,8 @@ def edit_product(request, pk):
                                     size_id=sizes[i],
                                     color_id=colors[i],
                                     price=prices[i] or 0,
-                                    stock=stocks[i] or 0
+                                    stock=stocks[i] or 0,
+                                    image=variant_image if variant_image else product.product_image
                                 )
                                 
                     messages.success(request, "Product updated successfully.")

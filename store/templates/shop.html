@@ -1,7 +1,7 @@
 
 {% extends 'base.html' %}
 {% load static %}
-
+{% load nav_tags %}
 {% block extra_css %}
 <style>
     .shop-container {
@@ -327,19 +327,20 @@
                     <svg class="filter-chevron" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                 </div>
                 <div class="filter-content">
+                    {% get_max_price as max_val %}
                     <!-- Number Inputs (Synced) -->
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <input type="number" id="minPriceInput" name="min_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.min_price|default:'0' }}" min="0" max="1000">
+                        <input type="number" id="minPriceInput" name="min_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.min_price|default:'0' }}" min="0" max="{{ max_val }}">
                         <span style="font-size: 0.8rem; color: var(--color-text);">-</span>
-                        <input type="number" id="maxPriceInput" name="max_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.max_price|default:'1000' }}" min="0" max="1000">
+                        <input type="number" id="maxPriceInput" name="max_price" class="tech-input p-1 text-center" style="width: 70px; font-size: 0.8rem;" value="{{ request.GET.max_price|default:max_val }}" min="0" max="{{ max_val }}">
                     </div>
 
                     <!-- Slider Component -->
                     <div class="slider-container">
                         <div class="slider-track"></div>
                         <div class="slider-track-highlight" id="sliderHighlight"></div>
-                        <input type="range" id="minRange" min="0" max="1000" value="{{ request.GET.min_price|default:'0' }}" class="range-input">
-                        <input type="range" id="maxRange" min="0" max="1000" value="{{ request.GET.max_price|default:'1000' }}" class="range-input">
+                        <input type="range" id="minRange" min="0" max="{{ max_val }}" value="{{ request.GET.min_price|default:'0' }}" class="range-input">
+                        <input type="range" id="maxRange" min="0" max="{{ max_val }}" value="{{ request.GET.max_price|default:max_val }}" class="range-input">
                     </div>
                 </div>
             </div>
@@ -485,30 +486,7 @@
         <!-- Glass Grid for Products -->
         <div class="glass-grid">
             {% for product in products %}
-            <div class="glass-card">
-                <div class="glass-card-image-wrapper">
-                    {% if product.product_image %}
-                        <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}" loading="lazy">
-                    {% else %}
-                        <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                    {% endif %}
-                    <div class="glass-badge">NEW</div>
-                </div>
-                <div>
-                    <a href="{% url 'product_detail' product.slug %}">
-                        <h4 class="glass-card-title">{{ product.name }}</h4>
-                    </a>
-                    <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">
-                        {% if product.category %}{{ product.category.name }}{% else %}Sneakers{% endif %}
-                    </p>
-                    <div class="glass-card-footer">
-                        <span class="glass-card-price">₹{{ product.price }}</span>
-                        <a href="{% url 'product_detail' product.slug %}" class="glass-btn">
-                            Details
-                        </a>
-                    </div>
-                </div>
-            </div>
+                {% include 'includes/product_card.html' with product=product %}
             {% empty %}
             <div class="empty-state-box col-12" style="grid-column: 1 / -1;">
                 <h3 style="color: #666;">NO RESULTS FOUND</h3>
@@ -637,7 +615,7 @@
         const minInput = document.getElementById('minPriceInput');
         const maxInput = document.getElementById('maxPriceInput');
         const highlight = document.getElementById('sliderHighlight');
-        const maxVal = parseInt(maxRange.max);
+        const maxVal = parseInt(minRange.max);
         const minGap = 0;
 
         function updateSlider() {

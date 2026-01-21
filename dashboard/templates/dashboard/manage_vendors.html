@@ -18,7 +18,6 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Shop / Owner</th>
                     <th>Contact</th>
                     <th>Bank Details</th>
@@ -30,7 +29,6 @@
             <tbody>
                 {% for vendor in vendors %}
                 <tr>
-                    <td>#{{ vendor.pk }}</td>
                     <td>
                         <div class="d-flex align-items-center">
                             {% if vendor.profile_picture %}

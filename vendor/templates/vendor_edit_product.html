@@ -61,14 +61,14 @@
                     
                     <div class="col-md-12">
                          <label class="form-label">Main Image</label>
-                         {{ form.product_image }}
-                           {% if form.product_image.errors %}
-                        <div class="text-danger small">{{ form.product_image.errors.0 }}</div>
-                        {% endif %}
-                        {% if product.product_image %}
-                         <div class="mt-2">
-                             <img src="{{ product.product_image.url }}" alt="Product Image" style="height: 60px; border-radius: 5px;">
-                         </div>
+                         {% if product.product_image %}
+                             <div class="d-flex align-items-center mb-2">
+                                 <img src="{{ product.product_image.url }}" alt="Product Image" class="img-thumbnail me-3" style="width: 100px; height: 100px; object-fit: cover;">
+                             </div>
+                         {% endif %}
+                         <input type="file" name="product_image" class="form-control-custom">
+                         {% if form.product_image.errors %}
+                            <div class="text-danger small">{{ form.product_image.errors.0 }}</div>
                          {% endif %}
                     </div>
 
@@ -118,8 +118,12 @@
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" value="{{ v.price }}" step="0.01"></td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" value="{{ v.stock }}"></td>
                                         <td>
-                                            <input type="file" class="form-control-custom form-control-sm" name="variant_image[]">
-                                             {% if v.image %}<small class="text-muted d-block">Current: {{ v.image.name|truncatechars:10 }}</small>{% endif %}
+                                            <input type="file" class="form-control-custom form-control-sm mb-1" name="variant_image_{{ forloop.counter0 }}">
+                                            {% if v.image %}
+                                                <div class="mt-1">
+                                                    <img src="{{ v.image.url }}" alt="Variant Image" class="rounded border" style="width: 40px; height: 40px; object-fit: cover;">
+                                                </div>
+                                            {% endif %}
                                         </td>
                                         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
                                     </tr>
@@ -143,7 +147,7 @@
                                         </td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00" step="0.01"></td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" placeholder="0"></td>
-                                        <td><input type="file" class="form-control-custom form-control-sm" name="variant_image[]"></td>
+                                        <td><input type="file" class="form-control-custom form-control-sm" name="variant_image_0"></td>
                                         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>
                                     </tr>
                                     {% endfor %}
@@ -168,11 +172,26 @@ function addVariantRow() {
     let rows = table.rows;
     let lastRow = rows[rows.length - 1];
     let newRow = lastRow.cloneNode(true);
+    let rowCount = rows.length;
     
-    // Clear inputs in the new row
+    // Clear inputs and update names in the new row
     let inputs = newRow.getElementsByTagName('input');
     for (let i = 0; i < inputs.length; i++) {
-        inputs[i].value = '';
+        if (inputs[i].type !== 'hidden') {
+            inputs[i].value = '';
+        } else {
+            // Remove hidden ID for new rows
+            inputs[i].remove();
+            i--; // Adjust index after removal
+            continue;
+        }
+        
+        if (inputs[i].type === 'file') {
+            inputs[i].name = 'variant_image_' + rowCount;
+            // Remove existing image preview if any
+            let imgDiv = inputs[i].parentNode.querySelector('div.mt-1');
+            if (imgDiv) imgDiv.remove();
+        }
     }
     let selects = newRow.getElementsByTagName('select');
     for(let i=0; i<selects.length; i++){

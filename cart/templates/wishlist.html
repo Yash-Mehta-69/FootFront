@@ -22,28 +22,9 @@
     <div class="glass-grid">
         {% if items %}
             {% for item in items %}
-                <div class="glass-card">
-                    <div class="glass-card-image-wrapper">
-                        {% if item.product_variant.image %}
-                            <img src="{{ item.product_variant.image.url }}" class="glass-card-img" alt="{{ item.product_variant.product.name }}">
-                        {% else %}
-                            <img src="{% static 'images/placeholder-shoe.png' %}" class="glass-card-img" alt="{{ item.product_variant.product.name }}">
-                        {% endif %}
-                        <div class="glass-badge">SAVED</div>
-                    </div>
-                    <div>
-                        <a href="{% url 'product_detail' item.product_variant.product.slug %}">
-                            <h4 class="glass-card-title">{{ item.product_variant.product.name }}</h4>
-                        </a>
-                        <div class="glass-card-category" style="font-size: 0.75rem; opacity: 0.7;">
-                            {{ item.product_variant.size }} | {{ item.product_variant.color }}
-                        </div>
-                        <div class="glass-card-footer">
-                            <span class="glass-card-price">₹{{ item.product_variant.price }}</span>
-                            <a href="{% url 'product_detail' item.product_variant.product.slug %}" class="glass-btn">VIEW</a>
-                        </div>
-                    </div>
-                </div>
+                {% with variant_info=item.product_variant.size|stringformat:"s"|add:" | "|add:item.product_variant.color|stringformat:"s" %}
+                    {% include 'includes/product_card.html' with product=item.product_variant.product extra_info=variant_info extra_badge="SAVED" price=item.product_variant.price %}
+                {% endwith %}
             {% endfor %}
         {% else %}
             <div class="empty-state-box" style="grid-column: 1 / -1;">

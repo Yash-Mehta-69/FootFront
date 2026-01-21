@@ -206,28 +206,7 @@
             <!-- Dynamic Product Grid -->
             <div class="glass-grid">
                 {% for product in products %}
-                <div class="glass-card">
-                    <div class="glass-card-image-wrapper">
-                         {% if product.product_image %}
-                        <img src="{{ product.product_image.url }}" class="glass-card-img" alt="{{ product.name }}" loading="lazy">
-                        {% else %}
-                        <img src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=600&auto=format&fit=crop" class="glass-card-img" alt="Shoe" loading="lazy">
-                        {% endif %}
-                        <div class="glass-badge">{% if product.is_trending %}TRENDING{% else %}NEW{% endif %}</div>
-                    </div>
-                    <div>
-                        <a href="{% url 'product_detail' product.slug %}">
-                            <h4 class="glass-card-title">{{ product.name }}</h4>
-                        </a>
-                        <p class="glass-card-category" style="margin-bottom: 0.5rem; font-size: 0.8rem; color: #888;">
-                            {% if product.category %}{{ product.category.name|upper }}{% else %}Sneakers{% endif %}
-                        </p>
-                        <div class="glass-card-footer">
-                            <span class="glass-card-price">{% if product.price %}₹{{ product.price }}{% else %}-{% endif %}</span>
-                            <a href="{% url 'product_detail' product.slug %}" class="glass-btn">Details</a>
-                        </div>
-                    </div>
-                </div>
+                    {% include 'includes/product_card.html' with product=product %}
                 {% empty %}
                  <div class="col-12 text-center py-5">
                     <p class="text-muted">No products found in this shop.</p>

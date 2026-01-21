@@ -18,7 +18,6 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Image</th>
                     <th>Name</th>
                     <th>Parent Category</th>
@@ -31,7 +30,6 @@
             <tbody>
                 {% for category in categories %}
                 <tr>
-                    <td>#{{ category.pk }}</td>
                     <td>
                         {% if category.cat_image %}
                         <div class="rounded d-flex align-items-center justify-content-center overflow-hidden" style="width: 40px; height: 40px; border: 1px solid var(--border-color);">
