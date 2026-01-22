@@ -13,6 +13,7 @@ import re
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from utils import panel_messages
 
 
 class MockObj:
@@ -104,10 +105,10 @@ def add_customer(request):
                     phone=phone,
                     is_blocked=(request.POST.get('status', 'Active') != 'Active')
                 )
-                messages.success(request, "Customer added successfully.")
+                panel_messages.add_admin_message(request, 'success', "Customer added successfully.")
                 return redirect('manage_customers')
             except Exception as e:
-                messages.error(request, f"Error adding customer: {e}")
+                panel_messages.add_admin_message(request, 'error', f"Error adding customer: {e}")
         
     return render(request, 'dashboard/user_form.html', {
         'action': 'Add', 
@@ -122,7 +123,7 @@ def edit_customer(request, pk):
     try:
         customer = Customer.objects.select_related('user').get(pk=pk)
     except Customer.DoesNotExist:
-        messages.error(request, "Customer not found.")
+        panel_messages.add_admin_message(request, 'error', "Customer not found.")
         return redirect('manage_customers')
 
     form_data = None
@@ -169,10 +170,10 @@ def edit_customer(request, pk):
             try:
                 customer.user.save()
                 customer.save()
-                messages.success(request, "Customer updated successfully.")
+                panel_messages.add_admin_message(request, 'success', "Customer updated successfully.")
                 return redirect('manage_customers')
             except Exception as e:
-                messages.error(request, f"Error updating customer: {e}")
+                panel_messages.add_admin_message(request, 'error', f"Error updating customer: {e}")
                 
     else:
         # Initial Form Data
@@ -213,11 +214,11 @@ def delete_customer(request, pk):
         customer.firebase_uid = None # Clear UID so it can be reused or simply to detach
         customer.save()
         
-        messages.success(request, "Customer deleted successfully (Firebase & Local).")
+        panel_messages.add_admin_message(request, 'success', "Customer deleted successfully (Firebase & Local).")
     except Customer.DoesNotExist:
-        messages.error(request, "Customer not found.")
+        panel_messages.add_admin_message(request, 'error', "Customer not found.")
     except Exception as e:
-        messages.error(request, f"Error deleting customer: {e}")
+        panel_messages.add_admin_message(request, 'error', f"Error deleting customer: {e}")
         
     return redirect('manage_customers')
 
@@ -307,10 +308,10 @@ def add_vendor(request):
                         beneficiary_name=request.POST.get('beneficiary_name')
                     )
                     
-                    messages.success(request, "Vendor added successfully.")
+                    panel_messages.add_admin_message(request, 'success', "Vendor added successfully.")
                     return redirect('manage_vendors')
             except Exception as e:
-                messages.error(request, f"Error adding vendor: {e}")
+                panel_messages.add_admin_message(request, 'error', f"Error adding vendor: {e}")
 
     return render(request, 'dashboard/user_form.html', {
         'action': 'Add', 
@@ -325,7 +326,7 @@ def edit_vendor(request, pk):
     try:
         vendor = Vendor.objects.select_related('user', 'bankdetail').get(pk=pk)
     except Vendor.DoesNotExist:
-        messages.error(request, "Vendor not found.")
+        panel_messages.add_admin_message(request, 'error', "Vendor not found.")
         return redirect('manage_vendors')
 
     form_data = None
@@ -402,10 +403,10 @@ def edit_vendor(request, pk):
                             beneficiary_name=request.POST.get('beneficiary_name')
                         )
     
-                    messages.success(request, "Vendor updated successfully.")
+                    panel_messages.add_admin_message(request, 'success', "Vendor updated successfully.")
                     return redirect('manage_vendors')
             except Exception as e:
-                messages.error(request, f"Error updating vendor: {e}")
+                panel_messages.add_admin_message(request, 'error', f"Error updating vendor: {e}")
                 
     else:
         # Initial Form Data
@@ -444,11 +445,11 @@ def delete_vendor(request, pk):
         # Also soft delete user? Usually yes.
         vendor.user.is_deleted = True
         vendor.user.save()
-        messages.success(request, "Vendor deleted successfully.")
+        panel_messages.add_admin_message(request, 'success', "Vendor deleted successfully.")
     except Vendor.DoesNotExist:
-        messages.error(request, "Vendor not found.")
+        panel_messages.add_admin_message(request, 'error', "Vendor not found.")
     except Exception as e:
-        messages.error(request, f"Error deleting vendor: {e}")
+        panel_messages.add_admin_message(request, 'error', f"Error deleting vendor: {e}")
     return redirect('manage_vendors')
 
 @admin_required
@@ -462,10 +463,10 @@ def add_category(request):
         form = CategoryForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, "Category added successfully.")
+            panel_messages.add_admin_message(request, 'success', "Category added successfully.")
             return redirect('manage_categories')
         else:
-            messages.error(request, f"Error adding category: {form.errors}")
+            panel_messages.add_admin_message(request, 'error', f"Error adding category: {form.errors}")
     else:
         form = CategoryForm()
     return render(request, 'dashboard/category_form.html', {'action': 'Add', 'form': form})
@@ -475,17 +476,17 @@ def edit_category(request, pk):
     try:
         category = Category.objects.get(pk=pk)
     except Category.DoesNotExist:
-        messages.error(request, "Category not found.")
+        panel_messages.add_admin_message(request, 'error', "Category not found.")
         return redirect('manage_categories')
 
     if request.method == "POST":
         form = CategoryForm(request.POST, request.FILES, instance=category)
         if form.is_valid():
             form.save()
-            messages.success(request, "Category updated successfully.")
+            panel_messages.add_admin_message(request, 'success', "Category updated successfully.")
             return redirect('manage_categories')
         else:
-            messages.error(request, f"Error updating category: {form.errors}")
+            panel_messages.add_admin_message(request, 'error', f"Error updating category: {form.errors}")
     else:
         form = CategoryForm(instance=category)
     return render(request, 'dashboard/category_form.html', {'action': 'Edit', 'category': category, 'form': form})
@@ -496,9 +497,9 @@ def delete_category(request, pk):
         category = Category.objects.get(pk=pk)
         category.is_deleted = True
         category.save()
-        messages.success(request, "Category soft-deleted successfully.")
+        panel_messages.add_admin_message(request, 'success', "Category soft-deleted successfully.")
     except Category.DoesNotExist:
-        messages.error(request, "Category not found.")
+        panel_messages.add_admin_message(request, 'error', "Category not found.")
     return redirect('manage_categories')
 
 @admin_required
@@ -595,12 +596,12 @@ def add_product(request):
                     if variant_count == 0:
                         raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
 
-                    messages.success(request, "Product added successfully.")
+                    panel_messages.add_admin_message(request, 'success', "Product added successfully.")
                     return redirect('manage_products')
             except Exception as e:
-                messages.error(request, f"Error creating product: {e}")
+                panel_messages.add_admin_message(request, 'error', f"Error creating product: {e}")
         else:
-             messages.error(request, f"Form error: {form.errors}")
+             panel_messages.add_admin_message(request, 'error', f"Form error: {form.errors}")
     else:
         form = ProductForm()
 
@@ -619,7 +620,7 @@ def edit_product(request, pk):
     try:
         product = Product.objects.get(pk=pk)
     except Product.DoesNotExist:
-        messages.error(request, "Product not found.")
+        panel_messages.add_admin_message(request, 'error', "Product not found.")
         return redirect('manage_products')
 
     if request.method == "POST":
@@ -677,12 +678,12 @@ def edit_product(request, pk):
                     if variant_count == 0:
                         raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
                                 
-                    messages.success(request, "Product updated successfully.")
+                    panel_messages.add_admin_message(request, 'success', "Product updated successfully.")
                     return redirect('manage_products')
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                messages.error(request, f"Error updating product: {e}")
+                panel_messages.add_admin_message(request, 'error', f"Error updating product: {e}")
     else:
         form = ProductForm(instance=product)
 
@@ -707,9 +708,9 @@ def delete_product(request, pk):
         product = Product.objects.get(pk=pk)
         product.is_deleted = True
         product.save()
-        messages.success(request, "Product soft-deleted successfully.")
+        panel_messages.add_admin_message(request, 'success', "Product soft-deleted successfully.")
     except Product.DoesNotExist:
-        messages.error(request, "Product not found.")
+        panel_messages.add_admin_message(request, 'error', "Product not found.")
     return redirect('manage_products')
 
 @admin_required
@@ -737,7 +738,7 @@ def admin_edit_order(request, pk):
     if request.method == "POST":
         new_status = request.POST.get('status')
         new_payment = request.POST.get('payment_status')
-        messages.success(request, f"Order #{pk} updated successfully (Status: {new_status}, Payment: {new_payment}) - Mock")
+        panel_messages.add_admin_message(request, 'success', f"Order #{pk} updated successfully (Status: {new_status}, Payment: {new_payment}) - Mock")
         return redirect('manage_orders')
         
     return render(request, 'dashboard/edit_order.html', {'order': order})

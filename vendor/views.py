@@ -10,6 +10,7 @@ from store.forms import VendorProductForm
 from cart.models import Shipment, OrderItem
 from django.utils import timezone
 from datetime import timedelta, datetime
+from utils import panel_messages
 
 class MockObj:
     def __init__(self, **kwargs):
@@ -108,12 +109,12 @@ def add_product(request):
                     if variant_count == 0:
                         raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
 
-                    messages.success(request, "Product added successfully.")
+                    panel_messages.add_vendor_message(request, 'success', "Product added successfully.")
                     return redirect('vendor_products')
             except Exception as e:
-                messages.error(request, f"Error adding product: {e}")
+                panel_messages.add_vendor_message(request, 'error', f"Error adding product: {e}")
         else:
-             messages.error(request, f"Form error: {form.errors}")
+             panel_messages.add_vendor_message(request, 'error', f"Form error: {form.errors}")
     else:
         form = VendorProductForm()
 
@@ -131,7 +132,7 @@ def edit_product(request, pk):
     try:
         product = Product.objects.get(pk=pk, vendor=request.user.vendor_profile)
     except Product.DoesNotExist:
-        messages.error(request, "Product not found or unauthorized.")
+        panel_messages.add_vendor_message(request, 'error', "Product not found or unauthorized.")
         return redirect('vendor_products')
 
     if request.method == "POST":
@@ -189,12 +190,12 @@ def edit_product(request, pk):
                     if variant_count == 0:
                         raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
                                 
-                    messages.success(request, "Product updated successfully.")
+                    panel_messages.add_vendor_message(request, 'success', "Product updated successfully.")
                     return redirect('vendor_products')
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                messages.error(request, f"Error updating product: {e}")
+                panel_messages.add_vendor_message(request, 'error', f"Error updating product: {e}")
     else:
         form = VendorProductForm(instance=product)
         
@@ -217,9 +218,9 @@ def delete_product(request, pk):
         product = Product.objects.get(pk=pk, vendor=request.user.vendor_profile)
         product.is_deleted = True
         product.save()
-        messages.success(request, "Product soft-deleted successfully.")
+        panel_messages.add_vendor_message(request, 'success', "Product soft-deleted successfully.")
     except Product.DoesNotExist:
-        messages.error(request, "Product not found or unauthorized.")
+        panel_messages.add_vendor_message(request, 'error', "Product not found or unauthorized.")
     return redirect('vendor_products')
 
 from django.http import JsonResponse
@@ -300,7 +301,7 @@ def update_shipment_status(request, pk):
 @vendor_required
 def create_shipment(request, order_item_id):
     if request.method == 'POST':
-        messages.success(request, 'Shipment created successfully!')
+        panel_messages.add_vendor_message(request, 'success', 'Shipment created successfully!')
     return redirect(request.META.get('HTTP_REFERER', 'vendor_orders'))
 
 @vendor_required
@@ -317,7 +318,7 @@ def vendor_profile(request):
 
     if request.method == 'POST':
         # Handle simple profile updates here if needed, or redirect to an edit page
-        messages.info(request, 'Profile update feature coming soon.')
+        panel_messages.add_vendor_message(request, 'info', 'Profile update feature coming soon.')
         return redirect('vendor_profile')
 
     return render(request, 'vendor_profile.html', {'vendor': vendor})
@@ -372,14 +373,14 @@ def vendor_change_password(request):
         confirm_password = request.POST.get('confirm_password')
 
         if not request.user.check_password(current_password):
-            messages.error(request, "Incorrect current password.")
+            panel_messages.add_vendor_message(request, 'error', "Incorrect current password.")
         elif new_password != confirm_password:
-            messages.error(request, "New passwords do not match.")
+            panel_messages.add_vendor_message(request, 'error', "New passwords do not match.")
         else:
             request.user.set_password(new_password)
             request.user.save()
             update_session_auth_hash(request, request.user)
-            messages.success(request, "Password changed successfully.")
+            panel_messages.add_vendor_message(request, 'success', "Password changed successfully.")
             return redirect('vendor_profile')
     
     return render(request, 'vendor_change_password.html')
