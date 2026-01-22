@@ -36,8 +36,13 @@ def admin_login(request):
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
         if user is not None:
-            login(request, user)
-            return redirect('admin_dashboard')
+            if user.is_staff or user.is_superuser:
+                login(request, user)
+                return redirect('admin_dashboard')
+            else:
+                messages.error(request, 'Unauthorized access attempt. Admin privileges required.')
+        else:
+            messages.error(request, 'Invalid administrator credentials.')
     return render(request, 'admin_login.html')
 
 
@@ -56,18 +61,15 @@ def vendor_login(request):
                 # Security Checks
                 if vendor.is_blocked:
                     messages.error(request, 'Your vendor account has been suspended. Please contact support.')
-                    return render(request, 'vendor_login.html')
-                
-                if vendor.is_deleted:
-                    messages.error(request, 'Vendor account not found.')
-                    return render(request, 'vendor_login.html')
-
-                login(request, user)
-                return redirect('vendordashboard')
+                elif vendor.is_deleted:
+                    messages.error(request, 'Vendor identity not found in our records.')
+                else:
+                    login(request, user)
+                    return redirect('vendordashboard')
             else:
-                messages.error(request, 'You are not authorized as a vendor.')
+                messages.error(request, 'Access denied. Account is not registered as a vendor.')
         else:
-            messages.error(request, 'Invalid username or password.')
+            messages.error(request, 'Authentication failed. Please check your Vendor ID and Access Key.')
     
     return render(request, 'vendor_login.html')
 

@@ -224,8 +224,8 @@
         const modal = document.getElementById('orderDetailModal');
         const content = document.getElementById('modalContent');
         
-        // Show modal and lock body scroll
-        modal.style.display = 'flex';
+        // Use the active class for visibility and transitions
+        modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         
         content.innerHTML = `<div class="p-5 text-center">
@@ -250,7 +250,7 @@
 
     function closeOrderModal() {
         const modal = document.getElementById('orderDetailModal');
-        modal.style.display = 'none';
+        modal.classList.remove('active');
         // Restore body scroll
         document.body.style.overflow = 'auto';
     }
@@ -284,12 +284,21 @@
         background: rgba(0,0,0,0.85);
         backdrop-filter: blur(10px);
         z-index: 9998; /* Just below cursor */
-        display: none;
+        display: none; /* Default hidden */
         align-items: flex-start; /* Ensure items start from top to avoid cut-off */
         justify-content: center;
         padding: 4rem 1rem; /* Space at top and bottom */
         overflow-y: auto; /* Allow the overlay to scroll if content is too tall */
         overscroll-behavior: contain;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .tech-modal-overlay.active {
+        display: flex;
+        opacity: 1;
+        visibility: visible;
     }
 
     .tech-modal-content {

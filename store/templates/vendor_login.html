@@ -79,11 +79,10 @@
         {% if messages %}
             {% for message in messages %}
                 if (typeof window.showGlobalError === 'function') {
-                    let title = "SYSTEM NOTICE";
+                    let title = "PARTNER ALERT";
                     let tag = "{{ message.tags }}";
                     
                     if(tag.includes('error')) title = "ACCESS DENIED";
-                    if(tag.includes('success')) title = "SUCCESS";
                     
                     window.showGlobalError(title, "{{ message|escapejs }}");
                 } else {

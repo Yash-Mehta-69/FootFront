@@ -69,6 +69,22 @@
                 ease: "power3.out"
             });
         }
+
+        // Handle Server-Side Messages (Login Errors)
+        {% if messages %}
+            {% for message in messages %}
+                if (typeof window.showGlobalError === 'function') {
+                    let title = "SECURITY ALERT";
+                    let tag = "{{ message.tags }}";
+                    
+                    if(tag.includes('error')) title = "ACCESS DENIED";
+                    
+                    window.showGlobalError(title, "{{ message|escapejs }}");
+                } else {
+                    alert("{{ message|escapejs }}");
+                }
+            {% endfor %}
+        {% endif %}
     });
 </script>
 {% endblock %}

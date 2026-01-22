@@ -149,7 +149,7 @@
     --autofill-bg: #f0f0f0;
     
     /* Hero Specifics (Light Mode) */
-    --hero-bg-gradient: radial-gradient(circle at center, #ffffff 0%, #dddddd 70%); /* Grey focus in center */
+    --hero-bg-gradient: radial-gradient(circle at center, #f1f2f6 0%, #ffffff 70%); /* Grey focus in center */
     --hero-text-large: #BBBBBB; /* Grey to match section headings */
     --hero-overlay-grid: linear-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.08) 1px, transparent 1px); /* Visible grey grid */
     

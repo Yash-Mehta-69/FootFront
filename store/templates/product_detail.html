@@ -25,9 +25,10 @@
     /* Main Image Wrapper */
     .pd-main-image-wrapper {
         position: relative;
-        width: 100%;
-        height: 550px; /* Consistent height viewport */
-        background: radial-gradient(circle at center, rgba(255,255,255,0.03) 0%, transparent 70%);
+        width: 85%; /* Shorter width */
+        margin: 0 auto; /* Centered */
+        height: 550px;
+        background: var(--glass-bg);
         border-radius: 20px;
         border: 1px solid var(--glass-border);
         overflow: hidden;
@@ -35,6 +36,33 @@
         justify-content: center;
         align-items: center;
         z-index: 2;
+        transition: transform 0.3s, box-shadow 0.3s;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Decorative Side Border for Main Image */
+    .pd-main-image-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: linear-gradient(to bottom, var(--color-accent), transparent);
+        z-index: 3;
+    }
+    
+    [data-theme="light"] .pd-main-image-wrapper {
+        background: #f1f2f6;
+        border: 1px solid #dcdde1;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    
+    .pd-main-image-wrapper:hover {
+        transform: translateY(-5px);
+        border-color: var(--color-accent);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    }
+    
+    [data-theme="light"] .pd-main-image-wrapper:hover {
+        box-shadow: 0 20px 50px rgba(0,0,0,0.1);
     }
     
     .pd-image {
@@ -42,7 +70,7 @@
         height: 100%;
         object-fit: contain;
         transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s;
-        filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+        /* filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));  REMOVED SHADOW */
     }
     .pd-image.changing {
         opacity: 0;
@@ -118,6 +146,12 @@
         backdrop-filter: blur(10px);
         position: relative;
         overflow: hidden;
+    }
+    
+    [data-theme="light"] .pd-info {
+        background: #f1f2f6;
+        border: 1px solid #dcdde1;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
     }
     /* Decorator Line */
     .pd-info::before {
@@ -299,6 +333,44 @@
         background: rgba(255,255,255,0.02);
     }
 
+    /* Write Review Button Theming - Matching Homepage */
+    #btnWriteReview, .btn-login-review {
+        background: var(--color-accent) !important;
+        border: 1px solid rgba(255,255,255,0.2) !important;
+        color: #000 !important;
+        font-family: var(--font-heading) !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        padding: 1rem 2.5rem !important;
+        font-size: 1.1rem !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+        transition: all 0.3s ease !important;
+        clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%) !important;
+        display: inline-block;
+        text-decoration: none;
+    }
+
+    #btnWriteReview:hover, .btn-login-review:hover {
+        background-color: var(--color-secondary) !important;
+        color: #fff !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 15px 45px rgba(255, 0, 153, 0.3) !important;
+    }
+
+    [data-theme="light"] #btnWriteReview, [data-theme="light"] .btn-login-review {
+        background: var(--color-accent) !important;
+        color: #fff !important;
+        border-color: rgba(0,0,0,0.1) !important;
+    }
+
+
+    [data-theme="light"] #btnWriteReview:hover, [data-theme="light"] .btn-login-review:hover {
+        background-color: var(--color-secondary) !important;
+        color: #fff !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 15px 45px rgba(255, 0, 153, 0.3) !important;
+    }
+
     .btn-wishlist {
         height: 55px;
         width: 55px;
@@ -372,9 +444,8 @@
         transition: transform 0.3s;
     }
     
-    /* Specific styling for Light Theme Cards */
     [data-theme="light"] .details-card {
-        background: #f1f2f6; /* Distinct Greyish BG for Light Mode */
+        background: #f1f2f6; /* Standardized with other cards */
         border: 1px solid #dcdde1;
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
@@ -430,33 +501,30 @@
     
     /* Review Card Styling with Theme awareness */
     .review-card {
-        background: rgba(255,255,255,0.03); 
+        background: var(--glass-bg); 
         border: 1px solid var(--glass-border);
-        padding: 1.5rem;
-        transition: transform 0.3s;
+        padding: 1.8rem;
+        transition: all 0.3s ease;
         border-radius: 12px;
+        height: 100%;
+        backdrop-filter: blur(10px);
     }
     
-    /* Light Theme Review Card - Distinct BG */
+    /* Light Theme Review Card */
     [data-theme="light"] .review-card {
-        background: #ffffff !important; /* solid white */
-        border: 1px solid #e2e2e2 !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.06) !important;
+        background: #f1f2f6 !important;
+        border: 1px solid #dcdde1 !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
         backdrop-filter: none !important;
-    }
-    body.light-theme .review-card {
-        background: #ffffff !important; 
-        border: 1px solid #e2e2e2 !important;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.06) !important;
     }
     
     .review-card:hover { 
         transform: translateY(-8px); 
-        background: rgba(255,255,255,0.05);
+        border-color: var(--color-accent) !important;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
     }
     [data-theme="light"] .review-card:hover {
-         background: #ffffff !important;
-         border-color: var(--color-accent) !important;
+         background: #f1f2f6 !important;
          box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
     }
     
@@ -470,18 +538,17 @@
     .review-card small { color: #aaa; }
     .review-card p { color: #eee; }
 
-    /* Light Theme Text Overrides */
-    [data-theme="light"] .review-card h6,
-    body.light-theme .review-card h6 {
+    [data-theme="light"] .review-card h6 {
         color: #000000 !important;
     }
-    [data-theme="light"] .review-card small,
-    body.light-theme .review-card small {
-        color: #6c757d !important;
+    [data-theme="light"] .review-card small {
+        color: #666666 !important;
     }
-    [data-theme="light"] .review-card p,
-    body.light-theme .review-card p {
+    [data-theme="light"] .review-card p {
         color: #333333 !important;
+    }
+    [data-theme="light"] .review-card .text-muted {
+        color: #666666 !important;
     }
     
     /* Animations */
@@ -601,7 +668,7 @@
 
         <div class="row g-5">
             <!-- LEFT: Media Gallery -->
-            <div class="col-lg-7">
+            <div class="col-lg-6">
                 <div class="pd-media-container">
                     <div class="pd-tech-frame"></div>
                     
@@ -634,7 +701,7 @@
             </div>
 
             <!-- RIGHT: Product Info -->
-            <div class="col-lg-5">
+            <div class="col-lg-6">
                 <div class="pd-info">
                     <span class="pd-category">
                         {% if product.is_trending %}<span class="badge bg-danger me-2">TRENDING</span>{% endif %}
@@ -840,11 +907,11 @@
 
                 <div class="col-md-4 text-center text-md-end">
                     {% if user.is_authenticated %}
-                    <button id="btnWriteReview" class="btn btn-primary px-4 py-3 fw-bold" style="pointer-events: auto;">
+                    <button id="btnWriteReview">
                         <i class="fas fa-pen-nib me-2"></i> WRITE A REVIEW
                     </button>
                     {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-light px-4 py-3">
+                    <a href="{% url 'login' %}" class="btn-login-review">
                         <i class="fas fa-sign-in-alt me-2"></i> Login to Review
                     </a>
                     {% endif %}
@@ -925,9 +992,9 @@
                         <i class="far fa-edit fa-3x text-muted mb-3 opacity-50"></i>
                         <h4 class="text-white">Be the first to review!</h4>
                         <p class="text-muted mb-4">Share your experience with this product.</p>
-                        {% if user.is_authenticated %}
+                        <!-- {% if user.is_authenticated %}
                         <button class="btn btn-sm btn-outline-accent" data-bs-toggle="modal" data-bs-target="#reviewModal">Write a Review</button>
-                        {% endif %}
+                        {% endif %} -->
                     </div>
                 {% endif %}
             </div>
