@@ -91,17 +91,23 @@ def add_product(request):
                     prices = request.POST.getlist('variant_price[]')
                     stocks = request.POST.getlist('variant_stock[]')
 
+                    variant_count = 0
                     for i in range(len(sizes)):
-                        if sizes[i] and colors[i]:
+                        if sizes[i] and colors[i] and prices[i] and stocks[i]:
                             variant_image = request.FILES.get(f'variant_image_{i}')
                             ProductVariant.objects.create(
                                 product=product,
                                 size_id=sizes[i],
                                 color_id=colors[i],
-                                price=prices[i] or 0,
-                                stock=stocks[i] or 0,
+                                price=prices[i],
+                                stock=stocks[i],
                                 image=variant_image if variant_image else product.product_image
                             )
+                            variant_count += 1
+                    
+                    if variant_count == 0:
+                        raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
+
                     messages.success(request, "Product added successfully.")
                     return redirect('vendor_products')
             except Exception as e:
@@ -151,8 +157,9 @@ def edit_product(request, pk):
                     product.productvariant_set.filter(is_deleted=False).exclude(id__in=kept_ids).update(is_deleted=True)
 
                     # 4. Loop and Upsert (Update or Insert)
+                    variant_count = 0
                     for i in range(len(sizes)):
-                        if sizes[i] and colors[i]: # Basic validation
+                        if sizes[i] and colors[i] and prices[i] and stocks[i]: # Basic validation
                             current_id = variant_ids[i] if i < len(variant_ids) and variant_ids[i].isdigit() else None
                             variant_image = request.FILES.get(f'variant_image_{i}')
                             
@@ -161,21 +168,26 @@ def edit_product(request, pk):
                                 variant = ProductVariant.objects.get(pk=current_id, product=product)
                                 variant.size_id = sizes[i]
                                 variant.color_id = colors[i]
-                                variant.price = prices[i] or 0
-                                variant.stock = stocks[i] or 0
+                                variant.price = prices[i]
+                                variant.stock = stocks[i]
                                 if variant_image:
                                     variant.image = variant_image
                                 variant.save()
+                                variant_count += 1
                             else:
                                 # CREATE new
                                 ProductVariant.objects.create(
                                     product=product,
                                     size_id=sizes[i],
                                     color_id=colors[i],
-                                    price=prices[i] or 0,
-                                    stock=stocks[i] or 0,
+                                    price=prices[i],
+                                    stock=stocks[i],
                                     image=variant_image if variant_image else product.product_image
                                 )
+                                variant_count += 1
+                    
+                    if variant_count == 0:
+                        raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
                                 
                     messages.success(request, "Product updated successfully.")
                     return redirect('vendor_products')
@@ -329,13 +341,16 @@ def vendor_analytics(request):
 def vendor_help(request):
     return render(request, 'vendor_help.html')
 
+from store.models import Review
+
 @vendor_required
 def vendor_reviews(request):
-    # Mock Data
-    reviews = [
-        MockObj(pk=1, product="Nike Air Max", user="John Doe", rating=5, comment="Great quality!", date="2023-10-21"),
-        MockObj(pk=2, product="Adidas UltraBoost", user="Jane Smith", rating=4, comment="Good, but shipping was slow.", date="2023-10-20"),
-    ]
+    # Fetch Reviews for Products belonging to this Vendor
+    reviews = Review.objects.filter(
+        product__vendor=request.user.vendor_profile,
+        is_deleted=False
+    ).order_by('-created_at')
+    
     return render(request, 'vendor_reviews.html', {'reviews': reviews})
 
 

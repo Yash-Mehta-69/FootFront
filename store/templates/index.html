@@ -781,37 +781,35 @@
 </section>
 
 <!-- 9. Reviews Section (Theme B: Void) -->
+{% if featured_reviews %}
 <section class="container section-padding mb-5 bg-noise-black">
     <h2 class="section-title-large">HYPE FROM THE FAM</h2>
-    <div class="reviews-container d-flex overflow-auto" style="padding-bottom: 2rem;">
-        <!-- Review 1 -->
-        <div class="review-card glass-card">
-            <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-            <p class="text-theme mb-3">"Legit the best place to cop kicks. The UI is insane and shipping was crazy fast."</p>
-            <div class="d-flex align-items-center gap-2">
-                <div class="avatar">A</div>
-                <span class="text-theme font-weight-bold">Alex K.</span>
+    <div class="reviews-container d-flex overflow-auto" style="padding-bottom: 2rem; gap: 20px;">
+        {% for review in featured_reviews %}
+        <div class="review-card glass-card" style="min-width: 320px;">
+            <div class="text-accent mb-2">
+                 {% with ''|center:5 as range %}
+                 {% for _ in range %}
+                     <i class="{% if forloop.counter <= review.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                 {% endfor %}
+                 {% endwith %}
+            </div>
+            <p class="text-theme mb-3">"{{ review.comment|truncatechars:100 }}"</p>
+            <div class="d-flex align-items-center gap-2 mt-auto">
+                <div class="avatar bg-accent text-black rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;font-weight:bold;">
+                    {{ review.customer.user.first_name|first|upper }}
+                </div>
+                <div class="d-flex flex-column">
+                    <span class="text-theme font-weight-bold">{{ review.customer.user.first_name }}</span>
+                    <small class="text-muted-theme">on {{ review.product.name|truncatechars:20 }}</small>
+                </div>
             </div>
         </div>
-        <!-- Review 2 -->
-        <div class="review-card glass-card">
-            <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-            <p class="text-theme mb-3">"Finally a site that actually looks good on mobile. Got my Jordans in 2 days."</p>
-            <div class="d-flex align-items-center gap-2">
-                <div class="avatar" style="background:#ff0099;">S</div>
-                <span class="text-theme font-weight-bold">Sarah J.</span>
-            </div>
-        </div>
-        <!-- Review 3 -->
-        <div class="review-card glass-card">
-            <div class="text-accent mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-            <p class="text-theme mb-3">"Customer support helped me choose the right size. Top tier service."</p>
-            <div class="d-flex align-items-center gap-2">
-                <div class="avatar" style="background:#3333ff;">M</div>
-                <span class="text-theme font-weight-bold">Mike T.</span>
-            </div>
-        </div>
+        {% endfor %}
     </div>
+</section>
+{% endif %}
+
     
     <style>
         .review-card {

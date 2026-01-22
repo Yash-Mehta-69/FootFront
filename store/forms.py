@@ -29,6 +29,16 @@ class ComplaintForm(forms.ModelForm):
         self.fields['product'].queryset = Product.objects.filter(is_deleted=False)
         self.fields['product'].empty_label = "General Inquiry (No specific product)"
 
+from .models import Review
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'comment']
+        widgets = {
+            'rating': forms.NumberInput(attrs={'min': 1, 'max': 5, 'type': 'hidden'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Share your thoughts about the product...'}),
+        }
+
 from .models import User, Customer, ShippingAddress
 
 class UserUpdateForm(forms.ModelForm):

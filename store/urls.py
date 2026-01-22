@@ -18,6 +18,7 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('shop/', views.shop, name='shop'),
     path('product/<slug:slug>/', views.product_detail, name='product_detail'),
+    path('product/add_review/<int:product_id>/', views.add_review, name='add_review'),
     path('terms/', views.terms_view, name='terms'),
     path('privacy/', views.privacy_view, name='privacy'),
     path('complaint/', views.complaint_view, name='complaint'),

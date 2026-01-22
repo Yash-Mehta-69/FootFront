@@ -184,11 +184,23 @@ class Review(SoftDeleteModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    comment = models.CharField(max_length=255)
+    comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.comment
+    
+class ReviewMedia(models.Model):
+    MEDIA_TYPES = (
+        ('image', 'Image'),
+        ('video', 'Video'),
+    )
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='media')
+    file = models.FileField(upload_to='reviews/media')
+    media_type = models.CharField(max_length=10, choices=MEDIA_TYPES)
+    
+    def __str__(self):
+        return f"Media for {self.review.id} ({self.media_type})"
     
 class Complaint(SoftDeleteModel):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)

@@ -48,7 +48,7 @@ def dashboard(request):
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
 
-from store.models import Customer, Category, Product, ProductVariant, Size, Color, AttributeRequest
+from store.models import Customer, Category, Product, ProductVariant, Size, Color, AttributeRequest, Review
 from store.forms import CategoryForm, ProductForm, SizeForm, ColorForm
 from vendor.models import Vendor
 
@@ -577,18 +577,24 @@ def add_product(request):
                     # But files are different. We will try to map by index if we update template or just SKIP images for variants for now to avoid crashes if arrays misalign.
                     # Upgrading template to indexed names is best, but for now we implement basic saving.
                     
+                    variant_count = 0
                     for i in range(len(sizes)):
-                        if sizes[i] and colors[i]: # Ensure valid row
+                        if sizes[i] and colors[i] and prices[i] and stocks[i]: # Ensure valid row
                             variant_image = request.FILES.get(f'variant_image_{i}')
                             
                             ProductVariant.objects.create(
                                 product=product,
                                 size_id=sizes[i],
                                 color_id=colors[i],
-                                price=prices[i] or 0,
-                                stock=stocks[i] or 0,
+                                price=prices[i],
+                                stock=stocks[i],
                                 image=variant_image if variant_image else product.product_image
                             )
+                            variant_count += 1
+                    
+                    if variant_count == 0:
+                        raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
+
                     messages.success(request, "Product added successfully.")
                     return redirect('manage_products')
             except Exception as e:
@@ -639,8 +645,9 @@ def edit_product(request, pk):
                     product.productvariant_set.filter(is_deleted=False).exclude(id__in=kept_ids).update(is_deleted=True)
 
                     # 4. Loop and Upsert (Update or Insert)
+                    variant_count = 0
                     for i in range(len(sizes)):
-                        if sizes[i] and colors[i]:
+                        if sizes[i] and colors[i] and prices[i] and stocks[i]:
                              current_id = variant_ids[i] if i < len(variant_ids) and variant_ids[i].isdigit() else None
                              variant_image = request.FILES.get(f'variant_image_{i}')
                              
@@ -649,21 +656,26 @@ def edit_product(request, pk):
                                  variant = ProductVariant.objects.get(pk=current_id, product=product)
                                  variant.size_id = sizes[i]
                                  variant.color_id = colors[i]
-                                 variant.price = prices[i] or 0
-                                 variant.stock = stocks[i] or 0
+                                 variant.price = prices[i]
+                                 variant.stock = stocks[i]
                                  if variant_image:
                                      variant.image = variant_image
                                  variant.save()
+                                 variant_count += 1
                              else:
                                  # CREATE new
                                  ProductVariant.objects.create(
                                     product=product,
                                     size_id=sizes[i],
                                     color_id=colors[i],
-                                    price=prices[i] or 0,
-                                    stock=stocks[i] or 0,
+                                    price=prices[i],
+                                    stock=stocks[i],
                                     image=variant_image if variant_image else product.product_image
                                 )
+                                 variant_count += 1
+                    
+                    if variant_count == 0:
+                        raise ValueError("At least one valid variant (Size, Color, Price, Stock) is required.")
                                 
                     messages.success(request, "Product updated successfully.")
                     return redirect('manage_products')
@@ -812,18 +824,17 @@ def manage_payments(request):
 
 @admin_required
 def view_reviews(request):
-    reviews = [
-        MockObj(pk=1, product="Nike Air Max", user="John Doe", rating=5, comment="Love these shoes!", date="2023-10-21"),
-        MockObj(pk=2, product="Adidas UltraBoost", user="Jane Smith", rating=4, comment="Very comfortable but expensive.", date="2023-10-20"),
-    ]
+    reviews = Review.objects.filter(is_deleted=False).select_related('product', 'customer__user').prefetch_related('media').order_by('-created_at')
     return render(request, 'dashboard/view_reviews.html', {'reviews': reviews})
 
 @admin_required
 def delete_review(request, pk):
     try:
-        # Mock deletion logic
         if request.method == "POST":
-            messages.success(request, f"Review #{pk} deleted successfully (Mock)")
+            review = get_object_or_404(Review, pk=pk)
+            review.is_deleted = True
+            review.save()
+            messages.success(request, "Review deleted successfully.")
             return redirect('view_reviews')
         return redirect('view_reviews')
     except Exception as e:

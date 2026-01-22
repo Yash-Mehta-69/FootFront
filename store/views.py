@@ -8,10 +8,12 @@ import json
 import os
 import firebase_admin
 from firebase_admin import credentials, auth
+import mimetypes
 from django.conf import settings
 from .models import User, Customer, Category, Product, Color, Size
 from .decorators import redirect_special_users
 from django.db.models import Min, Q
+from django.db import models
 from django.contrib.auth.forms import PasswordResetForm
 from django.template.loader import render_to_string
 from django.db.models.query_utils import Q
@@ -136,14 +138,20 @@ def initialize_firebase():
 
 # Create your views here.
 @redirect_special_users
+@redirect_special_users
 def index(request):
     categories = Category.objects.filter(is_deleted=False)
     trending_products = Product.objects.filter(is_deleted=False, is_trending=True).annotate(price=Min('productvariant__price'))[:10]
     all_products = Product.objects.filter(is_deleted=False).annotate(price=Min('productvariant__price')).order_by('-created_at')[:10]
+    
+    # Homepage Reviews (Top rated, latest 5)
+    featured_reviews = Review.objects.filter(is_deleted=False, rating__gte=4).order_by('-created_at')[:5]
+
     context = {
         'categories': categories,
         'trending_products': trending_products,
-        'all_products': all_products
+        'all_products': all_products,
+        'featured_reviews': featured_reviews,
     }
     return render(request, 'index.html', context)
 
@@ -616,6 +624,24 @@ def product_detail(request, slug):
         colors = sorted(list(set(v.color for v in variants)), key=lambda c: c.name)
         sizes = sorted(list(set(v.size for v in variants)), key=lambda s: s.size_label)
         
+        # Reviews
+        reviews = Review.objects.filter(product=product, is_deleted=False).order_by('-created_at')
+        avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg'] or 0
+        review_count = reviews.count()
+        
+        # Rating Breakdown
+        rating_counts = {
+            5: reviews.filter(rating=5).count(),
+            4: reviews.filter(rating=4).count(),
+            3: reviews.filter(rating=3).count(),
+            2: reviews.filter(rating=2).count(),
+            1: reviews.filter(rating=1).count(),
+        }
+        rating_percentages = {
+            star: int((count / review_count) * 100) if review_count > 0 else 0
+            for star, count in rating_counts.items()
+        }
+        
     except Product.DoesNotExist:
         return redirect('shop')
             
@@ -624,8 +650,70 @@ def product_detail(request, slug):
         'variants': variants,
         'available_colors': colors,
         'available_sizes': sizes,
+        'reviews': reviews,
+        'avg_rating': round(avg_rating, 1),
+        'review_count': review_count,
+        'rating_percentages': rating_percentages,
     }
     return render(request, 'product_detail.html', context)
+
+from .forms import ReviewForm
+from .models import ReviewMedia
+
+@login_required(login_url='login')
+def add_review(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == 'POST':
+        try:
+            # Check if user has a customer profile
+            try:
+                customer = request.user.customer_profile
+            except Customer.DoesNotExist:
+                messages.error(request, 'Only customers can add reviews.')
+                return redirect('product_detail', slug=product.slug)
+
+            # Check if user already reviewed
+            existing_review = Review.objects.filter(product=product, customer=customer, is_deleted=False).first()
+            if existing_review:
+                messages.error(request, 'You have already reviewed this product.')
+                return redirect('product_detail', slug=product.slug)
+
+            form = ReviewForm(request.POST, request.FILES)
+            if form.is_valid():
+                review = form.save(commit=False)
+                review.product = product
+                review.customer = customer
+                review.save()
+                
+                # Handle Media
+                files = request.FILES.getlist('media')
+                print(f"DEBUG: Processing {len(files)} files for review {review.id}")
+                for f in files:
+                    mime_type = f.content_type or ''
+                    # Enhanced detection: Check MIME type AND extension
+                    guessed_type, _ = mimetypes.guess_type(f.name)
+                    
+                    print(f"DEBUG: File: {f.name}, MIME: {mime_type}, Guessed: {guessed_type}, Size: {f.size}")
+
+                    is_video = 'video' in mime_type
+                    
+                    if not is_video and guessed_type and 'video' in guessed_type:
+                        is_video = True
+                        print(f"DEBUG: {f.name} detected as video via extension.")
+                        
+                    media_type = 'video' if is_video else 'image'
+                    print(f"DEBUG: Saving {f.name} as {media_type}")
+                    ReviewMedia.objects.create(review=review, file=f, media_type=media_type)
+                    
+                messages.success(request, 'Review submitted successfully!')
+            else:
+                 print(f"DEBUG: Review form errors: {form.errors}")
+                 messages.error(request, 'Error submitting review. Please check the form.')
+        except Exception as e:
+             print(f"DEBUG: Exception in add_review: {e}")
+             messages.error(request, f"An error occurred: {e}")
+             
+    return redirect('product_detail', slug=product.slug)
 
 def complaint_view(request):
     # Dummy Company Details

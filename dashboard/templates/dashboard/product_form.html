@@ -116,7 +116,7 @@
                                                 {% endfor %}
                                             </select>
                                         </td>
-                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" value="{{ v.price }}" step="0.01" required min="0"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" value="{{ v.price }}" step="0.01" required min="0.01"></td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" value="{{ v.stock }}" required min="0"></td>
                                         <td>
                                             <input type="file" class="form-control-custom form-control-sm mb-1" name="variant_image_{{ forloop.counter0 }}">
@@ -147,7 +147,7 @@
                                                 {% endfor %}
                                             </select>
                                         </td>
-                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00" step="0.01" required min="0"></td>
+                                        <td><input type="number" class="form-control-custom form-control-sm" name="variant_price[]" placeholder="0.00" step="0.01" required min="0.01"></td>
                                         <td><input type="number" class="form-control-custom form-control-sm" name="variant_stock[]" placeholder="0" required min="0"></td>
                                         <td><input type="file" class="form-control-custom form-control-sm" name="variant_image_0"></td>
                                         <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="fas fa-trash"></i></button></td>

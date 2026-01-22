@@ -19,6 +19,7 @@
                     <th>User</th>
                     <th>Rating</th>
                     <th>Comment</th>
+                    <th>Media</th>
                     <th>Date</th>
                     <th>Actions</th>
                 </tr>
@@ -26,8 +27,22 @@
             <tbody>
                 {% for review in reviews %}
                 <tr>
-                    <td>{{ review.product }}</td>
-                    <td>{{ review.user }}</td>
+                    <td>{{ review.product.name }}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                             {% if review.customer.user.profile_picture %}
+                                <img src="{{ review.customer.user.profile_picture.url }}" class="rounded-circle me-2" width="30" height="30" style="object-fit:cover;">
+                             {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 text-white" style="width:30px; height:30px; font-size:12px;">
+                                    {{ review.customer.user.first_name|first|upper }}
+                                </div>
+                             {% endif %}
+                             <div>
+                                 <div class="fw-bold">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</div>
+                                 <!-- <small class="text-muted">{{ review.customer.user.email }}</small> -->
+                             </div>
+                        </div>
+                    </td>
                     <td>
                         <span class="text-warning">
                              {% for i in "12345" %}
@@ -40,7 +55,25 @@
                         </span>
                     </td>
                     <td>{{ review.comment|truncatechars:50 }}</td>
-                    <td>{{ review.date }}</td>
+                    <td>
+                        {% if review.media.all %}
+                        <div class="d-flex gap-1" style="overflow-x: auto; max-width: 150px;">
+                            {% for media in review.media.all %}
+                                <div style="position: relative; width: 40px; height: 40px; cursor: pointer;" onclick="openMediaModal('{{ media.file.url }}', '{{ media.media_type }}')">
+                                    {% if media.media_type == 'image' %}
+                                        <img src="{{ media.file.url }}" class="w-100 h-100 object-fit-cover rounded border" alt="Review Media">
+                                    {% else %}
+                                        <video src="{{ media.file.url }}" class="w-100 h-100 object-fit-cover rounded border"></video>
+                                        <div class="position-absolute top-50 start-50 translate-middle text-white" style="font-size: 10pxpointer-events: none;"><i class="fas fa-play"></i></div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <span class="text-muted small">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ review.created_at|date:"M d, Y" }}</td>
                     <td>
                         <form method="POST" action="{% url 'delete_review' review.pk %}" class="d-inline">
                             {% csrf_token %}
@@ -52,7 +85,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="empty-state">
                             <div class="empty-state-icon">
                                 <i class="fas fa-star"></i>
@@ -67,4 +100,48 @@
         </table>
     </div>
 </div>
+
+<!-- Media Modal -->
+<div class="modal fade" id="mediaModal" tabindex="-1" aria-hidden="true" style="z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">
+             <div class="modal-header p-3 d-flex align-items-center" style="border-bottom: 1px solid var(--border-color);">
+                 <h5 class="modal-title fw-bold" style="color: var(--text-main); letter-spacing: 0.5px;">Review Media</h5>
+                 <button type="button" class="btn p-0 d-flex align-items-center justify-content-center" data-bs-dismiss="modal" aria-label="Close" style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-body); color: var(--text-main); transition: all 0.2s ease; border: 1px solid var(--border-color);">
+                     <i class="fas fa-times"></i>
+                 </button>
+             </div>
+             <div class="modal-body p-0 text-center d-flex align-items-center justify-content-center" style="min-height: 400px; background-color: var(--bg-body); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
+                 <div id="mediaContainer" class="w-100 h-100 d-flex align-items-center justify-content-center p-4"></div>
+             </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openMediaModal(url, type) {
+        const container = document.getElementById('mediaContainer');
+        container.innerHTML = '';
+        
+        if (type === 'image') {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'img-fluid rounded shadow-sm';
+            img.style.maxHeight = '600px';
+            img.style.objectFit = 'contain';
+            container.appendChild(img);
+        } else {
+            const video = document.createElement('video');
+            video.src = url;
+            video.controls = true;
+            video.autoplay = true;
+            video.className = 'w-100 rounded shadow-sm';
+            video.style.maxHeight = '600px';
+            container.appendChild(video);
+        }
+        
+        var myModal = new bootstrap.Modal(document.getElementById('mediaModal'));
+        myModal.show();
+    }
+</script>
 {% endblock %}

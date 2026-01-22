@@ -524,6 +524,21 @@
             line-height: 1.6;
         }
     </style>
+    <script>
+        // Immediate Theme Application to prevent flash
+        (function() {
+            const currentTheme = localStorage.getItem('footfront-theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (currentTheme) {
+                document.documentElement.setAttribute('data-theme', currentTheme);
+            } else if (systemPrefersDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -665,7 +680,7 @@
         const htmlElement = document.documentElement;
 
         // Check local storage
-        const currentTheme = localStorage.getItem('theme') || 'light';
+        const currentTheme = localStorage.getItem('footfront-theme') || 'light';
         htmlElement.setAttribute('data-theme', currentTheme);
 
         if (currentTheme === 'dark') {
@@ -675,10 +690,10 @@
         toggleSwitch.addEventListener('change', function (e) {
             if (e.target.checked) {
                 htmlElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
+                localStorage.setItem('footfront-theme', 'dark');
             } else {
                 htmlElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
+                localStorage.setItem('footfront-theme', 'light');
             }
         });
 

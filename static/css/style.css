@@ -24,7 +24,7 @@
     --border-radius-card: 16px;
     
     /* Grid & Background Effects */
-    --grid-line: rgba(255, 255, 255, 0.03);
+    --grid-line: rgba(255, 255, 255, 0.06);
     --noise-opacity: 0.07;
     
     /* Shadows */
@@ -81,7 +81,7 @@
     /* Hero Defaults (Dark) */
     --hero-bg-gradient: radial-gradient(circle at center, #1a1a1a 0%, #000 70%);
     --hero-text-large: rgba(255,255,255,0.05);
-    --hero-overlay-grid: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    --hero-overlay-grid: linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
     --hud-ring-color: rgba(255, 255, 255, 0.08);
     --hud-spec-text: rgba(255, 255, 255, 0.5);
 }
@@ -105,7 +105,7 @@
     --glass-hover-bg: rgba(0, 0, 0, 0.08);
     
     /* Grid & Background Effects */
-    --grid-line: rgba(0, 0, 0, 0.15); /* Increased opacity for better visibility */
+    --grid-line: rgba(0, 0, 0, 0.06); /* Increased opacity for better visibility */
     --noise-opacity: 0.03;
     
     /* Shadows */
@@ -149,9 +149,9 @@
     --autofill-bg: #f0f0f0;
     
     /* Hero Specifics (Light Mode) */
-    --hero-bg-gradient: radial-gradient(circle at center, #cccccc 0%, #ffffff 70%); /* Grey focus in center */
+    --hero-bg-gradient: radial-gradient(circle at center, #ffffff 0%, #dddddd 70%); /* Grey focus in center */
     --hero-text-large: #BBBBBB; /* Grey to match section headings */
-    --hero-overlay-grid: linear-gradient(rgba(0, 0, 0, 0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.25) 1px, transparent 1px); /* Visible grey grid */
+    --hero-overlay-grid: linear-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, 0.08) 1px, transparent 1px); /* Visible grey grid */
     
     /* Light Mode Specific Components */
     --sidebar-heading: #0a0a0a;
