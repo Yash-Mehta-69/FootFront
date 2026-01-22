@@ -180,8 +180,8 @@
                         if (data.status === 'success') {
                             window.location.href = data.redirect_url;
                         } else {
-                            if(window.showGlobalError) window.showGlobalError("REGISTRATION FAILED", data.message);
-                            else alert(data.message);
+                            if(window.showGlobalError) window.showGlobalError("REGISTRATION FAILED", window.parseFirebaseError(data.message));
+                            else alert(window.parseFirebaseError(data.message));
                             
                             const currentUser = firebase.auth().currentUser;
                             if (currentUser) currentUser.delete(); 
@@ -190,11 +190,8 @@
                     })
                     .catch((error) => {
                         console.error('Registration Error:', error);
-                        let msg = error.message;
-                        if(error.code === 'auth/email-already-in-use') msg = "This email identity is already registered.";
-                        
-                        if(window.showGlobalError) window.showGlobalError("REGISTRATION ERROR", msg);
-                        else alert(msg);
+                        if(window.showGlobalError) window.showGlobalError("REGISTRATION ERROR", window.parseFirebaseError(error));
+                        else alert(window.parseFirebaseError(error));
 
                         const currentUser = firebase.auth().currentUser;
                         if (currentUser) currentUser.delete();

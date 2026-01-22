@@ -69,3 +69,53 @@ window.closeGlobalError = function() {
         modal.classList.remove('active');
     }
 };
+
+window.parseFirebaseError = function(errorInput) {
+    let message = "An authentication error occurred.";
+    let rawStr = "";
+
+    if (typeof errorInput === 'string') {
+        rawStr = errorInput;
+    } else if (errorInput && errorInput.message) {
+        rawStr = errorInput.message;
+    } else {
+        rawStr = JSON.stringify(errorInput);
+    }
+
+    // Try to parse JSON if the string looks like it
+    if (rawStr.trim().startsWith('{')) {
+        try {
+            const data = JSON.parse(rawStr);
+            if (data.error && data.error.message) {
+                rawStr = data.error.message;
+            } else if (data.message) {
+                rawStr = data.message;
+            }
+        } catch (e) {}
+    }
+
+    // Mapping codes to friendly messages
+    const mapping = {
+        "EMAIL_NOT_FOUND": "This email address is not registered.",
+        "INVALID_PASSWORD": "The password you entered is incorrect.",
+        "USER_DISABLED": "This account has been disabled.",
+        "EMAIL_EXISTS": "An account with this email address already exists.",
+        "TOO_MANY_ATTEMPTS_EXCEEDED": "Too many failed attempts. Please try again later.",
+        "INVALID_EMAIL": "The email address provided is invalid.",
+        "WEAK_PASSWORD": "The password provided is too weak.",
+        "USER_NOT_FOUND": "No account found with these credentials.",
+        "INVALID_LOGIN_CREDENTIALS": "Invalid login credentials. Please check your email and password.",
+        "auth/user-not-found": "No account found with this email.",
+        "auth/wrong-password": "Incorrect password. Please try again.",
+        "auth/email-already-in-use": "This email is already in use by another account.",
+        "auth/invalid-email": "Please enter a valid email address.",
+        "auth/weak-password": "Password is too weak. Use a stronger one.",
+        "auth/network-request-failed": "Network error. Please check your connection.",
+        "auth/too-many-requests": "Too many requests. Please try again later.",
+    };
+
+    // Clean the error string (extracting code if it's like "CODE : Description")
+    const cleanCode = rawStr.split(' : ')[0].split('] ').pop().trim();
+    
+    return mapping[cleanCode] || mapping[rawStr] || rawStr || message;
+};

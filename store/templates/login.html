@@ -136,12 +136,10 @@
                         // messageDiv.innerText = 'Login Failed: ' + (error.message || error);
                         if (typeof window.showGlobalError === 'function') {
                             let title = "ACCESS DENIED";
-                            let msg = error.message;
-                            if(error.code === 'auth/user-not-found') msg = "User identity not found in database.";
-                            if(error.code === 'auth/wrong-password') msg = "Invalid security credentials provided.";
+                            let msg = window.parseFirebaseError(error);
                             window.showGlobalError(title, msg);
                         } else {
-                            alert(error.message);
+                            alert(window.parseFirebaseError(error));
                         }
                         
                         clearInterval(animInterval);

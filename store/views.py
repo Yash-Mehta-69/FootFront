@@ -25,6 +25,7 @@ from django.http import HttpResponse
 from .forms import ComplaintForm, UserUpdateForm, ShippingAddressForm
 from .models import User, Customer, Category, Product, Color, Size, ShippingAddress, Review, ProductVariant, Complaint
 from cart.models import Order
+from utils.error_parser import parse_firebase_error
 
 
 
@@ -213,7 +214,7 @@ def login_view(request):
             return JsonResponse({'status': 'error', 'message': 'Authentication failed (Invalid Token). Please refresh and try again.'}, status=401)
         except Exception as e:
             print(f"DEBUG: Login Error: {e}") # Log full error
-            return JsonResponse({'status': 'error', 'message': "An system error occurred during login. Please contact support."}, status=500)
+            return JsonResponse({'status': 'error', 'message': parse_firebase_error(e)}, status=500)
             
     return render(request, 'login.html')
 
@@ -293,7 +294,7 @@ def registration_view(request):
              return JsonResponse({'status': 'error', 'message': 'Invalid authentication token. Please refresh the page.'}, status=401)
         except Exception as e:
             print(f"DEBUG: Registration Error: {e}")
-            return JsonResponse({'status': 'error', 'message': "Registration failed due to a system error."}, status=500)
+            return JsonResponse({'status': 'error', 'message': parse_firebase_error(e)}, status=500)
 
     return render(request, 'registration.html')
 
@@ -317,7 +318,7 @@ def forgot_password_view(request):
                 return JsonResponse({'status': 'error', 'message': 'This email is not registered in our system.'}, status=404)
             return JsonResponse({'status': 'success'})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            return JsonResponse({'status': 'error', 'message': parse_firebase_error(e)}, status=500)
     return render(request, 'forgot_password.html')
 
 @login_required(login_url='login')
