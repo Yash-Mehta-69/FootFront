@@ -70,7 +70,7 @@ class ShippingAddressForm(forms.ModelForm):
         fields = ['address_line1', 'address_line2', 'city', 'state', 'postal_code']
         widgets = {
             'address_line1': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address Line 1', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
-            'address_line2': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address Line 2 (Optional)', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
+            'address_line2': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address Line 2', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
             'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
             'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'State', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
             'postal_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Postal Code', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
