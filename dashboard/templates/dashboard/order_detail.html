@@ -2,22 +2,144 @@
 
 {% block title %}Order Details | Admin Panel{% endblock %}
 
-{% block header_title %}Order Details #{{ order.pk }}{% endblock %}
+{% block header_title %}Order Details <span class="text-primary">#ORD-{{ order.pk }}</span>{% endblock %}
 {% block breadcrumb %}Orders / Details{% endblock %}
 
 {% block admin_content %}
-<div class="row">
+<style>
+    /* Stepper CSS */
+    .stepper-wrapper {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .stepper-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+    .stepper-item::before {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid var(--border-color);
+        width: 100%;
+        top: 20px;
+        left: -50%;
+        z-index: 2;
+    }
+    .stepper-item::after {
+        position: absolute;
+        content: "";
+        border-bottom: 2px solid var(--border-color);
+        width: 100%;
+        top: 20px;
+        left: 50%;
+        z-index: 2;
+    }
+    .stepper-item .step-counter {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 2px solid var(--border-color);
+        margin-bottom: 6px;
+        color: var(--text-secondary);
+        transition: all 0.3s;
+    }
+    .stepper-item.active .step-counter {
+        font-weight: bold;
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    .stepper-item.completed .step-counter {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+    .stepper-item.completed::after, .stepper-item.completed::before {
+        border-color: var(--primary-color);
+    }
+    .stepper-item:first-child::before {
+        content: none;
+    }
+    .stepper-item:last-child::after {
+        content: none;
+    }
+    .step-name {
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .stepper-item.active .step-name, .stepper-item.completed .step-name {
+        color: var(--text-main);
+        font-weight: 700;
+    }
+</style>
+
+<!-- Action Bar -->
+<div class="mb-4">
+    <a href="{% url 'manage_orders' %}" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Back to Orders
+    </a>
+</div>
+
+<!-- Order Status Stepper -->
+<div class="custom-card mb-4">
+    <div class="card-body">
+        <div class="stepper-wrapper">
+            <div class="stepper-item {% if order.status in 'Processing,Shipped,Delivered' %}completed{% endif %}">
+                <div class="step-counter"><i class="fas fa-clipboard-check"></i></div>
+                <div class="step-name">Processing</div>
+            </div>
+            <div class="stepper-item {% if order.status in 'Shipped,Delivered' %}completed{% elif order.status == 'Processing' %}active{% endif %}">
+                <div class="step-counter"><i class="fas fa-box"></i></div>
+                <div class="step-name">Packed</div>
+            </div>
+            <div class="stepper-item {% if order.status == 'Shipped' %}active{% elif order.status == 'Delivered' %}completed{% endif %}">
+                <div class="step-counter"><i class="fas fa-shipping-fast"></i></div>
+                <div class="step-name">Shipped</div>
+            </div>
+            <div class="stepper-item {% if order.status == 'Delivered' %}completed active{% endif %}">
+                <div class="step-counter"><i class="fas fa-check-circle"></i></div>
+                <div class="step-name">Delivered</div>
+            </div>
+        </div>
+        {% if order.status == 'Cancelled' %}
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <div>
+                    <strong>Order Cancelled</strong> - This order has been cancelled.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Items & Summary -->
     <div class="col-lg-8">
         <!-- Order Items -->
-        <div class="custom-card mb-4">
-            <h5 class="card-title-custom mb-3">Order Items</h5>
+        <div class="custom-card mb-4 h-100">
+            <div class="card-header-custom border-bottom pb-3 mb-3">
+                <h5 class="card-title-custom mb-0">Order Items</h5>
+                <span class="badge bg-light-custom border text-body">{{ order.items|length }} Items</span>
+            </div>
             <div class="table-responsive">
-                <table class="table table-borderless align-middle">
-                    <thead class="text-secondary">
+                <table class="table-custom align-middle">
+                    <thead>
                         <tr>
                             <th>Product</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Qty</th>
                             <th class="text-end">Total</th>
                         </tr>
                     </thead>
@@ -26,28 +148,37 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ item.image }}" alt="" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                    <span class="fw-bold text-dark">{{ item.product }}</span>
+                                    <div class="rounded border p-1 me-3" style="width: 50px; height: 50px; background-color: var(--bg-body);">
+                                        <img src="{{ item.image }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ item.product }}</div>
+                                        <div class="small text-muted">Variant Info Here</div>
+                                    </div>
                                 </div>
                             </td>
                             <td>{{ item.price }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td class="text-end">{{ item.price }}</td>
+                            <td>x{{ item.quantity }}</td>
+                            <td class="text-end fw-bold">{{ item.price }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                    <tfoot class="border-top">
+                    <tfoot style="border-top: 2px dashed var(--border-color);">
                         <tr>
-                            <td colspan="3" class="text-end pt-3">Subtotal</td>
-                            <td class="text-end pt-3 fw-bold">{{ order.subtotal }}</td>
+                            <td colspan="3" class="text-end pt-4">Subtotal</td>
+                            <td class="text-end pt-4 fw-bold">{{ order.subtotal }}</td>
                         </tr>
                         <tr>
-                            <td colspan="3" class="text-end border-0">Shipping</td>
+                            <td colspan="3" class="text-end border-0">Shipping Fee</td>
                             <td class="text-end border-0 fw-bold">{{ order.shipping }}</td>
                         </tr>
                         <tr>
-                            <td colspan="3" class="text-end border-0 fs-5 text-dark fw-bold">Total</td>
-                            <td class="text-end border-0 fs-5 text-primary fw-bold">{{ order.total }}</td>
+                            <td colspan="3" class="text-end border-0 pt-3">
+                                <span class="fs-5 fw-bold">Total Amount</span>
+                            </td>
+                            <td class="text-end border-0 pt-3">
+                                <span class="fs-5 text-primary fw-bold">{{ order.total }}</span>
+                            </td>
                         </tr>
                     </tfoot>
                 </table>
@@ -55,42 +186,67 @@
         </div>
     </div>
 
+    <!-- Right Column: Details -->
     <div class="col-lg-4">
-        <!-- Customer Details -->
+        <!-- Status Action -->
         <div class="custom-card mb-4">
-            <h5 class="card-title-custom mb-3">Customer Details</h5>
-            <div class="d-flex align-items-center mb-3">
-                <div class="user-avatar me-3" style="width: 45px; height: 45px;">
+            <h5 class="card-title-custom mb-3">Update Status</h5>
+            <form method="post"> <!-- Assuming POST handling for status update -->
+                {% csrf_token %}
+                <div class="mb-3">
+                    <select class="form-select-custom">
+                        <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                        <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary-custom w-100">Update Status</button>
+            </form>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="custom-card mb-4">
+            <h5 class="card-title-custom mb-3">Customer</h5>
+            <div class="d-flex align-items-center mb-4">
+                <div class="user-avatar me-3" style="width: 50px; height: 50px; font-size: 20px;">
                     {{ order.customer.name|slice:":1" }}
                 </div>
                 <div>
-                    <h6 class="mb-0 text-dark fw-bold">{{ order.customer.name }}</h6>
-                    <small class="text-secondary">{{ order.customer.email }}</small>
+                    <h6 class="mb-0 fw-bold">{{ order.customer.name }}</h6>
+                    <small class="text-muted">Customer ID: #{{ order.customer.pk }}</small>
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="text-secondary small d-block">Contact Number</label>
-                <span class="text-dark fw-bold">{{ order.customer.phone }}</span>
-            </div>
-            <div>
-                <label class="text-secondary small d-block">Shipping Address</label>
-                <span class="text-dark fw-bold">{{ order.shipping_address }}</span>
+            
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-center" style="width: 30px;"><i class="fas fa-envelope text-muted"></i></div>
+                    <div>
+                        <div class="small text-muted">Email Address</div>
+                        <div class="fw-bold">{{ order.customer.email }}</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-center" style="width: 30px;"><i class="fas fa-phone text-muted"></i></div>
+                    <div>
+                        <div class="small text-muted">Phone Number</div>
+                        <div class="fw-bold">{{ order.customer.phone }}</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Order Status -->
+        <!-- Shipping Info -->
         <div class="custom-card">
-            <h5 class="card-title-custom mb-3">Order Status</h5>
-            <div class="mb-3">
-                <label class="form-label">Update Status</label>
-                <select class="form-select-custom">
-                    <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
-                    <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
-                    <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
-                    <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
-                </select>
+            <h5 class="card-title-custom mb-3">Shipping Address</h5>
+            <div class="d-flex">
+                <div class="me-3 text-center" style="width: 30px;"><i class="fas fa-map-marker-alt text-muted mt-1"></i></div>
+                <div>
+                    <p class="mb-0 lh-base">
+                        {{ order.shipping_address }}
+                    </p>
+                </div>
             </div>
-            <button class="btn btn-primary-custom w-100">Update Status</button>
         </div>
     </div>
 </div>

@@ -6,6 +6,7 @@
 {% block breadcrumb %}Dashboard{% endblock %}
 
 {% block vendor_content %}
+<!-- Analytics Stats Cards -->
 <div class="row g-4 mb-4">
     <!-- Stats Card 1 -->
     <div class="col-12 col-sm-6 col-md-3">
@@ -13,17 +14,15 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
                     <h6 class="text-muted mb-2">Total Sales</h6>
-                    <h3 style="color: var(--text-main); font-weight: 700;">₹24,500</h3>
+                    <h3 style="color: var(--text-main); font-weight: 700;">{{ analytics.total_sales }}</h3>
                 </div>
-                <div
-                    style="background: rgba(67, 24, 255, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color);">
+                <div class="icon-circle bg-soft-primary text-primary-custom" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-rupee-sign fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i>
-                    +12%</span>
-                <span style="color: var(--text-secondary); font-size: 12px;">since last month</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.sales_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
     </div>
@@ -34,17 +33,15 @@
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
                     <h6 class="text-muted mb-2">Total Orders</h6>
-                    <h3 style="color: var(--text-main); font-weight: 700;">156</h3>
+                    <h3 style="color: var(--text-main); font-weight: 700;">{{ analytics.total_orders }}</h3>
                 </div>
-                <div
-                    style="background: rgba(5, 205, 153, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #05cd99;">
+                <div class="icon-circle bg-soft-success text-success" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-shopping-cart fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i>
-                    +8%</span>
-                <span style="color: var(--text-secondary); font-size: 12px;">since last month</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.orders_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
     </div>
@@ -54,16 +51,16 @@
         <div class="custom-card h-100 d-flex flex-column justify-content-between">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                    <h6 class="text-muted mb-2">Your Products</h6>
-                    <h3 style="color: var(--text-main); font-weight: 700;">45</h3>
+                    <h6 class="text-muted mb-2">Avg. Order Value</h6>
+                    <h3 style="color: var(--text-main); font-weight: 700;">{{ analytics.avg_order_value }}</h3>
                 </div>
-                <div
-                    style="background: rgba(255, 181, 71, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ffb547;">
-                    <i class="fas fa-box fa-lg"></i>
+                <div class="icon-circle bg-soft-info text-info" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-chart-line fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span style="color: var(--text-secondary); font-size: 12px;">In your catalog</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.aov_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
     </div>
@@ -73,18 +70,128 @@
         <div class="custom-card h-100 d-flex flex-column justify-content-between">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                    <h6 class="text-muted mb-2">Pending</h6>
-                    <h3 style="color: var(--text-main); font-weight: 700;">12</h3>
+                    <h6 class="text-muted mb-2">Products Sold</h6>
+                    <h3 style="color: var(--text-main); font-weight: 700;">{{ analytics.products_sold }}</h3>
                 </div>
-                <div
-                    style="background: rgba(238, 93, 80, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ee5d50;">
-                    <i class="fas fa-clock fa-lg"></i>
+                <div class="icon-circle bg-soft-warning text-warning" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-box-open fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-danger bg-opacity-10 text-danger me-2"><i class="fas fa-exclamation"></i>
-                    Action</span>
-                <span style="color: var(--text-secondary); font-size: 12px;">Needed</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.products_sold_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <h5 class="card-title-custom">Sales Overview</h5>
+                <select class="form-select-custom shadow-none" style="width: auto; padding: 5px 10px; font-size: 12px;">
+                    <option>This Year</option>
+                    <option>Last Year</option>
+                </select>
+            </div>
+            <div class="card-body" style="height: 300px; padding: 15px;">
+                 <canvas id="salesChart"></canvas>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    
+                    // Theme-aware colors
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    const primaryColor = '#4318ff';
+                    const textColor = isDark ? '#a3aed0' : '#2b3674';
+                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+                            datasets: [{
+                                label: 'Monthly Sales',
+                                data: [15000, 18000, 22000, 19000, 28000, 24000, 31000, 27000],
+                                borderColor: primaryColor,
+                                backgroundColor: 'rgba(67, 24, 255, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointBackgroundColor: primaryColor,
+                                borderWidth: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: gridColor },
+                                    ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Top Products</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-shoe-prints text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Nike Air Max 90</h6>
+                                <small class="text-muted" style="font-size: 11px;">Sneakers</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary-custom fw-bold" style="font-size: 13px;">₹12,450</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-running text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Adidas UltraBoost</h6>
+                                <small class="text-muted" style="font-size: 11px;">Running</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary-custom fw-bold">₹8,320</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-tshirt text-muted"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Puma Classic Tee</h6>
+                                <small class="text-muted" style="font-size: 11px;">Apparel</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary-custom fw-bold">₹5,100</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -94,7 +201,7 @@
 <div class="custom-card">
     <div class="card-header-custom">
         <h5 class="card-title-custom">Recent Orders</h5>
-        <a href="{% url 'vendor_orders' %}" class="btn btn-sm badge-soft-primary" style="text-decoration: none;">
+        <a href="{% url 'vendor_orders' %}" class="btn-light-custom btn-sm">
             See all
         </a>
     </div>
@@ -108,55 +215,30 @@
                     <th>Date</th>
                     <th>Status</th>
                     <th>Amount</th>
-                    <th>Action</th>
+                    <th class="text-end">Action</th>
                 </tr>
             </thead>
             <tbody>
+                {% for item in order_items %}
                 <tr>
-                    <td>#ORD-001</td>
-                    <td>John Doe</td>
-                    <td>Nike Air Max</td>
-                    <td>Oct 15, 2023</td>
+                    <td><span class="fw-bold">#ORD-{{ item.order.pk }}</span></td>
+                    <td>{{ item.order.customer.name }}</td>
+                    <td>{{ item.product_variant.product.name }}</td>
+                    <td>{{ item.order.order_date|date:"M d, Y" }}</td>
                     <td>
-                        <span class="status-badge status-active">
-                            <i class="fas fa-check-circle"></i> Completed
+                        <span class="status-badge {% if item.shipment.status == 'delivered' %}status-active{% elif item.shipment.status == 'cancelled' %}status-inactive{% endif %}">
+                            <i class="fas {% if item.shipment.status == 'delivered' %}fa-check-circle{% elif item.shipment.status == 'pending' %}fa-pause-circle{% else %}fa-truck{% endif %}"></i>
+                            {{ item.shipment.status|title }}
                         </span>
                     </td>
-                    <td>₹120.00</td>
-                    <td><button
-                            style="border: none; background: transparent; color: var(--text-secondary); cursor: pointer;"><i
-                                class="fas fa-eye"></i></button></td>
-                </tr>
-                <tr>
-                    <td>#ORD-002</td>
-                    <td>Jane Smith</td>
-                    <td>Adidas Ultraboost</td>
-                    <td>Oct 14, 2023</td>
-                    <td>
-                        <span class="status-badge" style="color: #ffb547;">
-                            <i class="fas fa-spinner"></i> Pending
-                        </span>
+                    <td class="fw-bold">₹{{ item.price }}</td>
+                    <td class="text-end">
+                        <a href="#" class="btn-icon-soft" title="View Detail">
+                            <i class="fas fa-eye"></i>
+                        </a>
                     </td>
-                    <td>₹180.00</td>
-                    <td><button
-                            style="border: none; background: transparent; color: var(--text-secondary); cursor: pointer;"><i
-                                class="fas fa-eye"></i></button></td>
                 </tr>
-                <tr>
-                    <td>#ORD-003</td>
-                    <td>Mike Ross</td>
-                    <td>Puma Suede</td>
-                    <td>Oct 12, 2023</td>
-                    <td>
-                        <span class="status-badge status-inactive">
-                            <i class="fas fa-times-circle"></i> Cancelled
-                        </span>
-                    </td>
-                    <td>₹85.00</td>
-                    <td><button
-                            style="border: none; background: transparent; color: var(--text-secondary); cursor: pointer;"><i
-                                class="fas fa-eye"></i></button></td>
-                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

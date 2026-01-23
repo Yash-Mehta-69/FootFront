@@ -61,38 +61,49 @@
             </div>
             <div class="card-body p-4">
                 <div class="accordion" id="helpAccordion">
-                    <div class="accordion-item border-0 mb-3" style="background-color: var(--bg-main); border-radius: 8px;">
+                    <style>
+                        .help-accordion-btn::after {
+                            filter: brightness(0.5);
+                        }
+                        [data-theme='dark'] .help-accordion-btn::after {
+                            filter: brightness(2) invert(1);
+                        }
+                    </style>
+                    <div class="accordion-item border-0 mb-3" style="background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;">
                         <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button collapsed shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
-                                <strong>How do I change my shop address?</strong>
+                            <button class="accordion-button help-accordion-btn collapsed shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" 
+                                style="background-color: var(--bg-card); color: var(--text-main); font-weight: 600;">
+                                How do I change my shop address?
                             </button>
                         </h2>
                         <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
-                            <div class="accordion-body text-muted pt-0">
+                            <div class="accordion-body pt-0" style="background-color: var(--bg-card); color: var(--text-secondary);">
                                 You cannot change sensitive details directly. Please contact admin support with your new address proof to get it updated.
                             </div>
                         </div>
                     </div>
-                    <div class="accordion-item border-0 mb-3" style="background-color: var(--bg-main); border-radius: 8px;">
+                    <div class="accordion-item border-0 mb-3" style="background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;">
                         <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
-                                <strong>When are payouts processed?</strong>
+                            <button class="accordion-button help-accordion-btn collapsed shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo"
+                                style="background-color: var(--bg-card); color: var(--text-main); font-weight: 600;">
+                                When are payouts processed?
                             </button>
                         </h2>
                         <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
-                            <div class="accordion-body text-muted pt-0">
+                            <div class="accordion-body pt-0" style="background-color: var(--bg-card); color: var(--text-secondary);">
                                 Payouts are processed every Wednesday for orders delivered in the previous week.
                             </div>
                         </div>
                     </div>
-                    <div class="accordion-item border-0" style="background-color: var(--bg-main); border-radius: 8px;">
+                    <div class="accordion-item border-0 mb-3" style="background-color: var(--bg-body); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden;">
                         <h2 class="accordion-header" id="headingThree">
-                            <button class="accordion-button collapsed shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
-                                <strong>Can I delete a product?</strong>
+                            <button class="accordion-button help-accordion-btn collapsed shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree"
+                                style="background-color: var(--bg-card); color: var(--text-main); font-weight: 600;">
+                                Can I delete a product?
                             </button>
                         </h2>
                         <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
-                            <div class="accordion-body text-muted pt-0">
+                            <div class="accordion-body pt-0" style="background-color: var(--bg-card); color: var(--text-secondary);">
                                 Yes, you can deactivate products from the Products page. To permanently delete, please contact support.
                             </div>
                         </div>

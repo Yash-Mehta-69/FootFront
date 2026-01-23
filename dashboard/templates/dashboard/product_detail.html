@@ -1,35 +1,35 @@
-{% extends 'vendor_base.html' %}
+{% extends 'dashboard/admin_base.html' %}
 
-{% block title %}Product Details | Vendor Panel{% endblock %}
+{% block title %}Product Details | Admin Panel{% endblock %}
 
 {% block header_title %}Product Details{% endblock %}
 {% block breadcrumb %}Products / Details{% endblock %}
 
-{% block vendor_content %}
+{% block admin_content %}
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="custom-card">
             <div class="card-header-custom d-flex justify-content-between align-items-center">
                 <h5 class="card-title-custom mb-0">Product Overview</h5>
                 <span class="status-badge status-active">
-                    <i class="fas fa-check-circle"></i> Active
+                    Active
                 </span>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4 mb-4 mb-md-0">
-                         <div class="rounded overflow-hidden border" style="background-color: var(--bg-body);">
+                         <div class="rounded overflow-hidden border">
                             {% if product.product_image %}
                                 <img src="{{ product.product_image.url }}" alt="{{ product.name }}" class="w-100" style="object-fit: cover; height: 300px;">
                             {% else %}
-                                <div class="d-flex align-items-center justify-content-center" style="height: 300px;">
+                                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
                                     <i class="fas fa-image fa-3x text-muted"></i>
                                 </div>
                             {% endif %}
                          </div>
                     </div>
                     <div class="col-md-8">
-                        <h3 class="fw-bold mb-2" style="color: var(--text-main);">{{ product.name }}</h3>
+                        <h3 class="fw-bold mb-2">{{ product.name }}</h3>
                         <p class="text-muted small mb-3">
                             Added on {{ product.created_at|date:"M d, Y" }}
                         </p>
@@ -37,22 +37,22 @@
                         <div class="row g-3 mb-4">
                             <div class="col-6">
                                 <label class="text-muted small d-block">Category</label>
-                                <span class="badge bg-soft-primary text-primary-custom fw-bold">{{ product.category.name|default:"Uncategorized" }}</span>
+                                <span class="badge bg-secondary">{{ product.category.name|default:"Uncategorized" }}</span>
                             </div>
                             <div class="col-6">
                                 <label class="text-muted small d-block">Vendor</label>
-                                <span class="text-primary-custom fw-bold">{{ product.vendor.shopName }}</span>
+                                <span class="text-primary fw-bold">{{ product.vendor.shopName }}</span>
                             </div>
                         </div>
 
                         <label class="text-muted small d-block mb-1">Description</label>
-                        <p style="color: var(--text-main);">{{ product.description }}</p>
+                        <p class="">{{ product.description }}</p>
                     </div>
                 </div>
 
-                <hr class="my-4" style="border-color: var(--border-color);">
+                <hr class="my-4">
                 
-                <h5 class="fw-bold mb-3" style="color: var(--text-main);">Variants</h5>
+                <h5 class="fw-bold mb-3">Variants</h5>
                 <div class="table-responsive">
                     <table class="table-custom align-middle">
                         <thead>
@@ -65,7 +65,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for variant in variants %}
+                            {% for variant in product.productvariant_set.all %}
+                                {% if not variant.is_deleted %}
                                 <tr>
                                     <td style="width: 60px;">
                                         {% if variant.image %}
@@ -84,15 +85,16 @@
                                     <td class="fw-bold">₹{{ variant.price }}</td>
                                     <td>
                                         {% if variant.stock > 0 %}
-                                            <span class="text-success-custom">{{ variant.stock }}</span>
+                                            <span class="text-success">{{ variant.stock }}</span>
                                         {% else %}
-                                            <span class="text-danger-custom">Out of Stock</span>
+                                            <span class="text-danger">Out of Stock</span>
                                         {% endif %}
                                     </td>
                                 </tr>
+                                {% endif %}
                             {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted p-4">No variants found.</td>
+                                    <td colspan="5" class="text-center text-muted">No variants found.</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -100,10 +102,10 @@
                 </div>
 
                 <div class="mt-4 text-center">
-                    <a href="{% url 'vendor_products' %}" class="btn-back me-2">
-                        <i class="fas fa-arrow-left"></i> Back to List
+                    <a href="{% url 'manage_products' %}" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Products
                     </a>
-                    <a href="{% url 'vendor_edit_product' product.pk %}" class="btn-primary-custom text-decoration-none">Edit Product</a>
+                    <a href="{% url 'admin_edit_product' product.pk %}" class="btn-primary-custom">Edit Product</a>
                 </div>
             </div>
         </div>

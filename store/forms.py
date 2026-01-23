@@ -158,7 +158,7 @@ class SizeForm(forms.ModelForm):
         model = Size
         fields = ['size_label']
         widgets = {
-            'size_label': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'placeholder': 'Enter Size Label', 'required': 'required'}),
+            'size_label': forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Enter Size Label', 'required': 'required'}),
         }
 
 class ColorForm(forms.ModelForm):
@@ -166,8 +166,8 @@ class ColorForm(forms.ModelForm):
         model = Color
         fields = ['name', 'hex_code']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'placeholder': 'Color Name', 'required': 'required'}),
-            'hex_code': forms.TextInput(attrs={'class': 'form-control form-control-custom', 'type': 'color', 'style': 'height: 40px; width: 60px; padding: 2px;', 'required': 'required'}),
+            'name': forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Color Name', 'required': 'required'}),
+            'hex_code': forms.TextInput(attrs={'class': 'form-control-custom', 'type': 'color', 'style': 'height: 40px; width: 60px; padding: 2px;', 'required': 'required'}),
         }
 
 

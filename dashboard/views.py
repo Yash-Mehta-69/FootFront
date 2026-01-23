@@ -222,6 +222,11 @@ def delete_customer(request, pk):
         
     return redirect('manage_customers')
 
+@admin_required
+def detail_customer(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    return render(request, 'dashboard/customer_detail.html', {'customer': customer})
+
 from vendor.models import Vendor, BankDetail
 from django.db import transaction
 from store.models import User
@@ -453,6 +458,11 @@ def delete_vendor(request, pk):
     return redirect('manage_vendors')
 
 @admin_required
+def detail_vendor(request, pk):
+    vendor = get_object_or_404(Vendor.objects.select_related('user', 'bankdetail'), pk=pk)
+    return render(request, 'dashboard/vendor_detail.html', {'vendor': vendor})
+
+@admin_required
 def manage_categories(request):
     categories = Category.objects.filter(is_deleted=False).select_related('parent_category')
     return render(request, 'dashboard/manage_categories.html', {'categories': categories})
@@ -501,6 +511,11 @@ def delete_category(request, pk):
     except Category.DoesNotExist:
         panel_messages.add_admin_message(request, 'error', "Category not found.")
     return redirect('manage_categories')
+
+@admin_required
+def detail_category(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    return render(request, 'dashboard/category_detail.html', {'category': category})
 
 @admin_required
 def manage_products(request):
@@ -714,6 +729,11 @@ def delete_product(request, pk):
     return redirect('manage_products')
 
 @admin_required
+def detail_product(request, pk):
+    product = get_object_or_404(Product.objects.select_related('vendor', 'category').prefetch_related('productvariant_set'), pk=pk)
+    return render(request, 'dashboard/product_detail.html', {'product': product})
+
+@admin_required
 def manage_orders(request):
     orders = [
         MockObj(pk=1001, customer="Alice Smith", date="2023-10-20", total="$150", status="Processing", payment_status="Paid"),
@@ -798,21 +818,39 @@ def manage_shipments(request):
 @admin_required
 def admin_update_shipment_status(request, pk):
     try:
-        if request.user.role != 'admin':
-             # Note: In real app, check permissions properly
-             pass
-
-        if request.method == "POST":
-            new_status = request.POST.get('status')
-            messages.success(request, f"Shipment #{pk} status updated to '{new_status}' successfully (Mock)")
-            return redirect('manage_shipments')
-
-        return redirect('manage_shipments')
-
+        if request.method == 'POST':
+            status = request.POST.get('status')
+            # Simulated update
+            panel_messages.add_admin_message(request, 'success', f"Shipment #{pk} status updated to {status.replace('_', ' ').title()}.")
     except Exception as e:
-        print(f"Error in admin_update_shipment_status: {e}")
-        messages.error(request, 'An error occurred.')
-        return redirect('manage_shipments')
+        panel_messages.add_admin_message(request, 'error', f"Error updating shipment: {str(e)}")
+        
+    return redirect(request.META.get('HTTP_REFERER', 'manage_shipments'))
+
+@admin_required
+def detail_shipment(request, pk):
+    # Mock data for shipment detail implementation
+    shipment = MockObj(
+        pk=pk,
+        order_item=MockObj(
+            order=MockObj(pk=1001, customer=MockObj(name="Alice Smith", email="alice@example.com", phone="1234567890"), shipping_address="123 Maple St, NY"),
+            product_variant=MockObj(product=MockObj(name="Nike Air Max", product_image=MockObj(url="/static/images/hero-shoe.png")), size=MockObj(size_label="US 9"), color=MockObj(name="Red", hex_code="#FF0000"), price="150.00"),
+            quantity=1
+        ),
+        tracking_number="TRK9988776655",
+        vendor=MockObj(shopName="Kicks Palace"),
+        courier_name="UPS",
+        status="Shipped",
+        shipped_at=datetime.now(),
+        expected_delivery=datetime.now() + timedelta(days=5),
+        history=[
+            MockObj(status="Order Placed", date=datetime.now() - timedelta(days=2), description="Order has been placed."),
+            MockObj(status="Packed", date=datetime.now() - timedelta(days=1), description="Seller has packed the order."),
+            MockObj(status="Shipped", date=datetime.now(), description="Order has been shipped via UPS.")
+        ]
+    )
+    return render(request, 'dashboard/shipment_detail.html', {'shipment': shipment})
+
 
 @admin_required
 def manage_payments(request):
@@ -827,6 +865,11 @@ def manage_payments(request):
 def view_reviews(request):
     reviews = Review.objects.filter(is_deleted=False).select_related('product', 'customer__user').prefetch_related('media').order_by('-created_at')
     return render(request, 'dashboard/view_reviews.html', {'reviews': reviews})
+
+@admin_required
+def detail_review(request, pk):
+    review = get_object_or_404(Review, pk=pk)
+    return render(request, 'dashboard/review_detail.html', {'review': review})
 
 @admin_required
 def delete_review(request, pk):

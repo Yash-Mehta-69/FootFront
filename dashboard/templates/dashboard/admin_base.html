@@ -488,6 +488,15 @@
             outline: none;
         }
 
+        .form-control-custom::placeholder {
+            color: var(--text-secondary);
+            opacity: 1; /* Firefox */
+        }
+        
+        .form-control-custom::-ms-input-placeholder { /* Edge 12-18 */
+            color: var(--text-secondary);
+        }
+
         .form-label {
             color: var(--text-secondary);
             font-weight: 500;
@@ -515,6 +524,83 @@
         .btn-light-custom:hover {
             background-color: var(--btn-light-hover);
             color: var(--btn-light-color);
+        }
+
+        /* Back Button Premium Styling */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-back i {
+            transition: transform 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background-color: var(--bg-card);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateX(-5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-back:hover i {
+            transform: translateX(-3px);
+            color: var(--primary-color);
+        }
+
+        /* Custom Dropdown Styling */
+        .dropdown-menu {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            box-shadow: var(--shadow-sm);
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        .dropdown-item {
+            color: var(--text-main) !important;
+            padding: 10px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-item i {
+            width: 16px;
+            font-size: 14px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: var(--bg-light-custom) !important;
+            color: var(--primary-color) !important;
+        }
+
+        .dropdown-item:hover i {
+            color: var(--primary-color);
+        }
+        
+        /* Specific override for logout to keep it red on hover but with background */
+        .dropdown-item.text-danger:hover {
+            background-color: rgba(238, 93, 80, 0.1) !important;
+            color: #ee5d50 !important;
+        }
+        .dropdown-item.text-danger:hover i {
+            color: #ee5d50;
         }
 
         /* Empty State Styling */
@@ -676,14 +762,25 @@
                     <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false" style="background: transparent; color: var(--text-main);">
                         <i class="fas fa-user-circle" style="font-size: 40px;"></i>
                     </div>
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        style="background-color: var(--bg-card); border-color: var(--border-color);">
-                        <li><a class="dropdown-item" style="color: var(--text-main);" href="{% url 'admin_profile' %}">Profile</a></li>
-                        <li><a class="dropdown-item" style="color: var(--text-main);" href="{% url 'admin_change_password' %}">Change Password</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'admin_profile' %}">
+                                <i class="fas fa-user-circle"></i> Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'admin_change_password' %}">
+                                <i class="fas fa-key"></i> Change Password
+                            </a>
+                        </li>
                         <li>
                             <hr class="dropdown-divider" style="border-color: var(--border-color);">
                         </li>
-                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>

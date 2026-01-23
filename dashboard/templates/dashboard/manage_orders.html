@@ -8,21 +8,21 @@
 {% block admin_content %}
 <div class="custom-card">
     <div class="card-header-custom">
-        <div class="d-flex gap-2">
-            <!-- Add Order Removed -->
-            <input type="text" class="form-control-custom" placeholder="Search orders..." style="width: 200px;">
+        <div class="d-flex gap-2 align-items-center">
+            <input type="text" class="form-control-custom" placeholder="Search orders..." style="width: 250px;">
+            
+            <!-- Vendor Filter -->
             <select class="form-select-custom" style="width: 150px;">
-                <option value="">Vendor</option>
-                {% for vendor in vendors %}
-                <option value="{{ vendor.pk }}">{{ vendor.shopName }}</option>
-                {% endfor %}
+                <option value="">Filter by Vendor</option>
+                <option value="1">Nike Official</option>
+                <option value="2">Adidas Store</option>
+                <option value="3">Puma Retail</option>
             </select>
+
+            <!-- Sort By Date -->
             <select class="form-select-custom" style="width: 150px;">
-                <option value="">Status</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
             </select>
         </div>
     </div>
@@ -31,67 +31,302 @@
         <table class="table-custom">
             <thead>
                 <tr>
+                    <th>Order ID</th>
                     <th>Customer</th>
                     <th>Date</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>Total Amount</th>
+                    <th>Payment ID</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for order in orders %}
+                <!-- Dummy Data Row 1 -->
                 <tr>
-                    <td>{{ order.customer }}</td>
-                    <td>{{ order.date }}</td>
-                    <td>{{ order.total }}</td>
+                    <td><span class="fw-bold">#ORD-7829</span></td>
                     <td>
-                        <span class="badge {% if order.payment_status == 'Paid' %}bg-success{% else %}bg-warning{% endif %} bg-opacity-10 text-{{ order.payment_status|lower }}">{{ order.payment_status }}</span>
-                    </td>
-                    <td>
-                        <span class="status-badge 
-                            {% if order.status == 'Processing' %}status-warning
-                            {% elif order.status == 'Shipped' %}status-active
-                            {% elif order.status == 'Delivered' %}status-active
-                            {% else %}status-inactive{% endif %}">
-                            <i class="fas 
-                                {% if order.status == 'Processing' %}fa-spinner
-                                {% elif order.status == 'Shipped' %}fa-shipping-fast
-                                {% elif order.status == 'Delivered' %}fa-check-circle
-                                {% else %}fa-times-circle{% endif %}">
-                            </i>
-                            {{ order.status }}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="d-flex gap-2">
-                            <a href="{% url 'admin_order_detail' order.pk %}" class="btn-icon-soft" title="View Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{% url 'admin_edit_order' order.pk %}" class="btn-icon-soft text-primary" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="#" class="btn-icon-soft text-danger" title="Delete" onclick="return confirm('Are you sure?')">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">
-                                <i class="fas fa-shopping-bag"></i>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px;">JM</div>
+                            <div>
+                                <div class="fw-bold">John Maker</div>
+                                <div class="text-muted small">john@example.com</div>
                             </div>
-                            <h3 class="empty-state-title">No Orders Found</h3>
-                            <p class="empty-state-text">There are no orders recorded in the system yet.</p>
+                        </div>
+                    </td>
+                    <td>Jan 22, 2026</td>
+                    <td class="fw-bold">₹4,999.00</td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="font-monospace small">TXN_123456789</span>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn-icon-soft" title="View Detail" data-bs-toggle="modal" data-bs-target="#orderDetailModal1">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon-soft text-danger" title="Delete" onclick="confirm('Are you sure you want to delete this order? This action cannot be undone.')">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
-                {% endfor %}
+
+                <!-- Dummy Data Row 2 -->
+                <tr>
+                    <td><span class="fw-bold">#ORD-7830</span></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px; background-color: #ffb547;">AS</div>
+                            <div>
+                                <div class="fw-bold">Alice Smith</div>
+                                <div class="text-muted small">alice@example.com</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Jan 23, 2026</td>
+                    <td class="fw-bold">₹2,450.00</td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="font-monospace small">-</span>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn-icon-soft" title="View Detail" data-bs-toggle="modal" data-bs-target="#orderDetailModal2">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon-soft text-danger" title="Delete" onclick="confirm('Are you sure you want to delete this order?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+
+                 <!-- Dummy Data Row 3 -->
+                 <tr>
+                    <td><span class="fw-bold">#ORD-7831</span></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px; background-color: #ee5d50;">RJ</div>
+                            <div>
+                                <div class="fw-bold">Rahul Jain</div>
+                                <div class="text-muted small">rahul.j@example.com</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Jan 23, 2026</td>
+                    <td class="fw-bold">₹8,999.00</td>
+                    <td>
+                        <div class="d-flex flex-column">
+                            <span class="font-monospace small">TXN_987654321</span>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button class="btn-icon-soft" title="View Detail" data-bs-toggle="modal" data-bs-target="#orderDetailModal3">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon-soft text-danger" title="Delete" onclick="confirm('Are you sure you want to delete this order?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
             </tbody>
         </table>
+    </div>
+    
+    <!-- Pagination Removed -->
+</div>
+
+<!-- Modal Template for Order 1 -->
+<div class="modal fade" id="orderDetailModal1" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content custom-card p-0">
+            <div class="modal-header border-bottom p-4">
+                <div>
+                    <h5 class="modal-title fw-bold">Order Details</h5>
+                    <div class="d-flex gap-2 align-items-center mt-1">
+                        <span class="badge bg-light-custom border text-body">#ORD-7829</span>
+                        <span class="text-muted small">• Jan 22, 2026</span>
+                    </div>
+                </div>
+                <!-- Theme-safe close button -->
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(var(--invert-value));"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4 mb-4">
+                    <!-- Customer Info -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background-color: var(--bg-light-custom);">
+                            <h6 class="text-primary-custom fw-bold mb-3"><i class="fas fa-user-circle me-2"></i>Customer</h6>
+                            <p class="mb-1 fw-bold">John Maker</p>
+                            <p class="mb-1 small">john@example.com</p>
+                            <p class="mb-1 small">+91 98765 43210</p>
+                            <hr class="my-2" style="opacity: 0.1;">
+                            <p class="mb-0 small text-muted">
+                                <strong>Shipping To:</strong><br>
+                                123, Green Park Avenue, New Delhi
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Order Info -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background-color: var(--bg-light-custom);">
+                            <h6 class="text-primary-custom fw-bold mb-3"><i class="fas fa-receipt me-2"></i>Summary</h6>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span>Payment:</span>
+                                <span class="fw-bold">Razorpay</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span>Txn ID:</span>
+                                <span class="font-monospace">TXN_123456789</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span>Total:</span>
+                                <span class="fw-bold text-success">₹4,999.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 px-1">Order Items & Tracking</h6>
+                <div class="d-flex flex-column gap-3">
+                    <!-- Item 1 -->
+                    <div class="border rounded-3 p-3" style="background-color: var(--bg-card);">
+                        <div class="d-flex align-items-start gap-3">
+                            <div style="width: 60px; height: 60px; background-color: var(--bg-light-custom); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fas fa-shoe-prints text-muted"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">Nike Air Max 90</h6>
+                                        <div class="text-muted small">Size: UK 9 • Color: White/Red</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">₹4,999.00</div>
+                                        <div class="small text-muted">Qty: 1</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tracking Info -->
+                                <div class="p-2 rounded-2 mt-2" style="background-color: rgba(67, 24, 255, 0.05); border: 1px solid rgba(67, 24, 255, 0.1);">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-success">Delivered</span>
+                                            <span class="small text-muted border-start ps-2 ms-1">
+                                                <i class="fas fa-truck me-1"></i> BlueDart
+                                            </span>
+                                        </div>
+                                        <span class="font-monospace small">TRK_AA123456</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer border-top p-3">
+                <button type="button" class="btn btn-secondary btn-light-custom" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Template for Order 2 -->
+<div class="modal fade" id="orderDetailModal2" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content custom-card p-0">
+            <div class="modal-header border-bottom p-4">
+                <div>
+                    <h5 class="modal-title fw-bold">Order Details</h5>
+                    <div class="d-flex gap-2 align-items-center mt-1">
+                        <span class="badge bg-light-custom border text-body">#ORD-7830</span>
+                        <span class="text-muted small">• Jan 23, 2026</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background-color: var(--bg-light-custom);">
+                            <h6 class="text-primary-custom fw-bold mb-3"><i class="fas fa-user-circle me-2"></i>Customer</h6>
+                            <p class="mb-1 fw-bold">Alice Smith</p>
+                            <p class="mb-1 small">alice@example.com</p>
+                            <p class="mb-1 small">+91 99887 76655</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background-color: var(--bg-light-custom);">
+                            <h6 class="text-primary-custom fw-bold mb-3"><i class="fas fa-receipt me-2"></i>Summary</h6>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span>Payment:</span>
+                                <span class="badge-soft-warning">COD</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 small">
+                                <span>Total:</span>
+                                <span class="fw-bold">₹2,450.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-3 px-1">Order Items & Tracking</h6>
+                <div class="border rounded-3 p-3 mb-3" style="background-color: var(--bg-card);">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="width: 60px; height: 60px; background-color: var(--bg-light-custom); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-shoe-prints text-muted"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Adidas Ultraboost</h6>
+                                    <p class="text-muted small mb-0">Size: UK 10 • Color: Black</p>
+                                </div>
+                                <div class="text-end fw-bold">₹2,450.00</div>
+                            </div>
+                            <div class="p-2 rounded-2 mt-2" style="background-color: rgba(67, 24, 255, 0.05); border: 1px solid rgba(67, 24, 255, 0.1);">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge-soft-warning">Pending</span>
+                                    <span class="small text-muted ms-auto">Awaiting vendor processing</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top p-3">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Template for Order 3 -->
+<div class="modal fade" id="orderDetailModal3" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content custom-card p-0">
+            <div class="modal-header border-bottom p-4">
+                <div>
+                    <h5 class="modal-title fw-bold">Order Details</h5>
+                    <div class="d-flex gap-2 align-items-center mt-1">
+                        <span class="badge bg-light-custom border text-body">#ORD-7831</span>
+                        <span class="text-muted small">• Jan 23, 2026</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+            </div>
+            <div class="modal-body p-4 text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <p class="text-muted">Loading detailed item status for #ORD-7831...</p>
+            </div>
+            <div class="modal-footer border-top p-3">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

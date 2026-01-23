@@ -1,0 +1,87 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Review Details | Vendor Panel{% endblock %}
+
+{% block header_title %}Review Details{% endblock %}
+{% block breadcrumb %}Reviews / Details{% endblock %}
+
+{% block vendor_content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="custom-card">
+            <div class="card-header-custom border-bottom pb-3 mb-4">
+                <h5 class="card-title-custom mb-0">Customer Feedback</h5>
+            </div>
+            
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="user-avatar me-3" style="width: 60px; height: 60px; font-size: 24px;">
+                        {{ review.customer.user.first_name|make_list|first|upper }}
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1" style="color: var(--text-main);">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</h5>
+                        <p class="text-muted small mb-0">{{ review.created_at|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="text-warning mb-2" style="font-size: 1.2rem;">
+                        {% with ''|center:5 as range %}
+                        {% for _ in range %}
+                           <i class="{% if forloop.counter <= review.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                        {% endfor %}
+                        {% endwith %}
+                        <span class="ms-2 fw-bold text-main" style="color: var(--text-main);">{{ review.rating }}/5</span>
+                    </div>
+                    <blockquote class="blockquote p-4 rounded-4" style="background-color: var(--bg-body); color: var(--text-main); font-style: italic; border-left: 5px solid var(--primary-color);">
+                        "{{ review.comment }}"
+                    </blockquote>
+                </div>
+
+                {% if review.media.all %}
+                <div class="mb-5">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-main);">Review Media</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for media in review.media.all %}
+                            <div class="rounded border p-1" style="width: 120px; height: 120px; cursor: pointer; background-color: var(--bg-body);">
+                                {% if media.media_type == 'image' %}
+                                    <img src="{{ media.file.url }}" class="w-100 h-100 object-fit-cover rounded" alt="Review Media" onclick="openMediaModal('{{ media.file.url }}', 'image')">
+                                {% else %}
+                                    <div class="position-relative w-100 h-100" onclick="openMediaModal('{{ media.file.url }}', 'video')">
+                                        <video src="{{ media.file.url }}" class="w-100 h-100 object-fit-cover rounded"></video>
+                                        <div class="position-absolute top-50 start-50 translate-middle text-white bg-dark bg-opacity-50 rounded-circle p-2"><i class="fas fa-play"></i></div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="bg-body-secondary p-4 rounded-4 mb-4" style="background-color: var(--bg-body) !important;">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-main);">Reviewing Product</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="rounded border p-1 me-3 bg-white" style="width: 60px; height: 60px;">
+                            {% if review.product.product_image %}
+                                <img src="{{ review.product.product_image.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100"><i class="fas fa-box text-muted"></i></div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="color: var(--text-main);">{{ review.product.name }}</div>
+                            <small class="badge bg-soft-primary text-primary-custom">{{ review.product.category.name }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-5">
+                    <a href="{% url 'vendor_reviews' %}" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Reviews
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

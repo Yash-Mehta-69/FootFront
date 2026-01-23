@@ -1,0 +1,75 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Shipment Details | Vendor Panel{% endblock %}
+
+{% block header_title %}Shipment Details{% endblock %}
+{% block breadcrumb %}Shipments / Details{% endblock %}
+
+{% block vendor_content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="custom-card">
+            <div class="card-header-custom d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                <h5 class="card-title-custom mb-0">Shipment Information #{{ shipment.pk }}</h5>
+                <span class="badge-soft-{% if shipment.status == 'delivered' %}success{% elif shipment.status == 'pending' %}warning{% else %}primary{% endif %} px-3 py-2 rounded-pill fw-bold">
+                    {{ shipment.status|title }}
+                </span>
+            </div>
+            
+            <div class="card-body">
+                <div class="row g-4 mb-5">
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block mb-1">Order ID</label>
+                        <h6 class="fw-bold" style="color: var(--text-main);">#ORD-{{ shipment.order_item.order.pk }}</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block mb-1">Customer</label>
+                        <h6 class="fw-bold" style="color: var(--text-main);">{{ shipment.order_item.order.customer.name }}</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block mb-1">Courier Service</label>
+                        <h6 class="fw-bold" style="color: var(--text-main);">{{ shipment.courier_name|default:"Not Assigned" }}</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block mb-1">Tracking Number</label>
+                        <h6 class="fw-bold font-monospace" style="color: var(--text-main);">{{ shipment.tracking_number|default:"Not Assigned" }}</h6>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block mb-1">Shipped Date</label>
+                        <h6 class="text-muted">{{ shipment.shipped_at|date:"M d, Y"|default:"-" }}</h6>
+                    </div>
+                     <div class="col-md-6">
+                        <label class="text-muted small d-block mb-1">Expected Delivery</label>
+                        <h6 class="text-muted">{{ shipment.expected_delivery|date:"M d, Y"|default:"-" }}</h6>
+                    </div>
+                </div>
+
+                <div class="bg-body-secondary p-4 rounded-4 mb-5" style="background-color: var(--bg-body) !important;">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-main);">Product Details</h6>
+                    <div class="d-flex align-items-center">
+                        <div class="rounded border p-1 me-3 bg-white" style="width: 60px; height: 60px;">
+                            {% if shipment.order_item.product_variant.image %}
+                                <img src="{{ shipment.order_item.product_variant.image.url }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100"><i class="fas fa-box text-muted"></i></div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="color: var(--text-main);">{{ shipment.order_item.product_variant.product.name }}</div>
+                            <small class="text-muted">
+                                {{ shipment.order_item.product_variant.size.size_label }} | {{ shipment.order_item.product_variant.color.name }} | Qty: {{ shipment.order_item.quantity }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <a href="{% url 'vendor_shipments' %}" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Shipments
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

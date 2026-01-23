@@ -13,6 +13,8 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
         rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -371,6 +373,38 @@
             color: white;
         }
 
+        /* Back Button Premium Styling */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-back i {
+            transition: transform 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background-color: var(--bg-card);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateX(-5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-back:hover i {
+            transform: translateX(-3px);
+            color: var(--primary-color);
+        }
+
         /* Bootstrap Utility Overrides */
         .text-muted {
             color: var(--text-secondary) !important;
@@ -449,6 +483,11 @@
             transition: all 0.3s;
         }
 
+        .form-control-custom::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
         .form-control-custom:focus,
         .form-select-custom:focus {
             border-color: var(--primary-color);
@@ -523,6 +562,79 @@
             margin: 0 auto 30px auto;
             line-height: 1.6;
         }
+
+        /* Action Buttons Styling */
+        .btn-icon-soft {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background-color: var(--bg-body);
+            color: var(--text-secondary);
+            transition: 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+        
+        .btn-icon-soft:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .bg-soft-primary { background-color: rgba(67, 24, 255, 0.1); }
+        .bg-soft-success { background-color: rgba(5, 205, 153, 0.1); }
+        .bg-soft-info { background-color: rgba(13, 202, 240, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 181, 71, 0.1); }
+        .bg-soft-warning { background-color: rgba(255, 181, 71, 0.1); }
+        .bg-soft-danger { background-color: rgba(238, 93, 80, 0.1); }
+
+        /* Custom Dropdown Styling */
+        .dropdown-menu {
+            background-color: var(--bg-card) !important;
+            border-color: var(--border-color) !important;
+            box-shadow: var(--shadow-sm);
+            border-radius: 12px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .dropdown-item {
+            color: var(--text-main) !important;
+            padding: 10px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-item i {
+            width: 16px;
+            font-size: 14px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .dropdown-item:hover, .dropdown-item:focus {
+            background-color: var(--bg-body) !important;
+            color: var(--primary-color) !important;
+        }
+
+        .dropdown-item:hover i {
+            color: var(--primary-color);
+        }
+        
+        /* Logout override */
+        .dropdown-item.text-danger:hover {
+            background-color: rgba(238, 93, 80, 0.1) !important;
+            color: #ee5d50 !important;
+        }
+        .dropdown-item.text-danger:hover i {
+            color: #ee5d50;
+        }
     </style>
     <script>
         // Immediate Theme Application to prevent flash
@@ -553,7 +665,6 @@
                 <i class="fas fa-home"></i> Dashboard
             </a>
             
-            <!-- Orders Link Removed -->
             <a href="{% url 'vendor_categories' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_categories' %}active{% endif %}">
                 <i class="fas fa-list"></i> Categories
@@ -570,6 +681,10 @@
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_products' %}active{% endif %}">
                 <i class="fas fa-box-open"></i> Products
             </a>
+            <a href="{% url 'vendor_orders' %}"
+                class="menu-item {% if 'orders' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-shopping-cart"></i> Orders
+            </a>
             <a href="{% url 'vendor_shipments' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_shipments' %}active{% endif %}">
                 <i class="fas fa-shipping-fast"></i> Shipments
@@ -577,9 +692,6 @@
             <a href="{% url 'vendor_reviews' %}"
                 class="menu-item {% if request.resolver_match.url_name == 'vendor_reviews' %}active{% endif %}">
                 <i class="fas fa-star"></i> Reviews
-            </a>
-            <a href="{% url 'vendor_analytics' %}" class="menu-item {% if request.resolver_match.url_name == 'vendor_analytics' %}active{% endif %}">
-                <i class="fas fa-chart-line"></i> Analytics
             </a>
 
             <a href="{% url 'vendor_help' %}" class="menu-item mt-4 {% if request.resolver_match.url_name == 'vendor_help' %}active{% endif %}">
@@ -630,14 +742,25 @@
                             {{ request.user.vendor_profile.shopName|make_list|first|upper|default:"V" }}
                         </div>
                     {% endif %}
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        style="background-color: var(--bg-card); border-color: var(--border-color);">
-                        <li><a class="dropdown-item" style="color: var(--text-main);" href="{% url 'vendor_profile' %}">Profile</a></li>
-                        <li><a class="dropdown-item" style="color: var(--text-main);" href="{% url 'vendor_change_password' %}">Change Password</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'vendor_profile' %}">
+                                <i class="fas fa-user-circle"></i> Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'vendor_change_password' %}">
+                                <i class="fas fa-key"></i> Change Password
+                            </a>
+                        </li>
                         <li>
                             <hr class="dropdown-divider" style="border-color: var(--border-color);">
                         </li>
-                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
+                        <li>
+                            <a class="dropdown-item text-danger font-weight-bold" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -768,6 +891,32 @@
                 showMessage("Error", "An error occurred.");
             });
         }
+
+        function openMediaModal(url, type) {
+            const container = document.getElementById('mediaContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            if (type === 'image') {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'img-fluid rounded shadow-sm';
+                img.style.maxHeight = '600px';
+                img.style.objectFit = 'contain';
+                container.appendChild(img);
+            } else {
+                const video = document.createElement('video');
+                video.src = url;
+                video.controls = true;
+                video.autoplay = true;
+                video.className = 'w-100 rounded shadow-sm';
+                video.style.maxHeight = '600px';
+                container.appendChild(video);
+            }
+            
+            var myModal = new bootstrap.Modal(document.getElementById('mediaModal'));
+            myModal.show();
+        }
     </script>
 
     <!-- Request Attribute Modal -->
@@ -812,7 +961,21 @@
             </div>
         </div>
     </div>
-    </script>
+    <div class="modal fade" id="mediaModal" tabindex="-1" aria-hidden="true" style="z-index: 2000;">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px;">
+                 <div class="modal-header p-3 d-flex align-items-center" style="border-bottom: 1px solid var(--border-color);">
+                     <h5 class="modal-title fw-bold" style="color: var(--text-main); letter-spacing: 0.5px;">Review Media</h5>
+                     <button type="button" class="btn p-0 d-flex align-items-center justify-content-center" data-bs-dismiss="modal" aria-label="Close" style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-body); color: var(--text-main); transition: all 0.2s ease; border: 1px solid var(--border-color);">
+                         <i class="fas fa-times"></i>
+                     </button>
+                 </div>
+                 <div class="modal-body p-0 text-center d-flex align-items-center justify-content-center" style="min-height: 400px; background-color: var(--bg-body); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
+                     <div id="mediaContainer" class="w-100 h-100 d-flex align-items-center justify-content-center p-4"></div>
+                 </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

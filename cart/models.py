@@ -52,10 +52,8 @@ class OrderItem(SoftDeleteModel):
 class Shipment(SoftDeleteModel):
     STATUS_CHOICES = (
         ('pending', 'Pending'),
-        ('shipped', 'Shipped'),
+        ('in_transit', 'In Transit'),
         ('delivered', 'Delivered'),
-        ('cancelled', 'Cancelled'),
-        ('returned', 'Returned'),
     )
     order_item = models.OneToOneField(OrderItem, on_delete=models.CASCADE, related_name='shipment')
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)

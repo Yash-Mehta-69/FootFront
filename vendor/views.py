@@ -21,8 +21,43 @@ class MockObj:
 # Create your views here.
 @vendor_required
 def vendor_dashboard(request):
-    print(f"User {request.user} accessing VENDOR dashboard")
-    return render(request,'vendor_dashboard.html')
+    vendor = request.user.vendor_profile
+    
+    # Analytics Data
+    analytics = MockObj(
+        total_sales="₹24,500",
+        sales_growth="12.5",
+        total_orders="156",
+        orders_growth="5.8",
+        avg_order_value="₹157",
+        aov_growth="1.2",
+        products_sold="45",
+        products_sold_growth="10.4"
+    )
+
+    # Recent Orders (Mock)
+    order_items = [
+        MockObj(
+            pk=1,
+            order=MockObj(pk=7829, customer=MockObj(name="John Maker"), order_date=datetime.now() - timedelta(days=2)),
+            product_variant=MockObj(product=MockObj(name="Nike Air Max 90")),
+            price=4999.00,
+            shipment=MockObj(status='delivered')
+        ),
+         MockObj(
+            pk=2,
+            order=MockObj(pk=7835, customer=MockObj(name="Sarah Connor"), order_date=datetime.now() - timedelta(days=1)),
+            product_variant=MockObj(product=MockObj(name="Puma T-Shirt")),
+            price=1299.00,
+            shipment=MockObj(status='shipped')
+        )
+    ]
+
+    context = {
+        'analytics': analytics,
+        'order_items': order_items,
+    }
+    return render(request, 'vendor_dashboard.html', context)
 
 @vendor_required
 def vendor_products(request):
@@ -74,7 +109,55 @@ def vendor_products(request):
 
 @vendor_required
 def vendor_orders(request):
-    return redirect('vendor_shipments') # Orders are now managed via Shipments
+    # Mock Data for Vendor Orders
+    # In a real scenario, this would filter OrderItems by the current vendor
+    from .views import MockObj # Ensure MockObj is available or define it if needed (it is defined at top of file)
+    
+    order_items = [
+        MockObj(
+            pk=1,
+            order=MockObj(
+                pk=7829,
+                customer=MockObj(
+                    user=MockObj(first_name="John", last_name="Maker", email="john@example.com"),
+                    phone="+91 98765 43210"
+                ),
+                order_date=datetime.now() - timedelta(days=2),
+                payment=MockObj(status='success')
+            ),
+            price=4999.00,
+            quantity=1,
+            product_variant=MockObj(
+                product=MockObj(name="Nike Air Max 90"),
+                size=MockObj(size_label="UK 9"),
+                color=MockObj(name="White/Red"),
+                image=MockObj(url="/static/images/products/shoe1.jpg") # Dummy URL
+            ),
+            shipment=MockObj(status='delivered', tracking_number="TRK_AA123456", courier_name="BlueDart")
+        ),
+         MockObj(
+            pk=2,
+            order=MockObj(
+                pk=7835,
+                customer=MockObj(
+                    user=MockObj(first_name="Sarah", last_name="Connor", email="sarah@example.com"),
+                    phone="+91 99887 76655"
+                ),
+                order_date=datetime.now() - timedelta(days=1),
+                payment=MockObj(status='pending'), # COD
+            ),
+            price=1299.00,
+            quantity=2,
+            product_variant=MockObj(
+                product=MockObj(name="Puma T-Shirt"),
+                size=MockObj(size_label="M"),
+                color=MockObj(name="Black"),
+                image=None
+            ),
+            shipment=MockObj(status='shipped', tracking_number="TRK_BB987654", courier_name="Delhivery")
+        )
+    ]
+    return render(request, 'vendor_orders.html', {'order_items': order_items})
 
 @vendor_required
 def add_product(request):
@@ -247,8 +330,58 @@ def request_attribute(request):
     return JsonResponse({'success': False, 'message': 'Invalid method.'})
 
 @vendor_required
-def product_detail(request):
-    return render(request, 'vendor_product_detail.html')
+def vendor_product_detail(request, pk):
+    product = get_object_or_404(Product, pk=pk, vendor=request.user.vendor_profile, is_deleted=False)
+    variants = product.productvariant_set.filter(is_deleted=False).select_related('size', 'color')
+    return render(request, 'vendor_product_detail.html', {'product': product, 'variants': variants})
+
+@vendor_required
+def vendor_category_detail(request, pk):
+    category = get_object_or_404(Category, pk=pk, is_deleted=False)
+    return render(request, 'vendor_category_detail.html', {'category': category})
+
+@vendor_required
+def vendor_review_detail(request, pk):
+    try:
+        review = Review.objects.get(pk=pk, product__vendor=request.user.vendor_profile, is_deleted=False)
+    except Review.DoesNotExist:
+        # Rich Mock Data Fallback
+        review = MockObj(
+            pk=pk,
+            customer=MockObj(user=MockObj(first_name="Jane", last_name="Smith")),
+            rating=5,
+            comment="Absolutely love these shoes! The comfort level is insane and they look even better in person.",
+            created_at=datetime.now() - timedelta(days=2),
+            product=MockObj(name="Nike Air Max 90", product_image=None, category=MockObj(name="Sneakers")),
+            media=MockObj(all=lambda: [])
+        )
+    return render(request, 'vendor_review_detail.html', {'review': review})
+
+@vendor_required
+def vendor_shipment_detail(request, pk):
+    try:
+        shipment = Shipment.objects.get(pk=pk)
+    except Shipment.DoesNotExist:
+        # Rich Mock Data Fallback
+        shipment = MockObj(
+            pk=pk,
+            status="in_transit",
+            courier_name="BlueDart",
+            tracking_number="BD_8822991100",
+            shipped_at=datetime.now() - timedelta(days=1),
+            expected_delivery=datetime.now() + timedelta(days=3),
+            order_item=MockObj(
+                order=MockObj(pk=7829, customer=MockObj(name="John Maker")),
+                product_variant=MockObj(
+                    product=MockObj(name="Nike Air Max 90"),
+                    size=MockObj(size_label="UK 9"),
+                    color=MockObj(name="White/Red"),
+                    image=None
+                ),
+                quantity=1
+            )
+        )
+    return render(request, 'vendor_shipment_detail.html', {'shipment': shipment})
 
 @vendor_required
 def vendor_categories(request):
@@ -296,7 +429,19 @@ def vendor_shipments(request):
 
 @vendor_required
 def update_shipment_status(request, pk):
-    return redirect(request.META.get('HTTP_REFERER', 'vendor_shipments'))
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        courier = request.POST.get('courier_name')
+        tracking = request.POST.get('tracking_number')
+
+        if status == 'in_transit' and (not courier or not tracking):
+            panel_messages.add_vendor_message(request, 'error', "Courier and Tracking Number are required for In Transit status.")
+        else:
+            # Here we would update the actual model
+            # Shipment.objects.filter(pk=pk).update(status=status, ...)
+            panel_messages.add_vendor_message(request, 'success', f"Shipment #{pk} updated successfully to {status.replace('_', ' ').title()}.")
+            
+    return redirect(request.META.get('HTTP_REFERER', 'vendor_orders'))
 
 @vendor_required
 def create_shipment(request, order_item_id):

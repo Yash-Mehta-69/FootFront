@@ -21,101 +21,171 @@
                     <th scope="col">Courier</th>
                     <th scope="col">Date</th>
                     <th scope="col">Status</th>
-                    <th scope="col">Actions</th>
+                    <th scope="col" class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% if shipments %}
-                    {% for shipment in shipments %}
-                    <tr>
-                        <td><a href="#" class="text-primary-custom fw-bold">#{{ shipment.order_item.order.pk }}</a></td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <span class="fw-bold">{{ shipment.order_item.product_variant.product.name }}</span>
-                            </div>
-                             <small class="text-muted">{{ shipment.order_item.product_variant.size.size_label }} | {{ shipment.order_item.product_variant.color.name }}</small>
-                        </td>
-                        <td>{{ shipment.tracking_number }}</td>
-                        <td>{{ shipment.courier_name }}</td>
-                        <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
-                        <td>
-                            {% if shipment.status == 'delivered' %}
-                                <span class="status-badge status-active">
-                                    <i class="fas fa-check-circle"></i> Delivered
-                                </span>
-                            {% elif shipment.status == 'shipped' %}
-                                <span class="status-badge text-primary-custom">
-                                    <i class="fas fa-shipping-fast"></i> Shipped
-                                </span>
-                            {% elif shipment.status == 'pending' %}
-                                <span class="status-badge text-warning" style="color: #ffb547;">
-                                    <i class="fas fa-clock"></i> Pending
-                                </span>
-                            {% elif shipment.status == 'cancelled' %}
-                                <span class="status-badge status-inactive">
-                                    <i class="fas fa-times-circle"></i> Cancelled
-                                </span>
-                            {% elif shipment.status == 'returned' %}
-                                <span class="status-badge text-info">
-                                    <i class="fas fa-undo"></i> Returned
-                                </span>
-                            {% else %}
-                                <span class="status-badge text-muted">
-                                    {{ shipment.status|title }}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                data-bs-target="#updateStatusModal{{ shipment.pk }}">
-                                Update
-                            </button>
+                <!-- Dummy Row 1: Pending -->
+                <tr>
+                    <td><a href="#" class="text-primary-custom fw-bold">#ORD-7829</a></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <span class="fw-bold">Nike Air Max 90</span>
+                        </div>
+                        <small class="text-muted">UK 9 | White/Red</small>
+                    </td>
+                    <td><span class="text-muted">-</span></td>
+                    <td><span class="text-muted">-</span></td>
+                    <td>Jan 22, 2026</td>
+                    <td id="status-s1"><span class="badge-soft-warning">Pending</span></td>
+                    <td class="text-end">
+                        <a href="{% url 'vendor_shipment_detail' 7829 %}" class="btn-icon-soft me-1" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button type="button" class="btn-icon-soft text-primary-custom" data-bs-toggle="modal"
+                            data-bs-target="#updateShipmentModal1" title="Update Status">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
 
-                            <!-- Modal -->
-                            <div class="modal fade" id="updateStatusModal{{ shipment.pk }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main);">
-                                        <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
-                                            <h5 class="modal-title">Update Status</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(var(--invert-value));"></button>
-                                        </div>
-                                        <form method="POST" action="{% url 'update_shipment_status' shipment.pk %}">
-                                            {% csrf_token %}
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label class="form-label">New Status</label>
-                                                    <select name="status" class="form-select form-select-custom">
-                                                        <option value="pending" {% if shipment.status == 'pending' %}selected{% endif %}>Pending</option>
-                                                        <option value="shipped" {% if shipment.status == 'shipped' %}selected{% endif %}>Shipped</option>
-                                                        <option value="delivered" {% if shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
-                                                        <option value="cancelled" {% if shipment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                                                        <option value="returned" {% if shipment.status == 'returned' %}selected{% endif %}>Returned</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary-custom">Save changes</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="7">
-                            <div class="empty-state">
-                                <i class="fas fa-shipping-fast empty-state-icon"></i>
-                                <h3 class="empty-state-title">No Shipments Found</h3>
-                                <p class="empty-state-text">You don't have any active or past shipments yet. When you process orders, they will appear here.</p>
-                            </div>
-                        </td>
-                    </tr>
-                {% endif %}
+                <!-- Dummy Row 2: In Transit -->
+                <tr>
+                    <td><a href="#" class="text-primary-custom fw-bold">#ORD-7835</a></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <span class="fw-bold">Puma T-Shirt (Basic)</span>
+                        </div>
+                        <small class="text-muted">M | Black</small>
+                    </td>
+                    <td>TRK_BB987654</td>
+                    <td>Delhivery</td>
+                    <td>Jan 23, 2026</td>
+                    <td id="status-s2"><span class="badge-soft-primary">In Transit</span></td>
+                    <td class="text-end">
+                        <a href="{% url 'vendor_shipment_detail' 7835 %}" class="btn-icon-soft me-1" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button type="button" class="btn-icon-soft text-primary-custom" data-bs-toggle="modal"
+                            data-bs-target="#updateShipmentModal2" title="Update Status">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- Dummy Row 3: Delivered -->
+                <tr>
+                    <td><a href="#" class="text-primary-custom fw-bold">#ORD-7840</a></td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <span class="fw-bold">Adidas Sneakers</span>
+                        </div>
+                        <small class="text-muted">UK 10 | Blue</small>
+                    </td>
+                    <td>TRK_CC112233</td>
+                    <td>Ecom Express</td>
+                    <td>Jan 20, 2026</td>
+                     <td><span class="badge-soft-success">Delivered</span></td>
+                    <td class="text-end">
+                        <a href="{% url 'vendor_shipment_detail' 7840 %}" class="btn-icon-soft" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
             </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal 1 (Pending) -->
+<div class="modal fade" id="updateShipmentModal1" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">Update Shipment #ORD-7829</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+            </div>
+            
+            <form method="POST" action="{% url 'update_shipment_status' 7829 %}">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">New Status</label>
+                        <select name="status" class="form-select form-select-custom" id="select-status-s1" onchange="toggleTracking('s1')">
+                            <option value="pending" selected>Pending</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="delivered">Delivered</option>
+                        </select>
+                    </div>
+                    
+                    <div id="tracking-input-s1" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Courier Name <span class="text-danger">*</span></label>
+                            <input type="text" name="courier_name" class="form-control form-control-custom" id="courier-s1" placeholder="Enter Courier Name (e.g. BlueDart)">
+                        </div>
+                         <div class="mb-3">
+                            <label class="form-label fw-bold small">Tracking Number <span class="text-danger">*</span></label>
+                            <input type="text" name="tracking_number" class="form-control form-control-custom" id="tracking-s1" placeholder="Enter Tracking Number (e.g. TRK_AA112233)">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary-custom">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 2 (In Transit) -->
+<div class="modal fade" id="updateShipmentModal2" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title">Update Shipment #ORD-7835</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+            </div>
+            
+            <form method="POST" action="{% url 'update_shipment_status' 7835 %}">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-3 p-3 rounded" style="background: rgba(67, 24, 255, 0.05);">
+                        <small class="d-block text-muted">Tracking Info</small>
+                        <strong>Delhivery</strong> - <span class="font-monospace">TRK_BB987654</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">New Status</label>
+                         <select name="status" class="form-select form-select-custom">
+                            <option value="in_transit" selected>In Transit</option>
+                            <option value="delivered">Delivered</option>
+                        </select>
+                    </div>
+                </div>
+                 <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary-custom">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleTracking(id) {
+    const status = document.getElementById('select-status-' + id).value;
+    const trackingDiv = document.getElementById('tracking-input-' + id);
+    if (status === 'in_transit') {
+        trackingDiv.style.display = 'block';
+        document.getElementById('courier-' + id).required = true;
+        document.getElementById('tracking-' + id).required = true;
+    } else {
+        trackingDiv.style.display = 'none';
+        document.getElementById('courier-' + id).required = false;
+        document.getElementById('tracking-' + id).required = false;
+    }
+}
+</script>
         </table>
     </div>
 </div>

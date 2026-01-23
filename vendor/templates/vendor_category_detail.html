@@ -1,0 +1,56 @@
+{% extends 'vendor_base.html' %}
+
+{% block title %}Category Details | Vendor Panel{% endblock %}
+
+{% block header_title %}Category Details{% endblock %}
+{% block breadcrumb %}Categories / Details{% endblock %}
+
+{% block vendor_content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="custom-card">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <h5 class="card-title-custom mb-0">Category Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-4 mb-md-0 text-center">
+                        <div class="rounded overflow-hidden border mx-auto" style="width: 200px; height: 200px; background-color: var(--bg-body);">
+                             {% if category.cat_image %}
+                                <img src="{{ category.cat_image.url }}" alt="{{ category.name }}" class="w-100 h-100" style="object-fit: cover;">
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <i class="fas fa-layer-group fa-3x text-muted"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h3 class="fw-bold mb-3" style="color: var(--text-main);">{{ category.name }}</h3>
+                        
+                        <div class="mb-4">
+                            <label class="text-muted small d-block mb-1">Parent Category</label>
+                            {% if category.parent_category %}
+                                <span class="badge bg-soft-primary text-primary-custom fw-bold">{{ category.parent_category.name }}</span>
+                            {% else %}
+                                <span class="text-muted small">Top Level Category</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="text-muted small d-block mb-1">Description</label>
+                            <p style="color: var(--text-main);">{{ category.description|default:"No description provided." }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-center border-top pt-4">
+                    <a href="{% url 'vendor_categories' %}" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Categories
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

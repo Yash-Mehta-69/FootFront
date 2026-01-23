@@ -37,92 +37,68 @@
                     <th scope="col">Courier</th>
                     <th scope="col">Shipped Date</th>
                     <th scope="col">Status</th>
-                    <th scope="col">Actions</th>
+                    <th scope="col" class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% if shipments %}
-                    {% for shipment in shipments %}
-                    <tr>
-                        <td><a href="#" class="text-primary-custom fw-bold">#{{ shipment.order_item.order.pk }}</a></td>
-                        <td>{{ shipment.tracking_number }}</td>
-                        <td>{{ shipment.vendor.shopName }}</td>
-                        <td>{{ shipment.courier_name }}</td>
-                        <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
-                        <td>
-                            {% if shipment.status == 'delivered' %}
-                                <span class="status-badge status-active">
-                                    <i class="fas fa-check-circle"></i> Delivered
-                                </span>
-                            {% elif shipment.status == 'shipped' %}
-                                <span class="status-badge text-primary-custom">
-                                    <i class="fas fa-shipping-fast"></i> Shipped
-                                </span>
-                            {% elif shipment.status == 'pending' %}
-                                <span class="status-badge text-warning" style="color: #ffb547;">
-                                    <i class="fas fa-clock"></i> Pending
-                                </span>
-                            {% elif shipment.status == 'cancelled' %}
-                                <span class="status-badge status-inactive">
-                                    <i class="fas fa-times-circle"></i> Cancelled
-                                </span>
-                            {% elif shipment.status == 'returned' %}
-                                <span class="status-badge text-info">
-                                    <i class="fas fa-undo"></i> Returned
-                                </span>
-                            {% else %}
-                                <span class="status-badge text-muted">
-                                    {{ shipment.status|title }}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                                data-bs-target="#updateStatusModal{{ shipment.pk }}">
-                                Update
-                            </button>
-
-                            <!-- Modal -->
-                            <div class="modal fade" id="updateStatusModal{{ shipment.pk }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main);">
-                                        <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
-                                            <h5 class="modal-title">Update Status</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(var(--invert-value));"></button>
-                                        </div>
-                                        <form method="POST" action="{% url 'admin_update_shipment_status' shipment.pk %}">
-                                            {% csrf_token %}
-                                            <div class="modal-body">
-                                                <div class="mb-3">
-                                                    <label class="form-label">New Status</label>
-                                                    <select name="status" class="form-select form-select-custom">
-                                                        <option value="pending" {% if shipment.status == 'pending' %}selected{% endif %}>Pending</option>
-                                                        <option value="shipped" {% if shipment.status == 'shipped' %}selected{% endif %}>Shipped</option>
-                                                        <option value="delivered" {% if shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
-                                                        <option value="cancelled" {% if shipment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                                                        <option value="returned" {% if shipment.status == 'returned' %}selected{% endif %}>Returned</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary-custom">Save changes</button>
-                                            </div>
-                                        </form>
+                {% for shipment in shipments %}
+                <tr>
+                    <td><a href="#" class="text-primary-custom fw-bold">#ORD-{{ shipment.order_item.order.pk }}</a></td>
+                    <td>{{ shipment.tracking_number|default:"-" }}</td>
+                    <td>{{ shipment.vendor.shopName }}</td>
+                    <td>{{ shipment.courier_name|default:"-" }}</td>
+                    <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
+                    <td>
+                        <span class="badge-soft-{% if shipment.status == 'delivered' %}success{% elif shipment.status == 'pending' %}warning{% else %}primary{% endif %}">
+                            {{ shipment.status|title }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'detail_shipment' shipment.pk %}" class="btn-icon-soft me-1" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button type="button" class="btn-icon-soft text-primary-custom" data-bs-toggle="modal" data-bs-target="#adminUpdateShipment{{ shipment.pk }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        
+                        <!-- Modal for this shipment -->
+                        <div class="modal fade" id="adminUpdateShipment{{ shipment.pk }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">
+                                    <div class="modal-header border-bottom">
+                                        <h5 class="modal-title">Admin Update #ORD-{{ shipment.order_item.order.pk }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
                                     </div>
+                                    
+                                    <form method="POST" action="{% url 'admin_update_shipment_status' shipment.pk %}">
+                                        {% csrf_token %}
+                                        <div class="modal-body p-4 text-start">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold small">Status Override</label>
+                                                <select name="status" class="form-select form-select-custom">
+                                                    <option value="pending" {% if shipment.status == 'pending' %}selected{% endif %}>Pending</option>
+                                                    <option value="in_transit" {% if shipment.status == 'in_transit' %}selected{% endif %}>In Transit</option>
+                                                    <option value="delivered" {% if shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                                    <option value="cancelled" {% if shipment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary-custom">Save</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="7" class="text-center py-4">
-                            <h6 class="text-muted">No shipments found.</h6>
-                        </td>
-                    </tr>
-                {% endif %}
-            </tbody>
+                        </div>
+
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center p-4">No shipments found.</td>
+                </tr>
+                {% endfor %}
         </table>
     </div>
 </div>

@@ -1,0 +1,77 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Review Details | Admin Panel{% endblock %}
+
+{% block header_title %}Review Details{% endblock %}
+{% block breadcrumb %}Reviews / Details{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="custom-card">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <h5 class="card-title-custom mb-0">Review Information</h5>
+                <span class="badge bg-secondary">
+                   {{ review.rating }} <i class="fas fa-star text-warning small"></i>
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="mb-4 d-flex align-items-center">
+                     {% if review.product.product_image %}
+                        <img src="{{ review.product.product_image.url }}" class="rounded me-3 border" style="width: 60px; height: 60px; object-fit: cover;">
+                    {% endif %}
+                    <div>
+                        <h6 class="mb-1 fw-bold">{{ review.product.name }}</h6>
+                        <p class="text-muted small mb-0">Reviewed on {{ review.created_at|date:"M d, Y" }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                 <div class="mb-4">
+                     <h6 class="fw-bold mb-2">Customer</h6>
+                     <div class="d-flex align-items-center">
+                         <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px;">
+                            {{ review.customer.user.first_name|slice:":1" }}
+                        </div>
+                        <span class="">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</span>
+                     </div>
+                 </div>
+
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-2">Review Content</h6>
+                     <h6 class="mb-2">{{ review.headline }}</h6>
+                    <p class="text-muted">{{ review.comment }}</p>
+                </div>
+                
+                {% if review.media.all %}
+                <div class="mb-4">
+                     <h6 class="fw-bold mb-2">Media</h6>
+                     <div class="d-flex gap-2 flex-wrap">
+                        {% for media in review.media.all %}
+                            {% if media.file_type == 'image' %}
+                                <a href="{{ media.file_url.url }}" target="_blank">
+                                    <img src="{{ media.file_url.url }}" class="rounded border" style="width: 80px; height: 80px; object-fit: cover;">
+                                </a>
+                            {% elif media.file_type == 'video' %}
+                                <video src="{{ media.file_url.url }}" controls class="rounded border" style="width: 150px; height: 80px; object-fit: cover;"></video>
+                            {% endif %}
+                        {% endfor %}
+                     </div>
+                </div>
+                {% endif %}
+
+                <div class="mt-4 text-center">
+                    <a href="{% url 'view_reviews' %}" class="btn-back me-2">
+                        <i class="fas fa-arrow-left"></i> Back to Reviews
+                    </a>
+                    <form method="POST" action="{% url 'delete_review' review.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this review?');">Delete Review</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

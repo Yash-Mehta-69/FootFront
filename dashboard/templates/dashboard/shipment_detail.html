@@ -1,0 +1,87 @@
+{% extends 'dashboard/admin_base.html' %}
+
+{% block title %}Shipment Details | Admin Panel{% endblock %}
+
+{% block header_title %}Shipment Details{% endblock %}
+{% block breadcrumb %}Shipments / Details{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="custom-card mb-4">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <h5 class="card-title-custom mb-0">Tracking Information</h5>
+                <span class="badge bg-primary">{{ shipment.status }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="text-muted small d-block">Tracking Number</label>
+                        <h5 class="fw-bold">{{ shipment.tracking_number }}</h5>
+                        <p class="text-muted small mb-0">Courier: {{ shipment.courier_name }}</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <label class="text-muted small d-block">Estimated Delivery</label>
+                        <h5 class="fw-bold">{{ shipment.expected_delivery|date:"M d, Y" }}</h5>
+                    </div>
+                </div>
+
+                <div class="tracking-history">
+                    <h6 class="fw-bold mb-3">Timeline</h6>
+                    <div class="timeline">
+                        {% for event in shipment.history %}
+                        <div class="timeline-item pb-4 ps-4 border-start position-relative">
+                            <span class="position-absolute top-0 start-0 translate-middle rounded-circle bg-primary border border-white" style="width: 12px; height: 12px;"></span>
+                            <div class="ms-2">
+                                <h6 class="mb-0 fw-bold">{{ event.status }}</h6>
+                                <p class="text-muted small mb-1">{{ event.date|date:"M d, Y, h:i A" }}</p>
+                                <p class="small mb-0">{{ event.description }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="custom-card">
+             <div class="card-header-custom">
+                <h5 class="card-title-custom mb-0">Item & Customer Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <img src="{{ shipment.order_item.product_variant.product.product_image.url }}" class="rounded me-3 border" style="width: 60px; height: 60px; object-fit: cover;">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ shipment.order_item.product_variant.product.name }}</h6>
+                        <div class="small text-muted">
+                            Size: {{ shipment.order_item.product_variant.size.size_label }} | 
+                            Color: {{ shipment.order_item.product_variant.color.name }} |
+                            Qty: {{ shipment.order_item.quantity }}
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                         <h6 class="fw-bold mb-2">Customer</h6>
+                         <p class="mb-0 fw-bold">{{ shipment.order_item.order.customer.name }}</p>
+                         <p class="text-muted small mb-0">{{ shipment.order_item.order.customer.email }}</p>
+                         <p class="text-muted small">{{ shipment.order_item.order.customer.phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                         <h6 class="fw-bold mb-2">Shipping Address</h6>
+                         <p class="text-muted small">{{ shipment.order_item.order.shipping_address }}</p>
+                    </div>
+                </div>
+                 <div class="mt-4 text-center">
+                    <a href="{% url 'manage_shipments' %}" class="btn-back">
+                        <i class="fas fa-arrow-left"></i> Back to Shipments
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
