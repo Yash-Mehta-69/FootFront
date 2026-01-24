@@ -132,34 +132,75 @@
             transition: all 0.3s ease;
         }
 
-        /* Top Bar Styling */
         .top-bar {
-            background: rgba(255, 255, 255, 0.05);
-            /* Very subtle transparent bg for glass effect if needed, mostly handled by items */
-            backdrop-filter: blur(10px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding: 10px 0;
+            margin: 15px 0 35px 0;
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 15px;
+            z-index: 990;
         }
 
-        .page-title {
-            font-size: 14px;
+        /* Premium Breadcrumbs */
+        .breadcrumb-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .breadcrumb-item-custom {
+            display: flex;
+            align-items: center;
             color: var(--text-secondary);
-            margin-bottom: 5px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb-item-custom i {
+            font-size: 14px;
+        }
+
+        .breadcrumb-item-custom:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumb-separator {
+            color: var(--text-secondary);
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            opacity: 0.6;
+        }
+
+        .breadcrumb-current {
+            color: var(--text-main);
+            font-weight: 700;
         }
 
         .page-header {
-            font-size: 30px;
-            font-weight: 700;
+            font-size: 28px;
+            font-weight: 800;
             color: var(--text-main);
             margin: 0;
+            letter-spacing: -0.5px;
         }
 
         .top-actions {
             display: flex;
             align-items: center;
+            gap: 15px;
         }
 
         /* Theme Switcher Styles */
@@ -285,24 +326,42 @@
             cursor: pointer;
             background-color: var(--bg-card);
             padding: 5px;
-            border-radius: 50px;
+            border-radius: 50%;
             box-shadow: var(--shadow-sm);
             display: flex;
             align-items: center;
-            padding-right: 15px;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
         }
 
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            background-color: var(--primary-color);
-            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(67, 24, 255, 0.2);
+            border: 2px solid transparent;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(67, 24, 255, 0.3);
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* Card Styling for Sub-pages */
@@ -660,8 +719,8 @@
         <a href="#" class="sidebar-brand">Foot<span>Front</span></a>
 
         <div class="sidebar-menu">
-            <a href="{% url 'vendordashboard' %}"
-                class="menu-item {% if request.resolver_match.url_name == 'vendordashboard' %}active{% endif %}">
+            <a href="{% url 'vendor_dashboard' %}"
+                class="menu-item {% if request.resolver_match.url_name == 'vendor_dashboard' %}active{% endif %}">
                 <i class="fas fa-home"></i> Dashboard
             </a>
             
@@ -713,7 +772,15 @@
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="d-inline-block">
-                    <p class="page-title">Pages / {% block breadcrumb %}Dashboard{% endblock %}</p>
+                    <nav class="breadcrumb-container" aria-label="breadcrumb">
+                        <a href="{% url 'vendor_dashboard' %}" class="breadcrumb-item-custom">
+                            <i class="fas fa-home me-2"></i> Vendor
+                        </a>
+                        {% block breadcrumb %}
+                        <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+                        <span class="breadcrumb-current">Dashboard</span>
+                        {% endblock %}
+                    </nav>
                     <h1 class="page-header">{% block header_title %}Main Dashboard{% endblock %}</h1>
                 </div>
             </div>
@@ -734,8 +801,8 @@
 
                 <div class="user-profile dropdown">
                     {% if request.user.vendor_profile.profile_picture %}
-                        <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0; overflow: hidden; background: transparent;">
-                            <img src="{{ request.user.vendor_profile.profile_picture.url }}" alt="user" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ request.user.vendor_profile.profile_picture.url }}" alt="user">
                         </div>
                     {% else %}
                         <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false">
@@ -976,6 +1043,8 @@
             </div>
         </div>
     </div>
+    <!-- Global Validation Script -->
+    <script src="{% static 'js/validation.js' %}"></script>
 </body>
 
 </html>

@@ -115,46 +115,118 @@ def vendor_orders(request):
     
     order_items = [
         MockObj(
-            pk=1,
+            pk=1, # OrderItem ID
             order=MockObj(
-                pk=7829,
+                pk=7829, # Order ID
                 customer=MockObj(
-                    user=MockObj(first_name="John", last_name="Maker", email="john@example.com"),
-                    phone="+91 98765 43210"
+                    user=MockObj(first_name="John", last_name="Maker", email="j***@example.com"),
+                    phone="+91 *********10"
                 ),
                 order_date=datetime.now() - timedelta(days=2),
-                payment=MockObj(status='success')
+                payment=MockObj(status='completed', payment_method='Razorpay', razorpay_order_id='razor_O123'),
+                shipping_address=MockObj(
+                    address_line1="123, Green Park Avenue",
+                    address_line2="Sector 15",
+                    city="New Delhi",
+                    state="Delhi",
+                    postal_code="110016"
+                )
             ),
-            price=4999.00,
+            price=14999.00,
             quantity=1,
             product_variant=MockObj(
-                product=MockObj(name="Nike Air Max 90"),
+                product=MockObj(name="Nike Air Jordan 1 Low"),
                 size=MockObj(size_label="UK 9"),
-                color=MockObj(name="White/Red"),
-                image=MockObj(url="/static/images/products/shoe1.jpg") # Dummy URL
+                color=MockObj(name="Chicago Red"),
+                image=MockObj(url="/media/photos/products/p1.png")
             ),
-            shipment=MockObj(status='delivered', tracking_number="TRK_AA123456", courier_name="BlueDart")
+            shipment=MockObj(
+                pk=101, # Shipment ID
+                status='delivered', 
+                tracking_number="BD_AJ123456", 
+                courier_name="BlueDart",
+                expected_delivery=datetime.now() - timedelta(hours=5),
+                history=[
+                    MockObj(status="Delivered", date=datetime.now() - timedelta(hours=5), description="Handed over to customer."),
+                    MockObj(status="In Transit", date=datetime.now() - timedelta(days=1), description="Arrived at local hub."),
+                    MockObj(status="Shipped", date=datetime.now() - timedelta(days=2), description="Picked up by BlueDart.")
+                ]
+            )
         ),
          MockObj(
             pk=2,
             order=MockObj(
                 pk=7835,
                 customer=MockObj(
-                    user=MockObj(first_name="Sarah", last_name="Connor", email="sarah@example.com"),
-                    phone="+91 99887 76655"
+                    user=MockObj(first_name="Sarah", last_name="Connor", email="s***@example.com"),
+                    phone="+91 *********55"
                 ),
                 order_date=datetime.now() - timedelta(days=1),
-                payment=MockObj(status='pending'), # COD
+                payment=MockObj(status='pending', payment_method='COD', razorpay_order_id='-'),
+                shipping_address=MockObj(
+                    address_line1="456, Cyberdyne Systems",
+                    address_line2="Industrial Block B",
+                    city="Los Angeles",
+                    state="California",
+                    postal_code="90001"
+                )
             ),
-            price=1299.00,
-            quantity=2,
+            price=24999.00,
+            quantity=1,
             product_variant=MockObj(
-                product=MockObj(name="Puma T-Shirt"),
-                size=MockObj(size_label="M"),
-                color=MockObj(name="Black"),
+                product=MockObj(name="Adidas Yeezy Boost 350"),
+                size=MockObj(size_label="UK 8"),
+                color=MockObj(name="Onyx"),
                 image=None
             ),
-            shipment=MockObj(status='shipped', tracking_number="TRK_BB987654", courier_name="Delhivery")
+            shipment=MockObj(
+                pk=102,
+                status='in_transit', 
+                tracking_number="DL_YZ987654", 
+                courier_name="Delhivery",
+                expected_delivery=datetime.now() + timedelta(days=2),
+                history=[
+                    MockObj(status="In Transit", date=datetime.now() - timedelta(hours=2), description="In transit to destination."),
+                    MockObj(status="Shipped", date=datetime.now() - timedelta(days=1), description="Dispatched from hub.")
+                ]
+            )
+        ),
+        MockObj(
+            pk=3,
+            order=MockObj(
+                pk=7840,
+                customer=MockObj(
+                    user=MockObj(first_name="Mike", last_name="Ross", email="m***@pearson-specter.com"),
+                    phone="+91 *********44"
+                ),
+                order_date=datetime.now(),
+                payment=MockObj(status='completed', payment_method='Credit Card', razorpay_order_id='razor_O440'),
+                shipping_address=MockObj(
+                    address_line1="789, Wall Street",
+                    address_line2="Floor 42",
+                    city="Manhattan",
+                    state="New York",
+                    postal_code="10005"
+                )
+            ),
+            price=8999.00,
+            quantity=1,
+            product_variant=MockObj(
+                product=MockObj(name="Nike Pegasus 40"),
+                size=MockObj(size_label="UK 10"),
+                color=MockObj(name="Volt Green"),
+                image=None
+            ),
+            shipment=MockObj(
+                pk=103,
+                status='pending', 
+                tracking_number=None, 
+                courier_name=None,
+                expected_delivery=datetime.now() + timedelta(days=4),
+                history=[
+                    MockObj(status="Pending", date=datetime.now(), description="Awaiting pickup.")
+                ]
+            )
         )
     ]
     return render(request, 'vendor_orders.html', {'order_items': order_items})
@@ -348,7 +420,7 @@ def vendor_review_detail(request, pk):
         # Rich Mock Data Fallback
         review = MockObj(
             pk=pk,
-            customer=MockObj(user=MockObj(first_name="Jane", last_name="Smith")),
+            customer=MockObj(user=MockObj(first_name="Customer", last_name="#"+str(pk))),
             rating=5,
             comment="Absolutely love these shoes! The comfort level is insane and they look even better in person.",
             created_at=datetime.now() - timedelta(days=2),
@@ -370,13 +442,31 @@ def vendor_shipment_detail(request, pk):
             tracking_number="BD_8822991100",
             shipped_at=datetime.now() - timedelta(days=1),
             expected_delivery=datetime.now() + timedelta(days=3),
+            history=[
+                MockObj(status="In Transit", date=datetime.now() - timedelta(hours=5), description="Shipment is out for delivery."),
+                MockObj(status="Shipped", date=datetime.now() - timedelta(days=1), description="Shipment left the vendor facility."),
+                MockObj(status="Pending", date=datetime.now() - timedelta(days=1, hours=4), description="Shipment order created.")
+            ],
             order_item=MockObj(
-                order=MockObj(pk=7829, customer=MockObj(name="John Maker")),
+                order=MockObj(
+                    pk=7829, 
+                    customer=MockObj(
+                        user=MockObj(first_name="John", last_name="Maker", email="j***@example.com"),
+                        phone="+91 *********10"
+                    ),
+                    shipping_address=MockObj(
+                        address_line1="123, Green Park Avenue",
+                        address_line2="Sector 15",
+                        city="New Delhi",
+                        state="Delhi",
+                        postal_code="110016"
+                    )
+                ),
                 product_variant=MockObj(
                     product=MockObj(name="Nike Air Max 90"),
                     size=MockObj(size_label="UK 9"),
                     color=MockObj(name="White/Red"),
-                    image=None
+                    image=MockObj(url="/media/photos/products/p1.png")
                 ),
                 quantity=1
             )

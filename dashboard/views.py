@@ -5,13 +5,9 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Min, Count, Sum
 from store.decorators import admin_required
-from store.forms import CategoryForm
 from datetime import datetime, timedelta
 import firebase_admin
 from firebase_admin import auth
-import re
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from utils import panel_messages
 
@@ -50,7 +46,7 @@ def dashboard(request):
     return render(request, 'dashboard/admin_dashboard.html', context)
 
 from store.models import Customer, Category, Product, ProductVariant, Size, Color, AttributeRequest, Review
-from store.forms import CategoryForm, ProductForm, SizeForm, ColorForm
+from store.forms import CategoryForm, ProductForm, SizeForm, ColorForm, CustomerAdminForm, VendorAdminForm
 from vendor.models import Vendor
 
 @admin_required
@@ -60,62 +56,34 @@ def manage_customers(request):
 
 @admin_required
 def add_customer(request):
-    form_data = {}
-    errors = {}
-    
     if request.method == "POST":
-        form_data = request.POST.dict()
-        
-        # Validation
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        phone = request.POST.get('phone', '').strip()
-        password = request.POST.get('password', '')
-        confirm_password = request.POST.get('confirm_password', '')
-        
-        if not re.match(r'^[a-zA-Z\s]+$', first_name): errors['first_name'] = "First name must contain only letters."
-        if not re.match(r'^[a-zA-Z\s]+$', last_name): errors['last_name'] = "Last name must contain only letters."
-        
-        try:
-            validate_email(email)
-        except ValidationError:
-            errors['email'] = "Invalid email format."
-            
-        if User.objects.filter(email=email).exists():
-            errors['email'] = "Email is already registered."
-            
-        if phone and (not phone.isdigit() or len(phone) != 10):
-            errors['phone'] = "Phone number must be exactly 10 digits."
-            
-        if password != confirm_password:
-            errors['confirm_password'] = "Passwords do not match."
-            
-        if not errors:
+        form = CustomerAdminForm(request.POST)
+        if form.is_valid():
             try:
                 user = User.objects.create_user(
-                    email=email,
-                    password=password,
-                    first_name=first_name,
-                    last_name=last_name,
+                    email=form.cleaned_data['email'],
+                    password=form.cleaned_data['password'],
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name'],
                     role='customer'
                 )
                 Customer.objects.create(
                     user=user, 
-                    phone=phone,
-                    is_blocked=(request.POST.get('status', 'Active') != 'Active')
+                    phone=form.cleaned_data['phone'],
+                    is_blocked=(form.cleaned_data['status'] != 'Active')
                 )
                 panel_messages.add_admin_message(request, 'success', "Customer added successfully.")
                 return redirect('manage_customers')
             except Exception as e:
                 panel_messages.add_admin_message(request, 'error', f"Error adding customer: {e}")
+    else:
+        form = CustomerAdminForm()
         
     return render(request, 'dashboard/user_form.html', {
         'action': 'Add', 
         'role': 'Customer', 
         'return_url': 'manage_customers',
-        'form_data': form_data,
-        'errors': errors
+        'form': form
     })
 
 @admin_required
@@ -126,71 +94,42 @@ def edit_customer(request, pk):
         panel_messages.add_admin_message(request, 'error', "Customer not found.")
         return redirect('manage_customers')
 
-    form_data = None
-    errors = {}
-
     if request.method == "POST":
-        form_data = request.POST.dict()
-        
-        # Validation
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        phone = request.POST.get('phone', '').strip()
-        
-        if not re.match(r'^[a-zA-Z\s]+$', first_name): errors['first_name'] = "First name must contain only letters."
-        if not re.match(r'^[a-zA-Z\s]+$', last_name): errors['last_name'] = "Last name must contain only letters."
-        
-        try:
-            validate_email(email)
-        except ValidationError:
-            errors['email'] = "Invalid email format."
-            
-        if User.objects.filter(email=email).exclude(pk=customer.user.pk).exists():
-            errors['email'] = "Email is already in use by another user."
-
-        if phone and (not phone.isdigit() or len(phone) != 10):
-            errors['phone'] = "Phone number must be exactly 10 digits."
-
-        if not errors:
-            # Update User fields
-            customer.user.first_name = first_name
-            customer.user.last_name = last_name
-            customer.user.email = email
-            
-            # Update Customer fields
-            customer.phone = phone
-            
-            status = request.POST.get('status')
-            if status == 'Active':
-                customer.is_blocked = False
-            else:
-                customer.is_blocked = True
-                
+        form = CustomerAdminForm(request.POST, user=customer.user)
+        if form.is_valid():
             try:
-                customer.user.save()
-                customer.save()
-                panel_messages.add_admin_message(request, 'success', "Customer updated successfully.")
-                return redirect('manage_customers')
+                with transaction.atomic():
+                    # Update User fields
+                    customer.user.first_name = form.cleaned_data['first_name']
+                    customer.user.last_name = form.cleaned_data['last_name']
+                    customer.user.email = form.cleaned_data['email']
+                    customer.user.save()
+                    
+                    # Update Customer fields
+                    customer.phone = form.cleaned_data['phone']
+                    customer.is_blocked = (form.cleaned_data['status'] != 'Active')
+                    customer.save()
+                    
+                    panel_messages.add_admin_message(request, 'success', "Customer updated successfully.")
+                    return redirect('manage_customers')
             except Exception as e:
                 panel_messages.add_admin_message(request, 'error', f"Error updating customer: {e}")
-                
     else:
         # Initial Form Data
-        form_data = {
+        initial_data = {
             'first_name': customer.user.first_name,
             'last_name': customer.user.last_name,
             'email': customer.user.email,
             'phone': customer.phone,
             'status': 'Active' if not customer.is_blocked else 'Blocked'
         }
+        form = CustomerAdminForm(initial=initial_data, user=customer.user)
 
     return render(request, 'dashboard/user_form.html', {
         'action': 'Edit', 
         'role': 'Customer', 
-        'customer_obj': customer, # For read-only fields like UID
-        'form_data': form_data,
-        'errors': errors,
+        'customer_obj': customer,
+        'form': form,
         'return_url': 'manage_customers'
     })
 
@@ -241,89 +180,54 @@ def manage_vendors(request):
 
 @admin_required
 def add_vendor(request):
-    form_data = {}
-    errors = {}
-    
     if request.method == "POST":
-        form_data = request.POST.dict()
-        
-        # Validation
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        password = request.POST.get('password', '')
-        confirm_password = request.POST.get('confirm_password', '')
-        shop_name = request.POST.get('shopName', '').strip()
-        business_phone = request.POST.get('business_phone', '').strip()
-        
-        if not re.match(r'^[a-zA-Z\s]+$', first_name): errors['first_name'] = "First name must contain only letters."
-        if not re.match(r'^[a-zA-Z\s]+$', last_name): errors['last_name'] = "Last name must contain only letters."
-        
-        try:
-            validate_email(email)
-        except ValidationError:
-            errors['email'] = "Invalid email format."
-            
-        if User.objects.filter(email=email).exists(): errors['email'] = "Email already registered."
-        
-        if password != confirm_password: errors['confirm_password'] = "Passwords do not match."
-        
-        if Vendor.objects.filter(shopName=shop_name).exists(): errors['shopName'] = "Shop name is already taken."
-        
-        if not business_phone.isdigit() or len(business_phone) != 10:
-            errors['business_phone'] = "Phone number must be exactly 10 digits."
-            
-        if not errors:
+        form = VendorAdminForm(request.POST, request.FILES)
+        if form.is_valid():
             try:
                 with transaction.atomic():
                     # 1. Create User
                     user = User.objects.create_user(
-                        email=email,
-                        password=password,
-                        first_name=first_name,
-                        last_name=last_name,
+                        email=form.cleaned_data['email'],
+                        password=form.cleaned_data['password'],
+                        first_name=form.cleaned_data['first_name'],
+                        last_name=form.cleaned_data['last_name'],
                         role='vendor'
                     )
                     
                     # 2. Create Vendor Profile
                     vendor = Vendor.objects.create(
                         user=user,
-                        shopName=shop_name,
-                        shopAddress=request.POST.get('shopAddress'),
-                        business_phone=business_phone,
-                        description=request.POST.get('description'),
-                        is_blocked=(request.POST.get('status', 'Active') != 'Active')
+                        shopName=form.cleaned_data['shopName'],
+                        shopAddress=form.cleaned_data['shopAddress'],
+                        business_phone=form.cleaned_data['business_phone'],
+                        description=form.cleaned_data.get('description'),
+                        is_blocked=(form.cleaned_data['status'] != 'Active'),
+                        profile_picture=form.cleaned_data.get('profile_picture'),
+                        panCard=form.cleaned_data.get('panCard'),
+                        adharCard=form.cleaned_data.get('adharCard')
                     )
                     
-                    # Handle Files
-                    if request.FILES.get('profile_picture'):
-                        vendor.profile_picture = request.FILES['profile_picture']
-                    if request.FILES.get('panCard'):
-                        vendor.panCard = request.FILES['panCard']
-                    if request.FILES.get('adharCard'):
-                        vendor.adharCard = request.FILES['adharCard']
-                    vendor.save()
-    
                     # 3. Create Bank Details
                     BankDetail.objects.create(
                         vendor=vendor,
-                        bank_name=request.POST.get('bank_name'),
-                        account_number=request.POST.get('account_number'),
-                        ifsc_code=request.POST.get('ifsc_code'),
-                        beneficiary_name=request.POST.get('beneficiary_name')
+                        bank_name=form.cleaned_data['bank_name'],
+                        account_number=form.cleaned_data['account_number'],
+                        ifsc_code=form.cleaned_data['ifsc_code'],
+                        beneficiary_name=form.cleaned_data['beneficiary_name']
                     )
                     
                     panel_messages.add_admin_message(request, 'success', "Vendor added successfully.")
                     return redirect('manage_vendors')
             except Exception as e:
                 panel_messages.add_admin_message(request, 'error', f"Error adding vendor: {e}")
+    else:
+        form = VendorAdminForm()
 
     return render(request, 'dashboard/user_form.html', {
         'action': 'Add', 
         'role': 'Vendor', 
         'return_url': 'manage_vendors',
-        'form_data': form_data,
-        'errors': errors
+        'form': form
     })
 
 @admin_required
@@ -334,88 +238,47 @@ def edit_vendor(request, pk):
         panel_messages.add_admin_message(request, 'error', "Vendor not found.")
         return redirect('manage_vendors')
 
-    form_data = None
-    errors = {}
-
     if request.method == "POST":
-        form_data = request.POST.dict()
-        
-        # Validation
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
-        shop_name = request.POST.get('shopName', '').strip()
-        business_phone = request.POST.get('business_phone', '').strip()
-        
-        if not re.match(r'^[a-zA-Z\s]+$', first_name): errors['first_name'] = "First name must contain only letters."
-        if not re.match(r'^[a-zA-Z\s]+$', last_name): errors['last_name'] = "Last name must contain only letters."
-        
-        try:
-            validate_email(email)
-        except ValidationError:
-            errors['email'] = "Invalid email format."
-            
-        if User.objects.filter(email=email).exclude(pk=vendor.user.pk).exists():
-            errors['email'] = "Email is already in use."
-            
-        if Vendor.objects.filter(shopName=shop_name).exclude(pk=vendor.pk).exists():
-            errors['shopName'] = "Shop name is already taken."
-            
-        if not business_phone.isdigit() or len(business_phone) != 10:
-            errors['business_phone'] = "Phone number must be exactly 10 digits."
-
-        if not errors:
+        form = VendorAdminForm(request.POST, request.FILES, user=vendor.user, vendor=vendor)
+        if form.is_valid():
             try:
                 with transaction.atomic():
                     # Update User
-                    vendor.user.first_name = first_name
-                    vendor.user.last_name = last_name
-                    vendor.user.email = email
+                    vendor.user.first_name = form.cleaned_data['first_name']
+                    vendor.user.last_name = form.cleaned_data['last_name']
+                    vendor.user.email = form.cleaned_data['email']
                     vendor.user.save()
     
                     # Update Vendor
-                    vendor.shopName = shop_name
-                    vendor.shopAddress = request.POST.get('shopAddress')
-                    vendor.business_phone = business_phone
-                    vendor.description = request.POST.get('description')
-                    
-                    status = request.POST.get('status')
-                    vendor.is_blocked = (status != 'Active')
+                    vendor.shopName = form.cleaned_data['shopName']
+                    vendor.shopAddress = form.cleaned_data['shopAddress']
+                    vendor.business_phone = form.cleaned_data['business_phone']
+                    vendor.description = form.cleaned_data.get('description')
+                    vendor.is_blocked = (form.cleaned_data['status'] != 'Active')
     
-                    # Handle Files
-                    if request.FILES.get('profile_picture'):
-                        vendor.profile_picture = request.FILES['profile_picture']
-                    if request.FILES.get('panCard'):
-                        vendor.panCard = request.FILES['panCard']
-                    if request.FILES.get('adharCard'):
-                        vendor.adharCard = request.FILES['adharCard']
+                    if form.cleaned_data.get('profile_picture'):
+                        vendor.profile_picture = form.cleaned_data['profile_picture']
+                    if form.cleaned_data.get('panCard'):
+                        vendor.panCard = form.cleaned_data['panCard']
+                    if form.cleaned_data.get('adharCard'):
+                        vendor.adharCard = form.cleaned_data['adharCard']
                     vendor.save()
     
                     # Update Bank Details
-                    if hasattr(vendor, 'bankdetail'):
-                        bank = vendor.bankdetail
-                        bank.bank_name = request.POST.get('bank_name')
-                        bank.account_number = request.POST.get('account_number')
-                        bank.ifsc_code = request.POST.get('ifsc_code')
-                        bank.beneficiary_name = request.POST.get('beneficiary_name')
-                        bank.save()
-                    else:
-                        BankDetail.objects.create(
-                            vendor=vendor,
-                            bank_name=request.POST.get('bank_name'),
-                            account_number=request.POST.get('account_number'),
-                            ifsc_code=request.POST.get('ifsc_code'),
-                            beneficiary_name=request.POST.get('beneficiary_name')
-                        )
+                    bank, created = BankDetail.objects.get_or_create(vendor=vendor)
+                    bank.bank_name = form.cleaned_data['bank_name']
+                    bank.account_number = form.cleaned_data['account_number']
+                    bank.ifsc_code = form.cleaned_data['ifsc_code']
+                    bank.beneficiary_name = form.cleaned_data['beneficiary_name']
+                    bank.save()
     
                     panel_messages.add_admin_message(request, 'success', "Vendor updated successfully.")
                     return redirect('manage_vendors')
             except Exception as e:
                 panel_messages.add_admin_message(request, 'error', f"Error updating vendor: {e}")
-                
     else:
         # Initial Form Data
-        form_data = {
+        initial_data = {
             'first_name': vendor.user.first_name,
             'last_name': vendor.user.last_name,
             'email': vendor.user.email,
@@ -429,13 +292,13 @@ def edit_vendor(request, pk):
             'ifsc_code': vendor.bankdetail.ifsc_code if hasattr(vendor, 'bankdetail') else '',
             'beneficiary_name': vendor.bankdetail.beneficiary_name if hasattr(vendor, 'bankdetail') else '',
         }
+        form = VendorAdminForm(initial=initial_data, user=vendor.user, vendor=vendor)
         
     return render(request, 'dashboard/user_form.html', {
         'action': 'Edit', 
         'role': 'Vendor', 
-        'vendor_obj': vendor, # For file links
-        'form_data': form_data,
-        'errors': errors,
+        'vendor_obj': vendor,
+        'form': form,
         'return_url': 'manage_vendors'
     })
 
@@ -736,8 +599,8 @@ def detail_product(request, pk):
 @admin_required
 def manage_orders(request):
     orders = [
-        MockObj(pk=1001, customer="Alice Smith", date="2023-10-20", total="$150", status="Processing", payment_status="Paid"),
-        MockObj(pk=1002, customer="Bob Jones", date="2023-10-19", total="$220", status="Shipped", payment_status="Paid"),
+        MockObj(pk=1001, customer="Alice Smith", date="2023-10-20", total="$150", status="Processing", payment_status="completed"),
+        MockObj(pk=1002, customer="Bob Jones", date="2023-10-19", total="$220", status="Shipped", payment_status="completed"),
         MockObj(pk=1003, customer="Charlie Brown", date="2023-10-18", total="$80", status="Cancelled", payment_status="Refunded"),
     ]
     vendors = [MockObj(pk=1, shopName="Kicks Palace"), MockObj(pk=2, shopName="Sporty Shoes")]
@@ -752,7 +615,7 @@ def admin_edit_order(request, pk):
         date="2023-10-20", 
         total="$150", 
         status="Processing", 
-        payment_status="Paid"
+        payment_status="completed"
     )
     
     if request.method == "POST":
@@ -771,12 +634,12 @@ def order_detail(request, pk):
         shipping_address="123 Maple St, New York, NY 10001",
         date="2023-10-20",
         status="Processing",
-        payment_status="Paid",
+        payment_status="completed",
         subtotal="$140",
         shipping="$10",
         total="$150",
         items=[
-            MockObj(product="Nike Air Max", quantity=1, price="$140", image="/static/images/hero-shoe.png")
+            MockObj(product="Nike Air Max", quantity=1, price="$140", image="/media/photos/products/p1.png")
         ]
     )
     return render(request, 'dashboard/order_detail.html', {'order': order})
@@ -820,8 +683,24 @@ def admin_update_shipment_status(request, pk):
     try:
         if request.method == 'POST':
             status = request.POST.get('status')
-            # Simulated update
-            panel_messages.add_admin_message(request, 'success', f"Shipment #{pk} status updated to {status.replace('_', ' ').title()}.")
+            courier = request.POST.get('courier_name')
+            tracking = request.POST.get('tracking_number')
+
+            if status == 'in_transit' and (not courier or not tracking):
+                panel_messages.add_admin_message(request, 'error', "Courier and Tracking Number are required for In Transit status.")
+            else:
+                # Simulated update
+                # In a real model, you would do: 
+                # shipment = get_object_or_404(Shipment, pk=pk)
+                # shipment.status = status
+                # shipment.courier_name = courier
+                # shipment.tracking_number = tracking
+                # shipment.save()
+                
+                msg = f"Shipment #{pk} status updated to {status.replace('_', ' ').title()}."
+                if status == 'in_transit':
+                    msg += f" (Courier: {courier}, Tracking: {tracking})"
+                panel_messages.add_admin_message(request, 'success', msg)
     except Exception as e:
         panel_messages.add_admin_message(request, 'error', f"Error updating shipment: {str(e)}")
         
@@ -834,7 +713,7 @@ def detail_shipment(request, pk):
         pk=pk,
         order_item=MockObj(
             order=MockObj(pk=1001, customer=MockObj(name="Alice Smith", email="alice@example.com", phone="1234567890"), shipping_address="123 Maple St, NY"),
-            product_variant=MockObj(product=MockObj(name="Nike Air Max", product_image=MockObj(url="/static/images/hero-shoe.png")), size=MockObj(size_label="US 9"), color=MockObj(name="Red", hex_code="#FF0000"), price="150.00"),
+            product_variant=MockObj(product=MockObj(name="Nike Air Max", product_image=MockObj(url="/media/photos/products/p1.png")), size=MockObj(size_label="US 9"), color=MockObj(name="Red", hex_code="#FF0000"), price="150.00"),
             quantity=1
         ),
         tracking_number="TRK9988776655",
@@ -857,7 +736,7 @@ def manage_payments(request):
     payments = [
         MockObj(pk="PAY-12345", user="Alice Smith", amount="$150", method="Credit Card", status="Success", date="2023-10-20"),
         MockObj(pk="PAY-67890", user="Bob Jones", amount="$220", method="PayPal", status="Success", date="2023-10-19"),
-        MockObj(pk="PAY-11223", user="Charlie Brown", amount="$80", method="Credit Card", status="Refunded", date="2023-10-18"),
+        MockObj(pk="PAY-11223", user="Charlie Brown", amount="$80", method="Credit Card", status="Cancelled", date="2023-10-18"),
     ]
     return render(request, 'dashboard/manage_payments.html', {'payments': payments})
 

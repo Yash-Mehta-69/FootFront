@@ -1,9 +1,12 @@
 {% extends 'dashboard/admin_base.html' %}
 
-{% block title %}Manage Products | Admin Panel{% endblock %}
+{% block title %}Products | Admin Panel{% endblock %}
 
-{% block header_title %}Manage Products{% endblock %}
-{% block breadcrumb %}Products{% endblock %}
+{% block header_title %}Products{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<span class="breadcrumb-current">Products</span>
+{% endblock %}
 
 {% block admin_content %}
 <div class="custom-card">

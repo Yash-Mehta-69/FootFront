@@ -2,18 +2,13 @@
 
 {% block title %}Orders | Vendor Panel{% endblock %}
 
-{% block header_title %}Order Management{% endblock %}
+{% block header_title %}Orders{% endblock %}
 {% block breadcrumb %}Orders{% endblock %}
 
 {% block vendor_content %}
 <div class="custom-card">
     <div class="card-header-custom" style="align-items: center; flex-wrap: wrap; gap: 15px;">
-        <h5 class="card-title-custom">Order Management</h5>
-        <div class="btn-group" role="group" style="box-shadow: none;">
-            <button type="button" class="btn btn-outline-primary active" style="border-radius: 20px 0 0 20px;">All</button>
-            <button type="button" class="btn btn-outline-primary">Pending</button>
-            <button type="button" class="btn btn-outline-primary" style="border-radius: 0 20px 20px 0;">Completed</button>
-        </div>
+        <h5 class="card-title-custom">All Orders</h5>
     </div>
 
     <div class="table-responsive">
@@ -22,151 +17,161 @@
                 <tr>
                     <th>Order ID</th>
                     <th>Customer</th>
-                    <th>Date</th>
-                    <th>Item Price</th>
-                    <th>Payment</th>
-                    <th>Status</th>
+                    <th>Products</th>
+                    <th>Order Date</th>
+                    <th>Total</th>
+                    <th>Payment Status</th>
                     <th style="text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Row 1: Pending -->
+                {% for item in order_items %}
                 <tr>
-                    <td><span class="fw-bold">#ORD-7829</span></td>
-                    <td>John Maker</td>
-                    <td>Jan 22, 2026</td>
-                    <td class="fw-bold">₹4,999.00</td>
-                    <td><span class="badge-soft-success">Paid</span></td>
-                    <td id="status-7829"><span class="badge-soft-warning">Pending</span></td>
-                    <td style="text-align: right;">
-                        <a href="#" class="btn-icon-soft me-1" title="View Detail">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <button class="btn-icon-soft text-primary-custom" 
-                            data-bs-toggle="modal" data-bs-target="#updateStatusModal7829" title="Update Status">
-                            <i class="fas fa-edit"></i>
-                        </button>
+                    <td><span class="fw-bold text-primary-custom">#ORD-{{ item.order.pk }}</span></td>
+                    <td>
+                        <div class="fw-bold">{{ item.order.customer.user.first_name }} {{ item.order.customer.user.last_name }}</div>
+                        <div class="small text-muted">{{ item.order.customer.user.email }}</div>
                     </td>
-                </tr>
-                
-                <!-- Row 2: In Transit -->
-                <tr>
-                    <td><span class="fw-bold">#ORD-7835</span></td>
-                    <td>Sarah Connor</td>
-                    <td>Jan 23, 2026</td>
-                    <td class="fw-bold">₹1,299.00</td>
-                    <td><span class="badge-soft-warning">Pending</span></td>
-                    <td id="status-7835"><span class="badge-soft-primary">In Transit</span></td>
+                    <td>
+                        <div class="fw-bold">{{ item.product_variant.product.name }}</div>
+                        <small class="text-muted">{{ item.product_variant.size.size_label }} | {{ item.product_variant.color.name }} | Qty: {{ item.quantity }}</small>
+                    </td>
+                    <td>{{ item.order.order_date|date:"M d, Y" }}</td>
+                    <td class="fw-bold text-success-custom">₹{{ item.price }}</td>
+                    <td>
+                        <span class="badge-soft-{% if item.order.payment.status == 'completed' %}success{% elif item.order.payment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                            {{ item.order.payment.status|title }}
+                        </span>
+                    </td>
                     <td style="text-align: right;">
-                        <a href="#" class="btn-icon-soft me-1" title="View Detail">
+                        <button class="btn-icon-soft me-1" title="View Detail" data-bs-toggle="modal" data-bs-target="#orderDetailModal{{ item.pk }}">
                             <i class="fas fa-eye"></i>
-                        </a>
-                        <button class="btn-icon-soft text-primary-custom"
-                            data-bs-toggle="modal" data-bs-target="#updateStatusModal7835" title="Update Status">
+                        </button>
+                        <button class="btn-icon-soft text-primary-custom" 
+                            data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.pk }}" title="Update Status">
                             <i class="fas fa-edit"></i>
                         </button>
                     </td>
                 </tr>
 
-                 <!-- Row 3: Delivered -->
-                 <tr>
-                    <td><span class="fw-bold">#ORD-7840</span></td>
-                    <td>Mike Ross</td>
-                    <td>Jan 24, 2026</td>
-                    <td class="fw-bold">₹7,500.00</td>
-                    <td><span class="badge-soft-success">Paid</span></td>
-                    <td><span class="badge-soft-success">Delivered</span></td>
-                    <td style="text-align: right;">
-                        <a href="#" class="btn-icon-soft" title="View Detail">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </td>
-                </tr>
+                <!-- Detail Modal -->
+                <div class="modal fade" id="orderDetailModal{{ item.pk }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content custom-card p-0">
+                            <div class="modal-header border-bottom p-4">
+                                <div>
+                                    <h5 class="modal-title fw-bold">Order Details</h5>
+                                    <div class="d-flex gap-2 align-items-center mt-1">
+                                        <span class="badge bg-light-custom border fw-bold text-primary-custom">#ORD-{{ item.order.pk }}</span>
+                                        <span class="text-muted small">• {{ item.order.order_date|date:"M d, Y" }}</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <h6 class="fw-bold mb-3 px-1">Items & Tracking</h6>
+                                <div class="border rounded-3 p-3 mb-3" style="background-color: var(--bg-card);">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div style="width: 60px; height: 60px; background-color: var(--bg-light-custom); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden;">
+                                            {% if item.product_variant.image %}
+                                                <img src="{{ item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% else %}
+                                                <i class="fas fa-shoe-prints text-muted"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold">{{ item.product_variant.product.name }}</h6>
+                                                    <div class="text-muted small">Size: {{ item.product_variant.size.size_label }} • Color: {{ item.product_variant.color.name }}</div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="fw-bold text-primary-custom">₹{{ item.price }}</div>
+                                                    <div class="small text-muted">Qty: {{ item.quantity }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="p-2 rounded-2 mt-2" style="background-color: rgba(67, 24, 255, 0.05); border: 1px solid rgba(67, 24, 255, 0.1);">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <span class="badge-soft-{% if item.shipment.status == 'delivered' %}success{% elif item.shipment.status == 'pending' %}warning{% else %}primary{% endif %}">
+                                                            {{ item.shipment.status|title }}
+                                                        </span>
+                                                        {% if item.shipment.courier_name %}
+                                                        <span class="small text-muted border-start ps-2 ms-1">
+                                                            <i class="fas fa-truck me-1"></i> {{ item.shipment.courier_name }}
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if item.shipment.tracking_number %}
+                                                    <span class="font-monospace small">{{ item.shipment.tracking_number }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-top p-3">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Update Status Modal -->
+                <div class="modal fade" id="updateStatusModal{{ item.pk }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content custom-card p-0">
+                            <div class="modal-header border-bottom p-4">
+                                <h5 class="modal-title fw-bold">Update Shipment #ORD-{{ item.order.pk }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+                            </div>
+                            
+                            <form method="POST" action="{% url 'update_shipment_status' item.pk %}">
+                                {% csrf_token %}
+                                <div class="modal-body p-4">
+                                    {% if item.shipment.tracking_number %}
+                                    <div class="mb-3 p-3 rounded-3" style="background: rgba(67, 24, 255, 0.05); border: 1px solid rgba(67, 24, 255, 0.1);">
+                                        <p class="text-muted small mb-1">Active Tracking</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>{{ item.shipment.courier_name }}</strong>
+                                            <span class="font-monospace">{{ item.shipment.tracking_number }}</span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small">New Status</label>
+                                        <select name="status" class="form-select form-select-custom" id="select-status-{{ item.pk }}" onchange="toggleTracking('{{ item.pk }}')">
+                                            <option value="pending" {% if item.shipment.status == 'pending' %}selected{% endif %}>Pending</option>
+                                            <option value="in_transit" {% if item.shipment.status == 'in_transit' %}selected{% endif %}>In Transit</option>
+                                            <option value="delivered" {% if item.shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div id="tracking-input-{{ item.pk }}" style="display: none;">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small">Courier Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="courier_name" class="form-control-custom w-100" id="courier-{{ item.pk }}" placeholder="e.g. BlueDart, FedEx">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small">Tracking Number <span class="text-danger">*</span></label>
+                                            <input type="text" name="tracking_number" class="form-control-custom w-100" id="tracking-{{ item.pk }}" placeholder="e.g. TRK123456789">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-top p-3">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn-primary-custom">Update Status</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </tbody>
         </table>
-    </div>
-</div>
-
-<!-- Modal for #ORD-7829 (Pending) -->
-<div class="modal fade" id="updateStatusModal7829" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">
-            <div class="modal-header" style="border-bottom: 1px solid var(--border-color);">
-                <h5 class="modal-title">Update Shipment #ORD-7829</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
-            </div>
-            
-            <form method="POST" action="{% url 'update_shipment_status' 7829 %}">
-                {% csrf_token %}
-                <div class="modal-body p-4">
-                    <div class="mb-4">
-                        <p class="text-muted small mb-1">Current Status</p>
-                        <span class="badge-soft-warning">Pending</span>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small">New Status</label>
-                        <select name="status" class="form-select form-select-custom" id="select-status-7829" onchange="toggleTracking(7829)">
-                            <option value="pending" selected>Pending</option>
-                            <option value="in_transit">In Transit</option>
-                            <option value="delivered">Delivered</option>
-                        </select>
-                    </div>
-                    
-                    <div id="tracking-input-7829" style="display: none;">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Courier Name <span class="text-danger">*</span></label>
-                            <input type="text" name="courier_name" class="form-control form-control-custom" id="courier-7829" placeholder="Enter Courier Name (e.g. Delhivery, FedEx)">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Tracking number <span class="text-danger">*</span></label>
-                            <input type="text" name="tracking_number" class="form-control form-control-custom" id="tracking-7829" placeholder="Enter Tracking Number (e.g. TRK123456789)">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-primary-custom">Update Status</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal for #ORD-7835 (In Transit) -->
-<div class="modal fade" id="updateStatusModal7835" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title">Update Shipment #ORD-7835</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
-            </div>
-            
-            <form method="POST" action="{% url 'update_shipment_status' 7835 %}">
-                {% csrf_token %}
-                <div class="modal-body p-4">
-                    <div class="mb-3 p-3 rounded" style="background: rgba(67, 24, 255, 0.05);">
-                        <p class="text-muted small mb-1">Active Tracking</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong>BlueDart</strong>
-                            <span class="font-monospace">TRK_BB987654</span>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small">New Status</label>
-                        <select name="status" class="form-select form-select-custom">
-                            <option value="in_transit" selected>In Transit</option>
-                            <option value="delivered">Delivered</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-primary-custom">Update Status</button>
-                </div>
-            </form>
-        </div>
     </div>
 </div>
 

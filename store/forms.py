@@ -1,6 +1,6 @@
 from django import forms
 from .models import Complaint, Product, Category, Size, Color
-
+from django.core.validators import RegexValidator
 class ComplaintForm(forms.ModelForm):
     class Meta:
         model = Complaint
@@ -9,17 +9,18 @@ class ComplaintForm(forms.ModelForm):
             'subject': forms.TextInput(attrs={
                 'class': 'form-control', 
                 'placeholder': 'Subject of your issue',
-                'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'
+                'required': 'required',
+                'minlength': '5'
             }),
             'complaint_text': forms.Textarea(attrs={
                 'class': 'form-control', 
                 'placeholder': 'Describe your issue in detail...', 
                 'rows': 5,
-                'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'
+                'required': 'required',
+                'minlength': '20'
             }),
             'product': forms.Select(attrs={
                 'class': 'form-control',
-                'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'
             }),
         }
 
@@ -35,17 +36,18 @@ class ReviewForm(forms.ModelForm):
         model = Review
         fields = ['rating', 'comment']
         widgets = {
-            'rating': forms.NumberInput(attrs={'min': 1, 'max': 5, 'type': 'hidden'}),
-            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Share your thoughts about the product...'}),
+            'rating': forms.NumberInput(attrs={'min': 1, 'max': 5, 'type': 'hidden', 'required': 'required'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Share your thoughts about the product...', 'required': 'required', 'minlength': '10'}),
         }
 
 from .models import User, Customer, ShippingAddress
 
 class UserUpdateForm(forms.ModelForm):
-    phone = forms.CharField(max_length=13, required=True, widget=forms.TextInput(attrs={
+    phone = forms.CharField(max_length=10, required=True, validators=[
+        RegexValidator(r'^\d{10}$', "Phone number must be exactly 10 digits.")
+    ], widget=forms.TextInput(attrs={
         'class': 'form-control',
         'placeholder': 'Phone Number',
-        'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'
     }))
 
     class Meta:
@@ -55,12 +57,16 @@ class UserUpdateForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'First Name',
-                'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'
+                'required': 'required',
+                'data-pattern': '^[a-zA-Z\\s]+$',
+                'data-error': 'Letters only'
             }),
             'last_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Last Name',
-                'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'
+                'required': 'required',
+                'data-pattern': '^[a-zA-Z\\s]+$',
+                'data-error': 'Letters only'
             }),
         }
 
@@ -69,11 +75,11 @@ class ShippingAddressForm(forms.ModelForm):
         model = ShippingAddress
         fields = ['address_line1', 'address_line2', 'city', 'state', 'postal_code']
         widgets = {
-            'address_line1': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address Line 1', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
-            'address_line2': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address Line 2', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
-            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
-            'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'State', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
-            'postal_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Postal Code', 'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);'}),
+            'address_line1': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address Line 1', 'required': 'required'}),
+            'address_line2': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Address Line 2 (Optional)'}),
+            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'City', 'required': 'required', 'data-pattern': '^[a-zA-Z\\s]+$'}),
+            'state': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'State', 'required': 'required', 'data-pattern': '^[a-zA-Z\\s]+$'}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Postal Code', 'required': 'required', 'data-pattern': '^\\d{6}$', 'data-error': '6-digit PIN code'}),
         }
 
 
@@ -87,6 +93,8 @@ class CategoryForm(forms.ModelForm):
             'name': forms.TextInput(attrs={
                 'class': 'form-control-custom',
                 'placeholder': 'Category Name',
+                'required': 'required',
+                'data-pattern': '^[a-zA-Z\\s\\-&]+$',
             }),
             'parent_category': forms.Select(attrs={
                 'class': 'form-select-custom',
@@ -138,7 +146,11 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = ['name', 'description', 'vendor', 'category', 'gender', 'product_image', 'is_trending']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Enter product name', 'required': 'required'}),
+            'name': forms.TextInput(attrs={
+                'class': 'form-control-custom', 
+                'placeholder': 'Enter product name', 
+                'required': 'required',
+            }),
             'description': forms.Textarea(attrs={'class': 'form-control-custom', 'rows': 4, 'placeholder': 'Enter product description', 'required': 'required'}),
             'vendor': forms.Select(attrs={'class': 'form-select-custom', 'required': 'required'}),
             'category': forms.Select(attrs={'class': 'form-select-custom', 'required': 'required'}),
@@ -173,7 +185,85 @@ class ColorForm(forms.ModelForm):
             'hex_code': forms.TextInput(attrs={'class': 'form-control-custom', 'type': 'color', 'style': 'height: 40px; width: 60px; padding: 2px;', 'required': 'required'}),
         }
 
+class CustomerAdminForm(forms.Form):
+    first_name = forms.CharField(max_length=150, required=True, validators=[
+        RegexValidator(r'^[a-zA-Z\s]+$', "First name must contain only letters.")
+    ], widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'e.g. John'}))
+    
+    last_name = forms.CharField(max_length=150, required=True, validators=[
+        RegexValidator(r'^[a-zA-Z\s]+$', "Last name must contain only letters.")
+    ], widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'e.g. Doe'}))
+    
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control-custom', 'placeholder': 'name@example.com'}))
+    
+    phone = forms.CharField(max_length=10, required=True, validators=[
+        RegexValidator(r'^\d{10}$', "Phone number must be exactly 10 digits.")
+    ], widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'e.g. 9876543210'}))
+    
+    status = forms.ChoiceField(choices=[('Active', 'Active'), ('Blocked', 'Blocked')], widget=forms.Select(attrs={'class': 'form-select-custom'}))
+    
+    # Password fields only for "Add" action
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control-custom'}), required=False, min_length=6)
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control-custom'}), required=False)
 
+    def __init__(self, *args, **kwargs):
+        self.instance_user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if self.instance_user:
+            self.fields['password'].required = False
+            self.fields['confirm_password'].required = False
 
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        qs = User.objects.filter(email=email)
+        if self.instance_user:
+            qs = qs.exclude(pk=self.instance_user.pk)
+        if qs.exists():
+            raise forms.ValidationError("Email is already registered.")
+        return email
 
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', "Passwords do not match.")
+        return cleaned_data
+
+class VendorAdminForm(CustomerAdminForm):
+    shopName = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Enter shop name'}))
+    business_phone = forms.CharField(max_length=10, required=True, validators=[
+        RegexValidator(r'^\d{10}$', "Phone number must be exactly 10 digits.")
+    ], widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': '10-digit number'}))
+    shopAddress = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control-custom', 'rows': 2, 'placeholder': 'Full address'}))
+    description = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control-custom', 'rows': 3, 'placeholder': 'Shop description'}), required=False)
+    
+    profile_picture = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control-custom', 'style': 'padding: 7px;'}))
+    panCard = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control-custom', 'style': 'padding: 7px;'}))
+    adharCard = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'class': 'form-control-custom', 'style': 'padding: 7px;'}))
+    
+    bank_name = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Bank Name'}))
+    account_number = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Account Number'}))
+    ifsc_code = forms.CharField(max_length=11, required=True, validators=[
+        RegexValidator(r'^[A-Z]{4}0[A-Z0-9]{6}$', "Invalid IFSC Code (e.g. SBIN0123456)")
+    ], widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'IFSC Code'}))
+    beneficiary_name = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control-custom', 'placeholder': 'Beneficiary Name'}))
+
+    def __init__(self, *args, **kwargs):
+        self.vendor_instance = kwargs.pop('vendor', None)
+        super().__init__(*args, **kwargs)
+        if not self.vendor_instance:
+            self.fields['profile_picture'].required = True
+            self.fields['panCard'].required = True
+            self.fields['adharCard'].required = True
+
+    def clean_shopName(self):
+        shopName = self.cleaned_data.get('shopName')
+        qs = Vendor.objects.filter(shopName=shopName)
+        if self.vendor_instance:
+            qs = qs.exclude(pk=self.vendor_instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Shop name is already taken.")
+        return shopName
 

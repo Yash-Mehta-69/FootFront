@@ -1,9 +1,12 @@
 {% extends 'dashboard/admin_base.html' %}
 
-{% block title %}Manage Orders | Admin Panel{% endblock %}
+{% block title %}Orders | Admin Panel{% endblock %}
 
-{% block header_title %}Manage Orders{% endblock %}
-{% block breadcrumb %}Orders{% endblock %}
+{% block header_title %}Orders{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<span class="breadcrumb-current">Orders</span>
+{% endblock %}s
 
 {% block admin_content %}
 <div class="custom-card">
@@ -35,29 +38,27 @@
                     <th>Customer</th>
                     <th>Date</th>
                     <th>Total Amount</th>
-                    <th>Payment ID</th>
+                    <th>Payment Status</th>
                     <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Dummy Data Row 1 -->
                 <tr>
-                    <td><span class="fw-bold">#ORD-7829</span></td>
+                    <td><span class="fw-bold text-primary-custom">#ORD-7829</span></td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px;">JM</div>
                             <div>
                                 <div class="fw-bold">John Maker</div>
-                                <div class="text-muted small">john@example.com</div>
+                                <div class="text-muted small">j***@example.com</div>
                             </div>
                         </div>
                     </td>
                     <td>Jan 22, 2026</td>
-                    <td class="fw-bold">₹4,999.00</td>
+                    <td class="fw-bold">₹14,999.00</td>
                     <td>
-                        <div class="d-flex flex-column">
-                            <span class="font-monospace small">TXN_123456789</span>
-                        </div>
+                        <span class="badge-soft-success">Completed</span>
                     </td>
                     <td class="text-end">
                         <div class="d-flex gap-2 justify-content-end">
@@ -73,22 +74,20 @@
 
                 <!-- Dummy Data Row 2 -->
                 <tr>
-                    <td><span class="fw-bold">#ORD-7830</span></td>
+                    <td><span class="fw-bold text-primary-custom">#ORD-7830</span></td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px; background-color: #ffb547;">AS</div>
                             <div>
                                 <div class="fw-bold">Alice Smith</div>
-                                <div class="text-muted small">alice@example.com</div>
+                                <div class="text-muted small">a***@example.com</div>
                             </div>
                         </div>
                     </td>
                     <td>Jan 23, 2026</td>
-                    <td class="fw-bold">₹2,450.00</td>
+                    <td class="fw-bold">₹24,999.00</td>
                     <td>
-                        <div class="d-flex flex-column">
-                            <span class="font-monospace small">-</span>
-                        </div>
+                        <span class="badge-soft-warning">Pending</span>
                     </td>
                     <td class="text-end">
                         <div class="d-flex gap-2 justify-content-end">
@@ -104,22 +103,20 @@
 
                  <!-- Dummy Data Row 3 -->
                  <tr>
-                    <td><span class="fw-bold">#ORD-7831</span></td>
+                    <td><span class="fw-bold text-primary-custom">#ORD-7831</span></td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px; background-color: #ee5d50;">RJ</div>
                             <div>
                                 <div class="fw-bold">Rahul Jain</div>
-                                <div class="text-muted small">rahul.j@example.com</div>
+                                <div class="text-muted small">r***@example.com</div>
                             </div>
                         </div>
                     </td>
                     <td>Jan 23, 2026</td>
                     <td class="fw-bold">₹8,999.00</td>
                     <td>
-                        <div class="d-flex flex-column">
-                            <span class="font-monospace small">TXN_987654321</span>
-                        </div>
+                        <span class="badge-soft-success">Completed</span>
                     </td>
                     <td class="text-end">
                         <div class="d-flex gap-2 justify-content-end">
@@ -147,7 +144,7 @@
                 <div>
                     <h5 class="modal-title fw-bold">Order Details</h5>
                     <div class="d-flex gap-2 align-items-center mt-1">
-                        <span class="badge bg-light-custom border text-body">#ORD-7829</span>
+                        <span class="badge bg-light-custom border fw-bold">#ORD-7829</span>
                         <span class="text-muted small">• Jan 22, 2026</span>
                     </div>
                 </div>

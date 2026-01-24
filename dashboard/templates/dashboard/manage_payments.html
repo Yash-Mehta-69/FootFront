@@ -1,9 +1,12 @@
 {% extends 'dashboard/admin_base.html' %}
 
-{% block title %}Manage Payments | Admin Panel{% endblock %}
+{% block title %}Payments | Admin Panel{% endblock %}
 
-{% block header_title %}Manage Payments{% endblock %}
-{% block breadcrumb %}Payments{% endblock %}
+{% block header_title %}Payments{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<span class="breadcrumb-current">Payments</span>
+{% endblock %}
 
 {% block admin_content %}
 <div class="custom-card">
@@ -34,11 +37,11 @@
                     <td>
                         <span class="status-badge 
                             {% if payment.status == 'Success' %}status-active
-                            {% elif payment.status == 'Refunded' %}status-inactive
+                            {% elif payment.status == 'Cancelled' %}status-inactive
                             {% else %}status-warning{% endif %}">
                             <i class="fas 
                                 {% if payment.status == 'Success' %}fa-check-circle
-                                {% elif payment.status == 'Refunded' %}fa-undo
+                                {% elif payment.status == 'Cancelled' %}fa-times-circle
                                 {% else %}fa-exclamation-circle{% endif %}">
                             </i>
                             {{ payment.status }}

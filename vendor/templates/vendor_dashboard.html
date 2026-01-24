@@ -221,7 +221,7 @@
             <tbody>
                 {% for item in order_items %}
                 <tr>
-                    <td><span class="fw-bold">#ORD-{{ item.order.pk }}</span></td>
+                    <td><span class="fw-bold text-primary-custom">#ORD-{{ item.order.pk }}</span></td>
                     <td>{{ item.order.customer.name }}</td>
                     <td>{{ item.product_variant.product.name }}</td>
                     <td>{{ item.order.order_date|date:"M d, Y" }}</td>

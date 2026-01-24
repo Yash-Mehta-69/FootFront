@@ -3,7 +3,12 @@
 {% block title %}Customer Details | Admin Panel{% endblock %}
 
 {% block header_title %}Customer Details{% endblock %}
-{% block breadcrumb %}Customers / Details{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<a href="{% url 'manage_customers' %}" class="breadcrumb-item-custom">Manage Customers</a>
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<span class="breadcrumb-current">Customer Details</span>
+{% endblock %}
 
 {% block admin_content %}
 <div class="row">
@@ -35,10 +40,12 @@
                         <label class="text-muted small d-block">Joined Date</label>
                         <span class="fw-bold">{{ customer.user.date_joined|date:"M d, Y" }}</span>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small d-block">User ID</label>
-                        <span class="fw-bold">#{{ customer.pk }}</span>
+                    {% if customer.firebase_uid %}
+                    <div class="col-12 mt-3">
+                        <label class="text-muted small d-block">Firebase UID</label>
+                        <span class="fw-bold text-primary-custom" style="word-break: break-all;">{{ customer.firebase_uid }}</span>
                     </div>
+                    {% endif %}
                 </div>
 
                 <div class="mt-4 text-center">

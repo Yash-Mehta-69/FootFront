@@ -1,9 +1,12 @@
 {% extends 'dashboard/admin_base.html' %}
 
-{% block title %}Manage Shipments | Admin Panel{% endblock %}
+{% block title %}Shipments | Admin Panel{% endblock %}
 
-{% block header_title %}Manage Shipments{% endblock %}
-{% block breadcrumb %}Shipments{% endblock %}
+{% block header_title %}Shipments{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<span class="breadcrumb-current">Shipments</span>
+{% endblock %}
 
 {% block admin_content %}
 <div class="custom-card">
@@ -43,7 +46,8 @@
             <tbody>
                 {% for shipment in shipments %}
                 <tr>
-                    <td><a href="#" class="text-primary-custom fw-bold">#ORD-{{ shipment.order_item.order.pk }}</a></td>
+                    <!-- <td><a href="#" class="text-primary-custom fw-bold">#ORD-{{ shipment.order_item.order.pk }}</a></td> -->
+                    <td>#ORD-{{ shipment.order_item.order.pk }}</td>
                     <td>{{ shipment.tracking_number|default:"-" }}</td>
                     <td>{{ shipment.vendor.shopName }}</td>
                     <td>{{ shipment.courier_name|default:"-" }}</td>
@@ -75,12 +79,23 @@
                                         <div class="modal-body p-4 text-start">
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold small">Status Override</label>
-                                                <select name="status" class="form-select form-select-custom">
+                                                <select name="status" class="form-select form-select-custom" id="select-status-{{ shipment.pk }}" onchange="toggleTracking('{{ shipment.pk }}')">
                                                     <option value="pending" {% if shipment.status == 'pending' %}selected{% endif %}>Pending</option>
                                                     <option value="in_transit" {% if shipment.status == 'in_transit' %}selected{% endif %}>In Transit</option>
                                                     <option value="delivered" {% if shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
                                                     <option value="cancelled" {% if shipment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
                                                 </select>
+                                            </div>
+
+                                            <div id="tracking-input-{{ shipment.pk }}" style="display: {% if shipment.status == 'in_transit' %}block{% else %}none{% endif %};">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold small">Courier Name <span class="text-danger">*</span></label>
+                                                    <input type="text" name="courier_name" class="form-control form-control-custom" id="courier-{{ shipment.pk }}" value="{{ shipment.courier_name|default:'' }}" placeholder="Enter Courier Name">
+                                                </div>
+                                                 <div class="mb-3">
+                                                    <label class="form-label fw-bold small">Tracking Number <span class="text-danger">*</span></label>
+                                                    <input type="text" name="tracking_number" class="form-control form-control-custom" id="tracking-{{ shipment.pk }}" value="{{ shipment.tracking_number|default:'' }}" placeholder="Enter Tracking Number">
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="modal-footer border-top">
@@ -102,4 +117,20 @@
         </table>
     </div>
 </div>
+
+<script>
+function toggleTracking(id) {
+    const status = document.getElementById('select-status-' + id).value;
+    const trackingDiv = document.getElementById('tracking-input-' + id);
+    if (status === 'in_transit') {
+        trackingDiv.style.display = 'block';
+        document.getElementById('courier-' + id).required = true;
+        document.getElementById('tracking-' + id).required = true;
+    } else {
+        trackingDiv.style.display = 'none';
+        document.getElementById('courier-' + id).required = false;
+        document.getElementById('tracking-' + id).required = false;
+    }
+}
+</script>
 {% endblock %}

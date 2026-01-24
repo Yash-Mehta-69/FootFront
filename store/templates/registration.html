@@ -48,14 +48,14 @@
             <p class="text-muted-theme" style="font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase;">Create Signal ID</p>
         </div>
         
-        <form id="registerForm" method="POST" onsubmit="startRegAnimation(event)">
+        <form id="registerForm" method="POST" onsubmit="startRegAnimation(event)" novalidate>
             {% csrf_token %}
             <div class="row-group mb-3">
                 <div class="form-group">
-                    <input type="text" class="tech-input" id="firstName" name="firstName" placeholder="FIRST NAME" required>
+                    <input type="text" class="tech-input" id="firstName" name="firstName" placeholder="FIRST NAME" required data-pattern="^[a-zA-Z\s]+$" data-error="Letters only please">
                 </div>
                 <div class="form-group">
-                    <input type="text" class="tech-input" id="lastName" name="lastName" placeholder="LAST NAME">
+                    <input type="text" class="tech-input" id="lastName" name="lastName" placeholder="LAST NAME" data-pattern="^[a-zA-Z\s]*$" data-error="Letters only please">
                 </div>
             </div>
 
@@ -64,15 +64,15 @@
             </div>
             
             <div class="mb-3">
-                <input type="tel" class="tech-input" id="phone" name="phone" placeholder="PHONE NUMBER" required>
+                <input type="tel" class="tech-input" id="phone" name="phone" placeholder="PHONE NUMBER" required data-pattern="^\d{10}$" data-error="Exactly 10 digits">
             </div>
 
             <div class="mb-3">
-                <input type="password" class="tech-input" id="password" name="password" placeholder="PASSWORD" required>
+                <input type="password" class="tech-input" id="password" name="password" placeholder="PASSWORD" required minlength="6">
             </div>
             
             <div class="mb-4">
-                <input type="password" class="tech-input" id="confirmPassword" name="confirmPassword" placeholder="CONFIRM PASSWORD" required>
+                <input type="password" class="tech-input" id="confirmPassword" name="confirmPassword" placeholder="CONFIRM PASSWORD" required data-match="password">
             </div>
             
             <button type="submit" id="regBtn" class="btn-primary" style="width: 100%;">INITIALIZE ACCOUNT</button>

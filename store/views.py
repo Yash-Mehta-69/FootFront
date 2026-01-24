@@ -65,7 +65,7 @@ def vendor_login(request):
                     messages.error(request, 'Vendor identity not found in our records.')
                 else:
                     login(request, user)
-                    return redirect('vendordashboard')
+                    return redirect('vendor_dashboard')
             else:
                 messages.error(request, 'Access denied. Account is not registered as a vendor.')
         else:

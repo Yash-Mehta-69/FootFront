@@ -2,8 +2,12 @@
 
 {% block title %}{{ action }} Product | Admin Panel{% endblock %}
 
-{% block header_title %}{{ action }} Product{% endblock %}
-{% block breadcrumb %}Products / {{ action }}{% endblock %}
+{% block breadcrumb %}
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<a href="{% url 'manage_products' %}" class="breadcrumb-item-custom">Products</a>
+<span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+<span class="breadcrumb-current">{{ action }} Product</span>
+{% endblock %}
 
 {% block admin_content %}
 <div class="row justify-content-center">
@@ -13,7 +17,7 @@
                 <h5 class="card-title-custom">Product Information</h5>
             </div>
             
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 <div class="row g-3">
                     <!-- Basic Info -->
