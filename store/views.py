@@ -715,9 +715,9 @@ def add_review(request, product_id):
 def complaint_view(request):
     # Dummy Company Details
     company_details = {
-        'address': '123 Tech Avenue, Innovation City, CA 90210',
+        'address': 'ST.Xaviers College Ahmedabad Gujarat 380006',
         'email': 'support@footfront.com',
-        'phone': '+1 (555) 019-2834',
+        'phone': '+91 98765 43210',
         'hours': 'Mon - Fri, 9am - 6pm PST'
     }
 
@@ -728,20 +728,16 @@ def complaint_view(request):
             'answer': 'You can track your order by logging into your account and visiting the "Orders" section. You will also receive an email with a tracking link once your order ships.'
         },
         {
-            'question': 'What is your return policy?',
-            'answer': 'We offer a 30-day return policy for unmatched items. Shoes must be unworn and in original packaging. Visit our Returns page to start a return.'
-        },
-        {
-            'question': 'Do you ship internationally?',
-            'answer': 'Yes! We ship to over 50 countries worldwide. Shipping rates and times vary by location and are calculated at checkout.'
-        },
-        {
             'question': 'Are the sneakers authentic?',
             'answer': 'Absolutely. Every pair on FootFront is verified by our expert team of authenticators before being shipped to you.'
         },
          {
             'question': 'How can I change my shipping address?',
             'answer': 'If your order hasn\'t shipped yet, please contact support immediately. Once shipped, we cannot change the destination.'
+        },
+        {
+            'question': 'What payment methods do you accept?',
+            'answer': 'We accept all major payment methods including credit cards, UPI, and  NetBanking.'
         }
     ]
 
