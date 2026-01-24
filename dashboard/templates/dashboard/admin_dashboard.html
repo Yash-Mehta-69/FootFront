@@ -9,6 +9,7 @@
 {% endblock %}
 
 {% block admin_content %}
+<!-- Analytics Stats Cards -->
 <div class="row g-4 mb-4">
     <!-- Stats Card 1: Users -->
     <div class="col-12 col-sm-6 col-md-3">
@@ -18,15 +19,13 @@
                     <h6 class="text-muted mb-2">Total Users</h6>
                     <h3 style="color: var(--text-main); font-weight: 700;">{{ stats.total_users }}</h3>
                 </div>
-                <div
-                    style="background: rgba(67, 24, 255, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-color);">
+                <div class="icon-circle bg-soft-primary text-primary-custom" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-users fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i>
-                    +{{ stats.users_growth }}%</span>
-                <span style="color: var(--text-secondary); font-size: 12px;">since last month</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ stats.users_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
     </div>
@@ -39,15 +38,13 @@
                     <h6 class="text-muted mb-2">Total Products</h6>
                     <h3 style="color: var(--text-main); font-weight: 700;">{{ stats.total_products }}</h3>
                 </div>
-                <div
-                    style="background: rgba(5, 205, 153, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #05cd99;">
+                <div class="icon-circle bg-soft-success text-success" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-box fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i>
-                    +{{ stats.products_growth }}%</span>
-                <span style="color: var(--text-secondary); font-size: 12px;">since last month</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ stats.products_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
     </div>
@@ -60,15 +57,13 @@
                     <h6 class="text-muted mb-2">Total Orders</h6>
                     <h3 style="color: var(--text-main); font-weight: 700;">{{ stats.total_orders }}</h3>
                 </div>
-                <div
-                    style="background: rgba(255, 181, 71, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ffb547;">
+                <div class="icon-circle bg-soft-info text-info" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-shopping-cart fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i>
-                    +{{ stats.orders_growth }}%</span>
-                <span style="color: var(--text-secondary); font-size: 12px;">since last month</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ stats.orders_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
     </div>
@@ -81,15 +76,109 @@
                     <h6 class="text-muted mb-2">Total Revenue</h6>
                     <h3 style="color: var(--text-main); font-weight: 700;">{{ stats.total_revenue }}</h3>
                 </div>
-                <div
-                    style="background: rgba(238, 93, 80, 0.1); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ee5d50;">
+                <div class="icon-circle bg-soft-warning text-warning" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-dollar-sign fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i>
-                    +{{ stats.revenue_growth }}%</span>
-                <span style="color: var(--text-secondary); font-size: 12px;">since last month</span>
+                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ stats.revenue_growth }}%</span>
+                <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <h5 class="card-title-custom">Platform Overview</h5>
+                <select class="form-select-custom shadow-none" style="width: auto; padding: 5px 10px; font-size: 12px;">
+                    <option>This Year</option>
+                    <option>Last Year</option>
+                </select>
+            </div>
+            <div class="card-body" style="height: 300px; padding: 15px;">
+                 <canvas id="salesChart"></canvas>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    
+                    // Theme-aware colors
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    const primaryColor = '#4318ff';
+                    const textColor = isDark ? '#a3aed0' : '#2b3674';
+                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                            datasets: [{
+                                label: 'Total Revenue',
+                                data: [12000, 19000, 3000, 5000, 2000, 3000, 15000, 21000, 25000, 28000, 35000, 42000],
+                                backgroundColor: primaryColor,
+                                borderRadius: 5,
+                                barThickness: 20
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: gridColor },
+                                    ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="custom-card h-100">
+            <div class="card-header-custom">
+                <h5 class="card-title-custom">Top Performing</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-crown text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Kicks Palace</h6>
+                                <small class="text-muted" style="font-size: 11px;">Top Vendor</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-success text-success fw-bold" style="font-size: 13px;">₹1.2M</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-shoe-prints text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Nike Air Jordan</h6>
+                                <small class="text-muted" style="font-size: 11px;">Top Product</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-soft-primary text-primary-custom fw-bold">850 Sold</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -99,7 +188,7 @@
 <div class="custom-card">
     <div class="card-header-custom">
         <h5 class="card-title-custom">Recent Orders</h5>
-        <a href="{% url 'manage_orders' %}" class="btn btn-sm badge-soft-primary" style="text-decoration: none; color: var(--primary-color);">
+        <a href="{% url 'manage_orders' %}" class="btn-light-custom btn-sm">
             See all
         </a>
     </div>
@@ -113,13 +202,13 @@
                     <th>Date</th>
                     <th>Status</th>
                     <th>Amount</th>
-                    <th>Action</th>
+                    <th class="text-end">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for order in recent_orders %}
                 <tr>
-                    <td>{{ order.pk }}</td>
+                    <td><span class="fw-bold text-primary-custom">{{ order.pk }}</span></td>
                     <td>{{ order.customer_name }}</td>
                     <td>{{ order.product }}</td>
                     <td>{{ order.date }}</td>
@@ -131,9 +220,9 @@
                             {{ order.status }}
                         </span>
                     </td>
-                    <td>{{ order.amount }}</td>
-                    <td>
-                        <a href="#" class="btn-icon-soft">
+                    <td class="fw-bold">{{ order.amount }}</td>
+                    <td class="text-end">
+                        <a href="#" class="btn-icon-soft" title="View Detail">
                             <i class="fas fa-eye"></i>
                         </a>
                     </td>

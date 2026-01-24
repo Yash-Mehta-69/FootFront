@@ -12,7 +12,7 @@ def redirect_special_users(view_func):
     def wrapper_func(request, *args, **kwargs):
         if request.user.is_authenticated:
             if request.user.role == 'vendor':
-                return redirect('vendordashboard')
+                return redirect('vendor_dashboard')
             elif request.user.role == 'admin':
                 return redirect('admin_dashboard')
         return view_func(request, *args, **kwargs)
