@@ -114,6 +114,9 @@ class CategoryForm(forms.ModelForm):
             if not re.match(r'^[a-zA-Z0-9\s\-\&]+$', name):
                 raise forms.ValidationError("Category name can only contain letters, numbers, spaces, hyphens, and '&'.")
             
+            if name.isdigit():
+                raise forms.ValidationError("Category name cannot be purely numeric. Please include at least one letter.")
+            
             # Case-insensitive unique check
             # Exclude current instance if editing
             qs = Category.objects.filter(name__iexact=name, is_deleted=False)

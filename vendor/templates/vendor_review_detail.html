@@ -20,7 +20,10 @@
                     </div>
                     <div>
                         <h5 class="fw-bold mb-1" style="color: var(--text-main);">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</h5>
-                        <p class="text-muted small mb-0">{{ review.created_at|date:"M d, Y" }}</p>
+                        <div class="d-flex align-items-center gap-2">
+                            <p class="text-muted small mb-0">{{ review.created_at|date:"M d, Y" }}</p>
+                            <span class="badge bg-soft-success text-success small" style="font-size: 10px;">Verified Buyer</span>
+                        </div>
                     </div>
                 </div>
 

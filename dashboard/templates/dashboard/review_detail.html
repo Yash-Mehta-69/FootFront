@@ -16,46 +16,67 @@
                 </span>
             </div>
             <div class="card-body">
-                <div class="mb-4 d-flex align-items-center">
+                <div class="d-flex align-items-center mb-4">
                      {% if review.product.product_image %}
-                        <img src="{{ review.product.product_image.url }}" class="rounded me-3 border" style="width: 60px; height: 60px; object-fit: cover;">
+                        <div class="rounded border p-1 me-3" style="width: 70px; height: 70px; background-color: var(--bg-body);">
+                             <img src="{{ review.product.product_image.url }}" class="w-100 h-100" style="object-fit: cover; border-radius: 4px;">
+                        </div>
                     {% endif %}
                     <div>
-                        <h6 class="mb-1 fw-bold">{{ review.product.name }}</h6>
+                        <h5 class="mb-1 fw-bold">{{ review.product.name }}</h5>
                         <p class="text-muted small mb-0">Reviewed on {{ review.created_at|date:"M d, Y" }}</p>
                     </div>
                 </div>
                 
-                <hr>
+                <hr class="my-4" style="border-top: 1px dashed var(--border-color); opacity: 0.5;">
                 
-                 <div class="mb-4">
-                     <h6 class="fw-bold mb-2">Customer</h6>
-                     <div class="d-flex align-items-center">
-                         <div class="user-avatar me-2" style="width: 30px; height: 30px; font-size: 12px;">
-                            {{ review.customer.user.first_name|slice:":1" }}
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3 text-uppercase small letter-spacing-1">Customer</h6>
+                        <div class="d-flex align-items-center">
+                            {% if review.customer.user.profile_picture %}
+                                <img src="{{ review.customer.user.profile_picture.url }}" class="rounded-circle me-2" width="40" height="40" style="object-fit:cover; border: 2px solid var(--border-color);">
+                            {% else %}
+                                <div class="rounded-circle bg-soft-primary d-flex align-items-center justify-content-center me-2 text-primary-custom fw-bold" style="width:40px; height:40px;">
+                                    {{ review.customer.user.first_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div class="fw-bold">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</div>
+                                <span class="badge bg-soft-success text-success small" style="font-size: 10px;">Verified Buyer</span>
+                            </div>
                         </div>
-                        <span class="">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</span>
-                     </div>
-                 </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3 text-uppercase small letter-spacing-1">Rating</h6>
+                        <div class="text-warning fs-5">
+                            {% with ''|center:5 as range %}
+                            {% for _ in range %}
+                                <i class="{% if forloop.counter <= review.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
 
-                <div class="mb-4">
-                    <h6 class="fw-bold mb-2">Review Content</h6>
-                     <h6 class="mb-2">{{ review.headline }}</h6>
-                    <p class="text-muted">{{ review.comment }}</p>
+                <div class="mt-4 p-3 rounded" style="background-color: var(--bg-body); border-left: 4px solid var(--primary-color);">
+                    <h6 class="fw-bold mb-2">Review Comment</h6>
+                    <p class="mb-0 fs-5 font-italic" style="color: var(--text-main);">"{{ review.comment }}"</p>
                 </div>
                 
                 {% if review.media.all %}
-                <div class="mb-4">
-                     <h6 class="fw-bold mb-2">Media</h6>
-                     <div class="d-flex gap-2 flex-wrap">
+                <div class="mt-4">
+                     <h6 class="fw-bold mb-3 text-uppercase small letter-spacing-1">Media Attachment</h6>
+                     <div class="d-flex gap-3 flex-wrap">
                         {% for media in review.media.all %}
-                            {% if media.file_type == 'image' %}
-                                <a href="{{ media.file_url.url }}" target="_blank">
-                                    <img src="{{ media.file_url.url }}" class="rounded border" style="width: 80px; height: 80px; object-fit: cover;">
-                                </a>
-                            {% elif media.file_type == 'video' %}
-                                <video src="{{ media.file_url.url }}" controls class="rounded border" style="width: 150px; height: 80px; object-fit: cover;"></video>
-                            {% endif %}
+                            <div class="position-relative" style="cursor: pointer;" onclick="openMediaModal('{{ media.file.url }}', '{{ media.media_type }}')">
+                                {% if media.media_type == 'image' %}
+                                    <img src="{{ media.file.url }}" class="rounded border shadow-sm hover-scale" style="width: 100px; height: 100px; object-fit: cover;">
+                                {% else %}
+                                    <video src="{{ media.file.url }}" class="rounded border shadow-sm hover-scale" style="width: 160px; height: 100px; object-fit: cover;"></video>
+                                    <div class="position-absolute top-50 start-50 translate-middle text-white"><i class="fas fa-play-circle fa-2x"></i></div>
+                                {% endif %}
+                            </div>
                         {% endfor %}
                      </div>
                 </div>

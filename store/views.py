@@ -675,12 +675,6 @@ def add_review(request, product_id):
                 messages.error(request, 'Only customers can add reviews.')
                 return redirect('product_detail', slug=product.slug)
 
-            # Check if user already reviewed
-            # existing_review = Review.objects.filter(product=product, customer=customer, is_deleted=False).first()
-            # if existing_review:
-            #     messages.error(request, 'You have already reviewed this product.')
-            #     return redirect('product_detail', slug=product.slug)
-
             form = ReviewForm(request.POST, request.FILES)
             if form.is_valid():
                 review = form.save(commit=False)

@@ -31,11 +31,16 @@
                         <td class="fw-bold">{{ review.product.name }}</td>
                         <td>
                             <div class="d-flex align-items-center">
-                                <i class="fas fa-user-circle me-2 text-muted"></i>
-                                <div>
-                                    <div class="fw-bold">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</div>
-                                    <!-- <small class="text-muted">{{ review.customer.user.email }}</small> -->
-                                </div>
+                                 {% if review.customer.user.profile_picture %}
+                                    <img src="{{ review.customer.user.profile_picture.url }}" class="rounded-circle me-2" width="30" height="30" style="object-fit:cover;">
+                                 {% else %}
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2 text-white" style="width:30px; height:30px; font-size:12px;">
+                                        {{ review.customer.user.first_name|first|upper }}
+                                    </div>
+                                 {% endif %}
+                                 <div>
+                                     <div class="fw-bold">{{ review.customer.user.first_name }} {{ review.customer.user.last_name }}</div>
+                                 </div>
                             </div>
                         </td>
                         <td>
@@ -52,7 +57,7 @@
                         </td>
                         <td>
                             {% if review.media.all %}
-                            <div class="d-flex gap-1" style="overflow-x: auto; max-width: 150px;">
+                            <div class="d-flex flex-wrap gap-1" style="max-width: 180px;">
                                 {% for media in review.media.all %}
                                     <div style="position: relative; width: 40px; height: 40px; cursor: pointer;" onclick="openMediaModal('{{ media.file.url }}', '{{ media.media_type }}')">
                                         {% if media.media_type == 'image' %}
