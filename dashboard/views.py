@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Min, Count, Sum
 from store.decorators import admin_required
@@ -804,22 +805,18 @@ def admin_profile(request):
 @admin_required
 def change_password(request):
     if request.method == "POST":
-        current_password = request.POST.get('current_password')
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
-
-        if not request.user.check_password(current_password):
-            messages.error(request, "Incorrect current password.")
-        elif new_password != confirm_password:
-            messages.error(request, "New passwords do not match.")
-        else:
-            request.user.set_password(new_password)
-            request.user.save()
-            update_session_auth_hash(request, request.user)  # Important!
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
             messages.success(request, "Password changed successfully.")
             return redirect('admin_profile')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = PasswordChangeForm(request.user)
 
-    return render(request, 'dashboard/change_password.html')
+    return render(request, 'dashboard/change_password.html', {'form': form})
 
 @admin_required
 def manage_requests(request):

@@ -1,6 +1,20 @@
 from django import forms
-from .models import Complaint, Product, Category, Size, Color
+from .models import Complaint, Product, Category, Size, Color, User, Customer, ShippingAddress
+from vendor.models import Vendor
 from django.core.validators import RegexValidator
+from django.contrib.auth.forms import PasswordChangeForm
+
+class CustomerPasswordChangeForm(PasswordChangeForm):
+    def clean_old_password(self):
+        """
+        Allows customers who don't have a local password (Firebase users) 
+        to bypass the old password check.
+        """
+        old_password = self.cleaned_data.get("old_password")
+        if not self.user.has_usable_password():
+            return old_password
+        return super().clean_old_password()
+
 class ComplaintForm(forms.ModelForm):
     class Meta:
         model = Complaint

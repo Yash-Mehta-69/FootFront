@@ -79,7 +79,13 @@ def password_reset_request(request, template_name, role_check):
         if password_reset_form.is_valid():
             data = password_reset_form.cleaned_data['email']
             print(f"DEBUG: Attempting password reset for email: {data} with role: {role_check}")
-            associated_users = User.objects.filter(Q(email=data) & Q(role=role_check))
+            
+            # Broaden check for admin: role='admin' OR is_staff OR is_superuser
+            if role_check == 'admin':
+                associated_users = User.objects.filter(Q(email=data) & (Q(role='admin') | Q(is_staff=True) | Q(is_superuser=True)))
+            else:
+                associated_users = User.objects.filter(Q(email=data) & Q(role=role_check))
+
             if associated_users.exists():
                 print(f"DEBUG: Found {associated_users.count()} user(s).")
                 for user in associated_users:
@@ -97,21 +103,24 @@ def password_reset_request(request, template_name, role_check):
                     }
                     email = render_to_string(email_template_name, c)
                     try:
-                        print("DEBUG: Calling send_mail...")
                         send_mail(subject, email, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
                         print("DEBUG: send_mail called successfully")
-                    except BadHeaderError:
-                        print("DEBUG: BadHeaderError")
-                        return HttpResponse('Invalid header found.')
                     except Exception as e:
                          print(f"DEBUG: Error sending email: {e}")
+                         messages.error(request, 'System error while transmitting reset link.')
+                         return render(request, template_name, {"form": password_reset_form})
                 
                 messages.success(request, 'A message with reset instructions has been sent to your inbox.')
                 return redirect(request.path)
             else:
                  print(f"DEBUG: No user found with email {data} and role {role_check}")
-                 messages.error(request, 'This email is not registered as a ' + role_check + '.')
-    return render(request, template_name)
+                 messages.error(request, f'This email is not registered as a {role_check}.')
+        else:
+            messages.error(request, 'Invalid email format.')
+    else:
+        password_reset_form = PasswordResetForm()
+        
+    return render(request, template_name, {"form": password_reset_form})
 
 @redirect_special_users
 def admin_forgot_password(request):
@@ -590,28 +599,57 @@ def api_search(request):
     
     return JsonResponse({'products': results})
 
+from .forms import CustomerPasswordChangeForm
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
 @login_required(login_url='login')
 def change_password(request):
+    user = request.user
+    is_customer = hasattr(user, 'customer_profile')
+    
     if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
+        if is_customer:
+            # All users now see "Old Password" field via CustomerPasswordChangeForm
+            form = CustomerPasswordChangeForm(user, request.POST)
+        else:
+            # Admins/Vendors use standard PasswordChangeForm
+            form = PasswordChangeForm(user, request.POST)
+            
         if form.is_valid():
+            new_password = form.cleaned_data['new_password1']
+            
+            if is_customer:
+                customer = user.customer_profile
+                if customer.firebase_uid:
+                    try:
+                        initialize_firebase()
+                        # Update Firebase Password
+                        auth.update_user(customer.firebase_uid, password=new_password)
+                    except Exception as e:
+                        print(f"DEBUG: Firebase Password Update Error: {e}")
+                        messages.error(request, f"Identity provider synchronization failed: {parse_firebase_error(e)}")
+                        return render(request, 'change_password.html', {'form': form})
+
+            # Save Django password
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
-            messages.success(request, 'Your password was successfully updated!')
+            messages.success(request, 'Your password was successfully updated across all protocols.')
             return redirect('profile_settings')
         else:
             messages.error(request, 'Please correct the error below.')
     else:
-        form = PasswordChangeForm(request.user)
-        # Add styles to form fields
-        for field in form.fields:
-            form.fields[field].widget.attrs.update({
-                'class': 'form-control',
-                'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);' 
-            })
+        if is_customer:
+            form = CustomerPasswordChangeForm(user)
+        else:
+            form = PasswordChangeForm(user)
+            
+    # Add styles to form fields (Always apply, even on errors/re-render)
+    for field in form.fields:
+        form.fields[field].widget.attrs.update({
+            'class': 'form-control',
+            'style': 'background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);' 
+        })
             
     return render(request, 'change_password.html', {'form': form})
 
