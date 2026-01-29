@@ -305,13 +305,14 @@ def logout_view(request):
     return redirect('home')
 
 @csrf_exempt
-@redirect_special_users
 def forgot_password_view(request):
-    if request.user.is_authenticated:
-        return redirect('home')
-
     if request.method == 'POST':
         try:
+            initialize_firebase()
+            # Check if user is already logged in for API calls
+            if request.user.is_authenticated:
+                 return JsonResponse({'status': 'error', 'message': 'You are already logged in. Please logout to reset password.'}, status=403)
+
             body = json.loads(request.body)
             email = body.get('email')
             if not email:
@@ -319,8 +320,15 @@ def forgot_password_view(request):
             if not User.objects.filter(email=email).exists():
                 return JsonResponse({'status': 'error', 'message': 'This email is not registered in our system.'}, status=404)
             return JsonResponse({'status': 'success'})
+        except json.JSONDecodeError:
+             return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': parse_firebase_error(e)}, status=500)
+    
+    # GET Request
+    if request.user.is_authenticated:
+        return redirect('home')
+        
     return render(request, 'forgot_password.html')
 
 @login_required(login_url='login')
