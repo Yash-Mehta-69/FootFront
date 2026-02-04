@@ -3,11 +3,7 @@
     <div class="d-flex justify-content-between align-items-center w-100">
         <div class="hud-top-left">
             <span class="text-accent glitch-text-small" style="letter-spacing: 4px; font-size: 0.65rem;">[//_LOGISTICS_PROTO_V9]</span>
-            {% if order.id == "001234" or order.id == "001235" or order.id == "000123" %}
-                <h2 class="modal-title-hud">SECURE_ORDER_ID: #{{ order.id }}</h2>
-            {% else %}
-                <h2 class="modal-title-hud">SECURE_ORDER_ID: #{{ order.id|stringformat:"06d" }}</h2>
-            {% endif %}
+            <h2 class="modal-title-hud">SECURE_ORDER_ID: #{{ order.id|stringformat:"06d" }}</h2>
         </div>
         <button type="button" class="btn-close-tech" onclick="closeOrderModal()"><i class="fas fa-times"></i></button>
     </div>
@@ -20,13 +16,8 @@
             <div class="glass-panel-sub hud-card" style="height: 100%;">
                 <div class="hud-tag">DESTINATION_PROTO</div>
                 <div class="mt-3" style="font-size: 0.95rem; line-height: 1.6; color: var(--color-text); font-family: monospace;">
-                    {% if order.id == "001234" or order.id == "001235" or order.id == "000123" %}
-                        <i class="fas fa-map-marker-alt text-accent me-2"></i> 45 CYBER LANE, SECTOR 7<br>
-                        <span class="ps-4">NEO TOKYO, KANTO 100-0001</span>
-                    {% else %}
-                        <i class="fas fa-map-marker-alt text-accent me-2"></i> {{ order.shipping_address.address_line1|upper }}<br>
-                        <span class="ps-4">{{ order.shipping_address.city|upper }} {{ order.shipping_address.postal_code }}</span>
-                    {% endif %}
+                    <i class="fas fa-map-marker-alt text-accent me-2"></i> {{ order.shipping_address.address_line1|upper }}<br>
+                    <span class="ps-4">{{ order.shipping_address.city|upper }} {{ order.shipping_address.postal_code }}</span>
                 </div>
             </div>
         </div>
@@ -35,7 +26,7 @@
                 <div>
                    <div class="hud-tag">VALUATION_CREDITS</div>
                    <div class="text-accent mt-3" style="font-size: 1.8rem; font-weight: 800; font-family: 'Oswald';">
-                       ₹{% if order.id == "001234" %}249.00{% elif order.id == "001235" %}189.50{% elif order.id == "000123" %}438.50{% else %}{{ order.total_amount }}{% endif %}
+                       ₹{{ order.total_amount }}
                    </div>
                 </div>
                 <div style="font-family: monospace; font-size: 0.7rem; color: var(--color-text-muted); text-align: right;">STATUS: ENCRYPTED_SETTLED</div>
@@ -45,98 +36,6 @@
 
     <!-- Vendor Grouped Items Section -->
     <div class="logistics-grid">
-        {% if order.id == "001234" or order.id == "001235" or order.id == "000123" %}
-            <!-- Demo Orders with Expanded Data -->
-            <div class="shipment-group mb-5">
-                <div class="vendor-header-hud">
-                    <span class="vendor-id">SRC_VNDR: [HYPER_LABS_INC]</span>
-                    <span class="vendor-status"><i class="fas fa-circle-notch fa-spin me-2"></i>_ACTIVE_TRACKING</span>
-                </div>
-                
-                <div class="shipment-item-hud glass-panel-sub p-4 mb-3">
-                    <div class="row g-4 align-items-center">
-                        <div class="col-lg-5">
-                            <div class="d-flex align-items-center gap-4">
-                                <div class="item-visual-hud">
-                                    <i class="fas fa-shoe-prints"></i>
-                                    <div class="visual-scanner"></div>
-                                </div>
-                                <div>
-                                    <div class="item-name-hud">CYBER RUNNER 2077</div>
-                                    <div class="item-spec-hud">SPEC: US 10.5 / NEON_GREEN_EDITION</div>
-                                    <div class="item-qty-hud">QTY: 01_UNIT</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-7">
-                            <!-- Stage-wise Progress Bar -->
-                            <div class="stage-tracker">
-                                <div class="stage-item completed">
-                                    <div class="stage-marker"><i class="fas fa-check"></i></div>
-                                    <div class="stage-label">PROCESSING</div>
-                                </div>
-                                <div class="stage-connector active"></div>
-                                <div class="stage-item active">
-                                    <div class="stage-marker"><i class="fas fa-truck-fast"></i></div>
-                                    <div class="stage-label">SHIPPED</div>
-                                </div>
-                                <div class="stage-connector"></div>
-                                <div class="stage-item">
-                                    <div class="stage-marker"><i class="fas fa-box-check"></i></div>
-                                    <div class="stage-label">DELIVERED</div>
-                                </div>
-                            </div>
-                            <div class="tracking-meta-hud text-end mt-2">ETA: 24_HRS | HUB: TOKYO_07</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="shipment-group mb-5">
-                <div class="vendor-header-hud">
-                    <span class="vendor-id">SRC_VNDR: [NEBULA_DESIGN]</span>
-                    <span class="vendor-status">_PACKAGING_STAGED</span>
-                </div>
-                
-                <div class="shipment-item-hud glass-panel-sub p-4">
-                    <div class="row g-4 align-items-center">
-                        <div class="col-lg-5">
-                            <div class="d-flex align-items-center gap-4">
-                                <div class="item-visual-hud secondary">
-                                    <i class="fas fa-tshirt"></i>
-                                    <div class="visual-scanner"></div>
-                                </div>
-                                <div>
-                                    <div class="item-name-hud">TECHWEAR PARKA v2</div>
-                                    <div class="item-spec-hud">SPEC: XL_OVERSIZE / MATTE_BLACK</div>
-                                    <div class="item-qty-hud">QTY: 01_UNIT</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-7">
-                            <!-- Stage-wise Progress Bar -->
-                            <div class="stage-tracker">
-                                <div class="stage-item active">
-                                    <div class="stage-marker"><i class="fas fa-circle-notch fa-spin"></i></div>
-                                    <div class="stage-label">PROCESSING</div>
-                                </div>
-                                <div class="stage-connector"></div>
-                                <div class="stage-item">
-                                    <div class="stage-marker"><i class="fas fa-truck-fast"></i></div>
-                                    <div class="stage-label">SHIPPED</div>
-                                </div>
-                                <div class="stage-connector"></div>
-                                <div class="stage-item">
-                                    <div class="stage-marker"><i class="fas fa-box-check"></i></div>
-                                    <div class="stage-label">DELIVERED</div>
-                                </div>
-                            </div>
-                            <div class="tracking-meta-hud text-end mt-2">ETA: 72_HRS | HUB: KYOTO_B4</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% else %}
             <!-- Real Dynamic Data -->
             {% regroup items by product_variant.product.vendor as vendor_list %}
             {% for vendor_group in vendor_list %}
@@ -176,21 +75,35 @@
                                 <div class="col-lg-7">
                                     <!-- Stage-wise Progress Bar -->
                                     <div class="stage-tracker">
-                                        {% with status=item.shipment.status|default:"pending" %}
-                                            <div class="stage-item {% if status == 'shipped' or status == 'delivered' %}completed{% elif status == 'pending' %}active{% endif %}">
+                                        {% with status=item.shipment.status|default:"preparing" %}
+                                            <!-- Preparing -->
+                                            <div class="stage-item {% if status != 'preparing' %}completed{% else %}active{% endif %}">
                                                 <div class="stage-marker">
-                                                    {% if status == 'shipped' or status == 'delivered' %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle-notch fa-spin"></i>{% endif %}
+                                                    {% if status != 'preparing' %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-circle-notch fa-spin"></i>{% endif %}
                                                 </div>
-                                                <div class="stage-label">PROCESSING</div>
+                                                <div class="stage-label">PREPARING</div>
                                             </div>
-                                            <div class="stage-connector {% if status == 'shipped' or status == 'delivered' %}active{% endif %}"></div>
-                                            <div class="stage-item {% if status == 'delivered' %}completed{% elif status == 'shipped' %}active{% endif %}">
+                                            <div class="stage-connector {% if status != 'preparing' %}active{% endif %}"></div>
+                                            
+                                            <!-- Shipped -->
+                                            <div class="stage-item {% if status == 'in_transit' or status == 'delivered' %}completed{% elif status == 'shipped' %}active{% endif %}">
                                                 <div class="stage-marker">
-                                                    {% if status == 'delivered' %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-truck-fast"></i>{% endif %}
+                                                    {% if status == 'in_transit' or status == 'delivered' %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-truck-fast"></i>{% endif %}
                                                 </div>
                                                 <div class="stage-label">SHIPPED</div>
                                             </div>
+                                            <div class="stage-connector {% if status == 'in_transit' or status == 'delivered' %}active{% endif %}"></div>
+
+                                            <!-- In Transit -->
+                                            <div class="stage-item {% if status == 'delivered' %}completed{% elif status == 'in_transit' %}active{% endif %}">
+                                                <div class="stage-marker">
+                                                    {% if status == 'delivered' %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-truck-ramp-box"></i>{% endif %}
+                                                </div>
+                                                <div class="stage-label">IN_TRANSIT</div>
+                                            </div>
                                             <div class="stage-connector {% if status == 'delivered' %}active{% endif %}"></div>
+                                            
+                                            <!-- Delivered -->
                                             <div class="stage-item {% if status == 'delivered' %}active completed{% endif %}">
                                                 <div class="stage-marker">
                                                     <i class="fas fa-box-check"></i>
@@ -206,7 +119,7 @@
                     {% endfor %}
                 </div>
             {% endfor %}
-        {% endif %}
+        </div>
     </div>
 </div>
 

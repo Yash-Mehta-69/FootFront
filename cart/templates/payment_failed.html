@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="padding-top: 200px; text-align: center; min-height: 80vh;">
+    <div style="background: var(--glass-bg); padding: 4rem; border-radius: 12px; border: 1px solid #ff4d4d;">
+        <i class="fas fa-times-circle" style="font-size: 5rem; color: #ff4d4d; margin-bottom: 2rem;"></i>
+        <h1 class="glitch-text" style="font-size: 3rem; color: #ff4d4d;">PAYMENT FAILED</h1>
+        <p class="mt-4" style="font-family: monospace;">ERROR: {{ error }}</p>
+        <p class="text-muted-theme">Something went wrong during the transaction. Please try again.</p>
+        
+        <div class="mt-5">
+            <a href="{% url 'checkout' %}" class="btn-primary">TRY AGAIN</a>
+            <a href="{% url 'cart_detail' %}" class="ms-3" style="color: var(--color-text);">BACK TO CART</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

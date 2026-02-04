@@ -43,6 +43,83 @@
         padding-bottom: 0.5rem;
     }
     
+    .address-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.2rem;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .address-card:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+    }
+    
+    .address-card.active {
+        border-color: var(--color-accent);
+        background: rgba(0, 255, 213, 0.05);
+        box-shadow: 0 0 20px rgba(0, 255, 213, 0.1);
+    }
+
+    .address-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--color-accent);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+
+    .address-card.active::before {
+        transform: scaleY(1);
+    }
+    
+    .address-card input[type="radio"] {
+        display: none; /* Hide radio, use card as button */
+    }
+
+    .selection-indicator {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .address-card.active .selection-indicator {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+    }
+
+    .selection-indicator i {
+        color: #000;
+        font-size: 0.8rem;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all 0.3s ease;
+    }
+
+    .address-card.active .selection-indicator i {
+        opacity: 1;
+        transform: scale(1);
+    }
+    
     .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -137,124 +214,139 @@
         margin-bottom: 0.2rem;
         display: block;
     }
+
+    .loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        flex-direction: column;
+        backdrop-filter: blur(5px);
+    }
+
+    .loader {
+        border: 4px solid rgba(255,255,255,0.1);
+        border-left-color: var(--color-accent);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="loader-overlay" id="loader">
+    <div class="loader"></div>
+    <div class="glitch-text" style="font-family: var(--font-heading);">SECURE TRANSACTION IN PROGRESS</div>
+</div>
+
 <div class="checkout-container">
     <div class="d-flex align-items-center mb-5 ps-3">
         <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: 3rem; color: var(--color-text); margin: 0;">TERMINAL CHECKOUT</h1>
         <span class="ms-4 text-muted-theme" style="font-family: monospace;">// SECURE CONNECTION</span>
     </div>
 
-    <form method="POST" action=""> <!-- Placeholder action -->
+    <form id="checkout-form">
         {% csrf_token %}
         <div class="checkout-grid ps-3 pe-3">
             
-            <!-- LEFT COLUMN: Forms -->
             <div class="checkout-forms">
-                <!-- Shipping Info -->
                 <div class="form-section">
-                    <h3 class="section-title">SHIPPING DATA</h3>
+                    <h3 class="section-title">SHIPPING DESTINATION</h3>
                     
-                    <div class="form-grid mb-4">
-                        <div class="form-group">
-                            <label>First Name</label>
-                            <input type="text" name="first_name" required placeholder="ENTER FIRST NAME">
+                    <div id="address-list">
+                        {% for addr in addresses %}
+                        <div class="address-card {% if forloop.first %}active{% endif %}" onclick="selectAddress('{{ addr.id }}', this)">
+                            <input type="radio" name="address_id" value="{{ addr.id }}" {% if forloop.first %}checked{% endif %}>
+                            <div class="selection-indicator">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div style="color: var(--color-text); font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fas fa-map-marker-alt" style="color: var(--color-accent); font-size: 0.8rem;"></i>
+                                    {{ addr.city }}, {{ addr.state }}
+                                </div>
+                                <div class="text-muted-theme" style="font-size: 0.9rem;">{{ addr.address_line1 }}</div>
+                                <div class="text-muted-theme" style="font-size: 0.9rem; font-family: monospace;">{{ addr.postal_code }}</div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Last Name</label>
-                            <input type="text" name="last_name" required placeholder="ENTER LAST NAME">
+                        {% empty %}
+                        <p class="text-muted-theme">No saved addresses found.</p>
+                        {% endfor %}
+                        
+                        <div class="address-card {% if not addresses %}active{% endif %}" onclick="selectAddress('new', this)">
+                            <input type="radio" name="address_id" value="new" {% if not addresses %}checked{% endif %}>
+                            <div class="selection-indicator">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div style="flex-grow: 1;">
+                                <div style="color: var(--color-text); font-weight: bold;">ADD NEW ADDRESS</div>
+                                <div class="text-muted-theme" style="font-size: 0.9rem;">Provide a new delivery location</div>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div class="form-group mb-4">
-                        <label>Address</label>
-                        <input type="text" name="address" required placeholder="STREET ADDRESS, P.O. BOX, ETC.">
-                    </div>
-                    
-                    <div class="form-grid mb-4">
-                        <div class="form-group">
-                            <label>City</label>
-                            <input type="text" name="city" required placeholder="CITY">
+
+                    <div id="new-address-form" style="display: {% if addresses %}none{% else %}block{% endif %}; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem; margin-top: 1.5rem;">
+                        <div class="form-group mb-4">
+                            <label>STREET Address</label>
+                            <input type="text" name="address" placeholder="STREET ADDRESS, P.O. BOX, ETC.">
                         </div>
-                        <div class="form-group">
-                            <label>Country</label>
-                            <select name="country">
-                                <option value="US">UNITED STATES</option>
-                                <option value="CA">CANADA</option>
-                                <option value="UK">UNITED KINGDOM</option>
-                                <!-- More options can be added -->
-                            </select>
+                        
+                        <div class="form-grid mb-4">
+                            <div class="form-group">
+                                <label>City</label>
+                                <input type="text" name="city" placeholder="CITY">
+                            </div>
+                            <div class="form-group">
+                                <label>State / Province</label>
+                                <input type="text" name="state" placeholder="STATE">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>State / Province</label>
-                            <input type="text" name="state" placeholder="STATE">
-                        </div>
+                        
                         <div class="form-group">
                             <label>Zip / Postal Code</label>
-                            <input type="text" name="zipcode" required placeholder="00000">
+                            <input type="text" name="zipcode" placeholder="00000">
                         </div>
                     </div>
                 </div>
                 
-                <!-- Payment Info -->
                 <div class="form-section">
-                    <h3 class="section-title">PAYMENT METHOD</h3>
-                    
-                    <div class="payment-option active" onclick="selectPayment(this, 'card')">
-                        <input type="radio" name="payment_method" value="card" checked class="payment-radio">
+                    <h3 class="section-title">PAYMENT GATEWAY</h3>
+                    <div class="d-flex align-items-center p-3" style="background: rgba(255,255,255,0.05); border-radius: 6px; border: 1px solid var(--color-accent);">
+                        <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay" style="height: 30px; margin-right: 1rem;">
                         <div>
-                            <div style="color: var(--color-text); font-weight: bold;">CREDIT / DEBIT CARD</div>
-                            <small class="text-muted-theme">Safe encrypted transaction</small>
+                            <div style="color: var(--color-text); font-weight: bold;">RAZORPAY SECURE</div>
+                            <small class="text-muted-theme">Support Cards, UPI, Netbanking & Wallets</small>
                         </div>
-                        <i class="fas fa-credit-card ms-auto" style="color: var(--color-text); font-size: 1.5rem;"></i>
-                    </div>
-                    
-                    <div class="payment-option" onclick="selectPayment(this, 'paypal')">
-                        <input type="radio" name="payment_method" value="paypal" class="payment-radio">
-                        <div>
-                            <div style="color: var(--color-text); font-weight: bold;">PAYPAL</div>
-                            <small class="text-muted-theme">Redirect to PayPal</small>
-                        </div>
-                        <i class="fab fa-paypal ms-auto" style="color: var(--color-text); font-size: 1.5rem;"></i>
-                    </div>
-                    
-                    <!-- Card Details (Mock) -->
-                    <div id="card-details" class="mt-4">
-                        <div class="form-group mb-3">
-                            <label>Card Number</label>
-                            <input type="text" placeholder="0000 0000 0000 0000">
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label>Expiry</label>
-                                <input type="text" placeholder="MM/YY">
-                            </div>
-                            <div class="form-group">
-                                <label>CVC</label>
-                                <input type="text" placeholder="123">
-                            </div>
-                        </div>
+                        <i class="fas fa-shield-alt ms-auto" style="color: var(--color-accent); font-size: 1.5rem;"></i>
                     </div>
                 </div>
             </div>
             
-            <!-- RIGHT COLUMN: Summary -->
             <div>
                 <div class="summary-panel">
                     <h3 class="section-title">ORDER SUMMARY</h3>
                     
-                    <!-- Loop through mocked items or context items if available -->
-                    <!-- Ideally we pass 'items' from the view. Assuming context has 'items' -->
-                    <div class="mb-4" style="max-height: 200px; overflow-y: auto;">
-                        {% for item in items %} <!-- Safe to loop if empty -->
+                    <div class="mb-4" style="max-height: 250px; overflow-y: auto;">
+                        {% for item in items %}
                         <div class="d-flex justify-content-between mb-3">
                             <div>
                                 <div style="color: var(--color-text); font-weight: 600;">{{ item.product_variant.product.name }}</div>
+                                <small class="text-muted-theme">COLOR: {{ item.product_variant.color.name }} | SIZE: {{ item.product_variant.size.size_label }}</small>
+                                <br>
                                 <small class="text-muted-theme">QTY: {{ item.quantity }}</small>
                             </div>
                             <div style="color: var(--color-text);">₹{{ item.sub_total }}</div>
@@ -268,10 +360,6 @@
                     </div>
                     <div class="summary-row">
                         <span>SHIPPING</span>
-                        <span>CALCULATED</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>TAX</span>
                         <span>₹0.00</span>
                     </div>
                     
@@ -280,12 +368,12 @@
                         <span>₹{{ total }}</span>
                     </div>
                     
-                    <button type="button" class="btn-primary w-100 mt-4" onclick="alert('Payment Integration Pending!')">
-                        INITIATE PAYMENT
+                    <button type="button" class="btn-primary w-100 mt-4" onclick="initiateRazorpay()">
+                        PLACE ORDER & PAY
                     </button>
                     
                     <div class="mt-3 text-center">
-                        <a href="{% url 'shop' %}" style="color: var(--color-secondary); font-size: 0.9rem; text-decoration: underline;">CONTINUE SHOPPING</a>
+                        <a href="{% url 'cart_detail' %}" style="color: var(--color-secondary); font-size: 0.9rem; text-decoration: underline;">RETURN TO CART</a>
                     </div>
                 </div>
             </div>
@@ -294,19 +382,99 @@
     </form>
 </div>
 
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-    function selectPayment(element, method) {
-        // Visual toggle only
-        document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('active'));
+    function selectAddress(id, element) {
+        document.querySelectorAll('.address-card').forEach(el => el.classList.remove('active'));
         element.classList.add('active');
         element.querySelector('input').checked = true;
         
-        const cardDetails = document.getElementById('card-details');
-        if (method === 'card') {
-            cardDetails.style.display = 'block';
+        const form = document.getElementById('new-address-form');
+        if (id === 'new') {
+            form.style.display = 'block';
         } else {
-            cardDetails.style.display = 'none';
+            form.style.display = 'none';
         }
+    }
+
+    function initiateRazorpay() {
+        const loader = document.getElementById('loader');
+        const form = document.getElementById('checkout-form');
+        const formData = new FormData(form);
+
+        loader.style.display = 'flex';
+
+        fetch("{% url 'create_order' %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                var options = {
+                    "key": "{{ razorpay_key_id }}",
+                    "amount": data.amount,
+                    "currency": data.currency,
+                    "name": "FootFront",
+                    "description": "Payment for Order #" + data.order_id,
+                    "image": "{% static 'img/logo.png' %}",
+                    "order_id": data.razorpay_order_id,
+                    "handler": function (response){
+                        submitPaymentCallback(response, data.callback_url);
+                    },
+                    "prefill": {
+                        "name": data.prefill_name,
+                        "email": data.prefill_email,
+                        "contact": data.prefill_contact
+                    },
+                    "theme": {
+                        "color": "#00ffd5"
+                    },
+                    "modal": {
+                        "ondismiss": function() {
+                            loader.style.display = 'none';
+                        }
+                    }
+                };
+                var rzp1 = new Razorpay(options);
+                rzp1.open();
+            } else {
+                alert(data.message);
+                loader.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Something went wrong. Please try again.');
+            loader.style.display = 'none';
+        });
+    }
+
+    function submitPaymentCallback(response, callbackUrl) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = callbackUrl;
+        
+        const fields = {
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+            'razorpay_order_id': response.razorpay_order_id,
+            'razorpay_payment_id': response.razorpay_payment_id,
+            'razorpay_signature': response.razorpay_signature
+        };
+
+        for (const [key, value] of Object.entries(fields)) {
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
     }
 </script>
 {% endblock %}

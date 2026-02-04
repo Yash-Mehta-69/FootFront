@@ -4,45 +4,80 @@ from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Min, Count, Sum
-from store.decorators import admin_required
+from django.utils import timezone
 from datetime import datetime, timedelta
 import firebase_admin
 from firebase_admin import auth
+from store.decorators import admin_required
 from django.core.paginator import Paginator
+from django.db.models import Q, Min, Count, Sum, Prefetch
 from utils import panel_messages
+from cart.models import Order, OrderItem, Shipment, ShipmentStatusHistory, Payment
 
-
-class MockObj:
-    def __init__(self, **kwargs):
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-# Create your views here.
 @admin_required
 def dashboard(request):
-    # Mock Stats
+    # Real Stats
+    total_customers = Customer.objects.filter(is_deleted=False).count()
+    total_products = Product.objects.filter(is_deleted=False).count()
+    total_orders = Order.objects.filter(is_deleted=False).count()
+    total_revenue_val = Order.objects.filter(is_deleted=False, payment__status='completed').aggregate(total=Sum('total_amount'))['total'] or 0
+
+    # Quick Growth Logic (Simplified: Current Month vs previous)
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    prev_month_end = month_start - timedelta(seconds=1)
+    prev_month_start = prev_month_end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    curr_month_orders = Order.objects.filter(order_date__gte=month_start).count()
+    prev_month_orders = Order.objects.filter(order_date__gte=prev_month_start, order_date__lt=month_start).count()
+    
+    orders_growth = 0
+    if prev_month_orders > 0:
+        orders_growth = ((curr_month_orders - prev_month_orders) / prev_month_orders) * 100
+
     stats = {
-        'total_users': 1250,
-        'users_growth': 5.4,
-        'total_products': 450,
+        'total_users': total_customers,
+        'users_growth': 5.4, # Keep aesthetic growth for now or implement user growth
+        'total_products': total_products,
         'products_growth': 2.1,
-        'total_orders': 328,
-        'orders_growth': 12.5,
-        'total_revenue': "₹45,230",
+        'total_orders': total_orders,
+        'orders_growth': round(orders_growth, 1),
+        'total_revenue': f"₹{int(total_revenue_val):,}",
         'revenue_growth': 8.2
     }
     
-    # Mock Recent Orders
-    recent_orders = [
-        MockObj(pk="#ORD-001", customer_name="John Doe", product="Nike Air Max", date="Oct 15, 2023", status="Completed", amount="₹120.00", status_class="success"),
-        MockObj(pk="#ORD-002", customer_name="Jane Smith", product="Adidas Ultraboost", date="Oct 14, 2023", status="Pending", amount="₹180.00", status_class="warning"),
-        MockObj(pk="#ORD-003", customer_name="Mike Ross", product="Puma Suede", date="Oct 12, 2023", status="Cancelled", amount="₹85.00", status_class="danger"),
-    ]
+    # Real Recent Orders
+    recent_orders_raw = Order.objects.filter(is_deleted=False).select_related(
+        'customer', 'customer__user', 'payment'
+    ).prefetch_related('items__product_variant__product').order_by('-order_date')[:5]
+
+    recent_orders = []
+    for o in recent_orders_raw:
+        # Get first item name or summary
+        items = list(o.items.all())
+        product_summary = items[0].product_variant.product.name if items else "No Items"
+        if len(items) > 1:
+            product_summary += f" (+{len(items)-1} more)"
+            
+        status_map = {
+            'completed': 'success',
+            'pending': 'warning',
+            'failed': 'danger'
+        }
+        
+        recent_orders.append({
+            'pk': f"#ORD-{o.pk}",
+            'customer_name': f"{o.customer.user.first_name} {o.customer.user.last_name}",
+            'product': product_summary,
+            'date': o.order_date.strftime("%b %d, %Y"),
+            'status': o.payment.get_status_display() if o.payment else "Unpaid",
+            'amount': f"₹{o.total_amount:,}",
+            'status_class': status_map.get(o.payment.status if o.payment else 'pending', 'warning')
+        })
     
     context = {
         'stats': stats,
-        'recent_orders': recent_orders
+        'recent_orders': recent_orders_raw
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
 
@@ -383,7 +418,6 @@ def detail_category(request, pk):
 
 @admin_required
 def manage_products(request):
-    from django.db.models import Prefetch
     
     # Prefetch only active variants to avoid showing deleted ones (which solves the price not updating issue)
     active_variants_prefetch = Prefetch(
@@ -599,90 +633,191 @@ def detail_product(request, pk):
 
 @admin_required
 def manage_orders(request):
-    orders = [
-        MockObj(pk=1001, customer="Alice Smith", date="2023-10-20", total="$150", status="Processing", payment_status="completed"),
-        MockObj(pk=1002, customer="Bob Jones", date="2023-10-19", total="$220", status="Shipped", payment_status="completed"),
-        MockObj(pk=1003, customer="Charlie Brown", date="2023-10-18", total="$80", status="Cancelled", payment_status="Refunded"),
-    ]
-    vendors = [MockObj(pk=1, shopName="Kicks Palace"), MockObj(pk=2, shopName="Sporty Shoes")]
-    return render(request, 'dashboard/manage_orders.html', {'orders': orders, 'vendors': vendors})
+    # Filtering parameters
+    q = request.GET.get('q', '')
+    vendor_id = request.GET.get('vendor', '')
+    sort = request.GET.get('sort', 'date_newest')
+    
+    # Base queryset
+    orders = Order.objects.filter(is_deleted=False).select_related(
+        'customer', 'customer__user', 'payment', 'shipping_address'
+    ).prefetch_related(
+        Prefetch(
+            'items',
+            queryset=OrderItem.objects.filter(is_deleted=False).select_related(
+                'product_variant', 'product_variant__product',
+                'product_variant__size', 'product_variant__color', 'shipment'
+            ),
+            to_attr='all_items'
+        )
+    )
+
+    # Searching
+    if q:
+        clean_id = q.upper().replace('#ORD-', '').strip()
+        if clean_id.isdigit():
+            orders = orders.filter(pk=int(clean_id))
+        else:
+            orders = orders.filter(
+                Q(customer__user__first_name__icontains=q) |
+                Q(customer__user__last_name__icontains=q) |
+                Q(customer__user__email__icontains=q)
+            )
+
+    # Filter by Vendor (Show orders that contain at least one item from this vendor)
+    if vendor_id:
+        orders = orders.filter(items__product_variant__product__vendor_id=vendor_id).distinct()
+
+    # Sorting
+    if sort == 'date_newest':
+        orders = orders.order_by('-order_date')
+    elif sort == 'date_oldest':
+        orders = orders.order_by('order_date')
+    
+    # Pagination
+    paginator = Paginator(orders, 10)
+    page_number = request.GET.get('page')
+    orders_page = paginator.get_page(page_number)
+
+    # Attach Vendor Display Info
+    for order in orders_page:
+        vendors = {item.product_variant.product.vendor.shopName for item in order.all_items}
+        if not vendors:
+            order.vendor_display_text = "No Vendor"
+        elif len(vendors) == 1:
+            order.vendor_display_text = list(vendors)[0]
+        else:
+            # If 2 vendors, show both. If more, show "Multi-Vendor" or "A, B +X"
+            # User likely wants clarity. Let's show first 2 names then +X
+            sorted_vendors = sorted(list(vendors))
+            if len(sorted_vendors) <= 2:
+                order.vendor_display_text = ", ".join(sorted_vendors)
+            else:
+                order.vendor_display_text = f"{sorted_vendors[0]}, {sorted_vendors[1]} (+{len(vendors)-2})"
+    
+    context = {
+        'orders': orders_page,
+        'vendors': Vendor.objects.filter(is_deleted=False),
+        'search_query': q,
+        'current_vendor': int(vendor_id) if vendor_id and vendor_id.isdigit() else '',
+        'current_sort': sort
+    }
+    return render(request, 'dashboard/manage_orders.html', context)
 
 @admin_required
 def admin_edit_order(request, pk):
-    # Mock order fetching
-    order = MockObj(
-        pk=pk, 
-        customer="Alice Smith", 
-        date="2023-10-20", 
-        total="$150", 
-        status="Processing", 
-        payment_status="completed"
-    )
+    order = get_object_or_404(Order, pk=pk, is_deleted=False)
     
     if request.method == "POST":
-        new_status = request.POST.get('status')
-        new_payment = request.POST.get('payment_status')
-        panel_messages.add_admin_message(request, 'success', f"Order #{pk} updated successfully (Status: {new_status}, Payment: {new_payment}) - Mock")
+        # Note: Administrative edits to existing orders are limited to payment/status meta
+        # Complex changes (adding/removing items) usually require a new order.
+        new_status = request.POST.get('status') # This might refer to payment status in this context
+        if order.payment:
+            order.payment.status = new_status
+            order.payment.save()
+            
+        panel_messages.add_admin_message(request, 'success', f"Order #{pk} details updated professionally.")
         return redirect('manage_orders')
         
     return render(request, 'dashboard/edit_order.html', {'order': order})
 
 @admin_required
 def order_detail(request, pk):
-    order = MockObj(
-        pk=pk,
-        customer=MockObj(name="Alice Smith", email="alice@example.com", phone="1234567890"),
-        shipping_address="123 Maple St, New York, NY 10001",
-        date="2023-10-20",
-        status="Processing",
-        payment_status="completed",
-        subtotal="$140",
-        shipping="$10",
-        total="$150",
-        items=[
-            MockObj(product="Nike Air Max", quantity=1, price="$140", image="/media/photos/products/p1.png")
-        ]
+    order = get_object_or_404(
+        Order.objects.filter(is_deleted=False).select_related(
+            'customer', 'customer__user', 'shipping_address', 'payment'
+        ).prefetch_related(
+            Prefetch(
+                'items',
+                queryset=OrderItem.objects.filter(is_deleted=False).select_related(
+                    'product_variant', 'product_variant__product',
+                    'product_variant__size', 'product_variant__color', 'shipment'
+                ),
+                to_attr='all_items'
+            )
+        ),
+        pk=pk
     )
     return render(request, 'dashboard/order_detail.html', {'order': order})
 
 @admin_required
 def manage_shipments(request):
-    # Mock Data
-    shipments = [
-        MockObj(
-            pk=501,
-            order_item=MockObj(
-                order=MockObj(pk=1001),
-                product_variant=MockObj(product=MockObj(name="Nike Air Max"), size=MockObj(size_label="US 9"), color=MockObj(name="Red"))
-            ),
-            tracking_number="TRK9988776655",
-            vendor=MockObj(shopName="Kicks Palace"),
-            courier_name="UPS",
-            status="pending",
-            shipped_at=datetime.now(),
-            expected_delivery=datetime.now() + timedelta(days=5)
-        ),
-        MockObj(
-            pk=502,
-            order_item=MockObj(
-                order=MockObj(pk=1002),
-                product_variant=MockObj(product=MockObj(name="Adidas UltraBoost"), size=MockObj(size_label="US 10"), color=MockObj(name="Black"))
-            ),
-            tracking_number="TRK1122334455",
-            vendor=MockObj(shopName="Sporty Shoes"),
-            courier_name="DHL",
-            status="delivered",
-            shipped_at=datetime.now() - timedelta(days=3),
-            expected_delivery=datetime.now() - timedelta(days=1)
+    # Filtering parameters
+    q = request.GET.get('q', '')
+    status = request.GET.get('status', '')
+    vendor_id = request.GET.get('vendor', '')
+    order_id = request.GET.get('order_id', '')
+    sort = request.GET.get('sort', 'shipped_newest')
+    
+    # Base queryset
+    shipments = Shipment.objects.filter(is_deleted=False).select_related(
+        'order_item', 'order_item__order', 'vendor',
+        'order_item__product_variant', 'order_item__product_variant__product'
+    )
+    
+    # Searching
+    if q:
+        shipments = shipments.filter(
+            Q(tracking_number__icontains=q) |
+            Q(order_item__product_variant__product__name__icontains=q)
         )
-    ]
-    vendors = [MockObj(pk=1, shopName="Kicks Palace"), MockObj(pk=2, shopName="Sporty Shoes")]
-    return render(request, 'dashboard/manage_shipments.html', {'shipments': shipments, 'vendors': vendors})
+        
+    # Order ID Filter
+    if order_id:
+        try:
+            clean_id = order_id.upper().replace('#ORD-', '').strip()
+            if clean_id.isdigit():
+                shipments = shipments.filter(order_item__order__pk=int(clean_id))
+            else:
+                shipments = shipments.filter(order_item__order__pk__icontains=clean_id)
+        except:
+            pass
+
+    # Status Filter
+    if status:
+        shipments = shipments.filter(status=status)
+        
+    # Vendor Filter
+    if vendor_id:
+        shipments = shipments.filter(vendor_id=vendor_id)
+        
+    # Sorting
+    if sort == 'shipped_newest':
+        shipments = shipments.order_by('-shipped_at')
+    elif sort == 'shipped_oldest':
+        shipments = shipments.order_by('shipped_at')
+    elif sort == 'delivery_newest':
+        shipments = shipments.order_by('-expected_delivery')
+    elif sort == 'delivery_oldest':
+        shipments = shipments.order_by('expected_delivery')
+        
+    # Pagination
+    paginator = Paginator(shipments, 10)
+    page_number = request.GET.get('page')
+    shipments_page = paginator.get_page(page_number)
+    
+    # Get all unique Order IDs for the datalist
+    admin_order_ids = OrderItem.objects.filter(is_deleted=False).values_list('order_id', flat=True).distinct().order_by('-order_id')
+    
+    context = {
+        'shipments': shipments_page,
+        'vendors': Vendor.objects.filter(is_deleted=False),
+        'admin_order_ids': admin_order_ids,
+        'search_query': q,
+        'order_id_filter': order_id,
+        'current_status': status,
+        'current_vendor': int(vendor_id) if vendor_id and vendor_id.isdigit() else '',
+        'current_sort': sort,
+        'status_choices': Shipment.STATUS_CHOICES
+    }
+    return render(request, 'dashboard/manage_shipments.html', context)
 
 @admin_required
 def admin_update_shipment_status(request, pk):
-    try:
-        if request.method == 'POST':
+    shipment = get_object_or_404(Shipment, pk=pk, is_deleted=False)
+    
+    if request.method == 'POST':
+        try:
             status = request.POST.get('status')
             courier = request.POST.get('courier_name')
             tracking = request.POST.get('tracking_number')
@@ -690,56 +825,91 @@ def admin_update_shipment_status(request, pk):
             if status == 'in_transit' and (not courier or not tracking):
                 panel_messages.add_admin_message(request, 'error', "Courier and Tracking Number are required for In Transit status.")
             else:
-                # Simulated update
-                # In a real model, you would do: 
-                # shipment = get_object_or_404(Shipment, pk=pk)
-                # shipment.status = status
-                # shipment.courier_name = courier
-                # shipment.tracking_number = tracking
-                # shipment.save()
+                # Lifecycle Enforcement: Define rank for statuses to prevent reverting
+                rank = {'preparing': 1, 'shipped': 2, 'in_transit': 3, 'delivered': 4}
+                current_rank = rank.get(shipment.status, 0)
+                new_rank = rank.get(status, 0)
                 
-                msg = f"Shipment #{pk} status updated to {status.replace('_', ' ').title()}."
-                if status == 'in_transit':
-                    msg += f" (Courier: {courier}, Tracking: {tracking})"
-                panel_messages.add_admin_message(request, 'success', msg)
-    except Exception as e:
-        panel_messages.add_admin_message(request, 'error', f"Error updating shipment: {str(e)}")
+                if new_rank < current_rank:
+                    panel_messages.add_admin_message(request, 'error', f"Admin Override: Cannot revert status from {shipment.get_status_display()} to {status.title()}.")
+                    return redirect(request.META.get('HTTP_REFERER', 'manage_shipments'))
+
+                shipment.status = status
+                if courier: shipment.courier_name = courier
+                if tracking: shipment.tracking_number = tracking
+                
+                if status == 'shipped' and not shipment.shipped_at:
+                    shipment.shipped_at = timezone.now()
+                
+                if status == 'shipped' and not shipment.expected_delivery:
+                    shipment.expected_delivery = (timezone.now() + timedelta(days=7)).date()
+                    
+                shipment.save()
+                
+                # Log History
+                ShipmentStatusHistory.objects.create(
+                    shipment=shipment,
+                    status=status.replace('_', ' ').title(),
+                    description=f"Shipment status updated to {status.replace('_', ' ').title()} by Administrator."
+                )
+                
+                panel_messages.add_admin_message(request, 'success', f"Shipment updated successfully by Admin to {status.replace('_', ' ').title()}.")
+        except Exception as e:
+            panel_messages.add_admin_message(request, 'error', f"Error updating shipment: {str(e)}")
         
     return redirect(request.META.get('HTTP_REFERER', 'manage_shipments'))
 
 @admin_required
 def detail_shipment(request, pk):
-    # Mock data for shipment detail implementation
-    shipment = MockObj(
-        pk=pk,
-        order_item=MockObj(
-            order=MockObj(pk=1001, customer=MockObj(name="Alice Smith", email="alice@example.com", phone="1234567890"), shipping_address="123 Maple St, NY"),
-            product_variant=MockObj(product=MockObj(name="Nike Air Max", product_image=MockObj(url="/media/photos/products/p1.png")), size=MockObj(size_label="US 9"), color=MockObj(name="Red", hex_code="#FF0000"), price="150.00"),
-            quantity=1
-        ),
-        tracking_number="TRK9988776655",
-        vendor=MockObj(shopName="Kicks Palace"),
-        courier_name="UPS",
-        status="Shipped",
-        shipped_at=datetime.now(),
-        expected_delivery=datetime.now() + timedelta(days=5),
-        history=[
-            MockObj(status="Order Placed", date=datetime.now() - timedelta(days=2), description="Order has been placed."),
-            MockObj(status="Packed", date=datetime.now() - timedelta(days=1), description="Seller has packed the order."),
-            MockObj(status="Shipped", date=datetime.now(), description="Order has been shipped via UPS.")
-        ]
+    shipment = get_object_or_404(
+        Shipment.objects.filter(is_deleted=False).select_related(
+            'order_item', 'order_item__order', 'order_item__order__customer',
+            'order_item__order__customer__user', 'order_item__order__shipping_address',
+            'order_item__product_variant', 'order_item__product_variant__product',
+            'order_item__product_variant__size', 'order_item__product_variant__color',
+            'vendor'
+        ).prefetch_related('history'),
+        pk=pk
     )
     return render(request, 'dashboard/shipment_detail.html', {'shipment': shipment})
 
 
 @admin_required
 def manage_payments(request):
-    payments = [
-        MockObj(pk="PAY-12345", user="Alice Smith", amount="$150", method="Credit Card", status="Success", date="2023-10-20"),
-        MockObj(pk="PAY-67890", user="Bob Jones", amount="$220", method="PayPal", status="Success", date="2023-10-19"),
-        MockObj(pk="PAY-11223", user="Charlie Brown", amount="$80", method="Credit Card", status="Cancelled", date="2023-10-18"),
-    ]
-    return render(request, 'dashboard/manage_payments.html', {'payments': payments})
+    search_query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    sort_by = request.GET.get('sort', 'date_newest')
+
+    payments = Payment.objects.filter(is_deleted=False).select_related(
+        'order', 'order__customer', 'order__customer__user'
+    )
+
+    if search_query:
+        payments = payments.filter(
+            Q(razorpay_payment_id__icontains=search_query) |
+            Q(order__pk__icontains=search_query) |
+            Q(order__customer__user__first_name__icontains=search_query) |
+            Q(order__customer__user__email__icontains=search_query)
+        )
+
+    if status_filter:
+        payments = payments.filter(status=status_filter)
+
+    if sort_by == 'date_oldest':
+        payments = payments.order_by('payment_date')
+    else: # Default or date_newest
+        payments = payments.order_by('-payment_date')
+
+    status_choices = Payment.STATUS_CHOICES
+
+    context = {
+        'payments': payments,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'current_sort': sort_by,
+        'status_choices': status_choices,
+    }
+    return render(request, 'dashboard/manage_payments.html', context)
 
 @admin_required
 def view_reviews(request):
@@ -768,6 +938,10 @@ def delete_review(request, pk):
 
 @admin_required
 def view_complaints(request):
+    class MockObj:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
     complaints = [
         MockObj(pk=1, user="Mike Ross", subject="Late Delivery", message="My order is 3 days late.", date="2023-10-21", status="Open"),
         MockObj(pk=2, user="Rachel Green", subject="Wrong Item", message="I received the wrong size.", date="2023-10-19", status="Resolved"),

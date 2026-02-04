@@ -21,7 +21,10 @@
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.sales_growth }}%</span>
+                <span class="badge {% if analytics.sales_growth_pos %}bg-success text-success-custom{% else %}bg-danger text-danger-custom{% endif %} bg-opacity-10 me-2">
+                    <i class="fas {% if analytics.sales_growth_pos %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> 
+                    {% if analytics.sales_growth_pos %}+{% else %}-{% endif %}{{ analytics.sales_growth }}%
+                </span>
                 <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
@@ -35,12 +38,15 @@
                     <h6 class="text-muted mb-2">Total Orders</h6>
                     <h3 style="color: var(--text-main); font-weight: 700;">{{ analytics.total_orders }}</h3>
                 </div>
-                <div class="icon-circle bg-soft-success text-success" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <div class="icon-circle bg-soft-success text-success-custom" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-shopping-cart fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.orders_growth }}%</span>
+                <span class="badge {% if analytics.orders_growth_pos %}bg-success text-success-custom{% else %}bg-danger text-danger-custom{% endif %} bg-opacity-10 me-2">
+                    <i class="fas {% if analytics.orders_growth_pos %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> 
+                    {% if analytics.orders_growth_pos %}+{% else %}-{% endif %}{{ analytics.orders_growth }}%
+                </span>
                 <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
@@ -59,7 +65,10 @@
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.aov_growth }}%</span>
+                <span class="badge {% if analytics.aov_growth_pos %}bg-success text-success-custom{% else %}bg-danger text-danger-custom{% endif %} bg-opacity-10 me-2">
+                    <i class="fas {% if analytics.aov_growth_pos %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> 
+                    {% if analytics.aov_growth_pos %}+{% else %}-{% endif %}{{ analytics.aov_growth }}%
+                </span>
                 <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
@@ -73,12 +82,15 @@
                     <h6 class="text-muted mb-2">Products Sold</h6>
                     <h3 style="color: var(--text-main); font-weight: 700;">{{ analytics.products_sold }}</h3>
                 </div>
-                <div class="icon-circle bg-soft-warning text-warning" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <div class="icon-circle bg-soft-warning status-warning" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-box-open fa-lg"></i>
                 </div>
             </div>
             <div class="d-flex align-items-center">
-                <span class="badge bg-success bg-opacity-10 text-success me-2"><i class="fas fa-arrow-up"></i> +{{ analytics.products_sold_growth }}%</span>
+                <span class="badge {% if analytics.products_sold_growth_pos %}bg-success text-success-custom{% else %}bg-danger text-danger-custom{% endif %} bg-opacity-10 me-2">
+                    <i class="fas {% if analytics.products_sold_growth_pos %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i> 
+                    {% if analytics.products_sold_growth_pos %}+{% else %}-{% endif %}{{ analytics.products_sold_growth }}%
+                </span>
                 <span style="color: var(--text-secondary); font-size: 12px;">vs last month</span>
             </div>
         </div>
@@ -155,42 +167,26 @@
             </div>
             <div class="card-body p-0">
                 <div class="list-group list-group-flush">
+                    {% for product in top_products %}
                     <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
                         <div class="d-flex align-items-center">
-                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-shoe-prints text-muted"></i>
+                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                {% if product.product_image %}
+                                    <img src="{{ product.product_image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="fas fa-shoe-prints text-muted"></i>
+                                {% endif %}
                             </div>
                             <div>
-                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Nike Air Max 90</h6>
-                                <small class="text-muted" style="font-size: 11px;">Sneakers</small>
+                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">{{ product.name }}</h6>
+                                <small class="text-muted" style="font-size: 11px;">{{ product.category.name }}</small>
                             </div>
                         </div>
-                        <span class="badge bg-soft-primary text-primary-custom fw-bold" style="font-size: 13px;">₹12,450</span>
+                        <span class="badge bg-soft-primary text-primary-custom fw-bold" style="font-size: 13px;">₹{{ product.total_revenue|floatformat:0 }}</span>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-running text-muted"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Adidas UltraBoost</h6>
-                                <small class="text-muted" style="font-size: 11px;">Running</small>
-                            </div>
-                        </div>
-                        <span class="badge bg-soft-primary text-primary-custom fw-bold">₹8,320</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 py-3">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-light-custom rounded p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-tshirt text-muted"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-0 fw-bold" style="letter-spacing: -0.5px; color: var(--text-main);">Puma Classic Tee</h6>
-                                <small class="text-muted" style="font-size: 11px;">Apparel</small>
-                            </div>
-                        </div>
-                        <span class="badge bg-soft-primary text-primary-custom fw-bold">₹5,100</span>
-                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-muted small">No sales data yet.</div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -219,23 +215,51 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in order_items %}
+                {% for order in recent_orders %}
                 <tr>
-                    <td><span class="fw-bold text-primary-custom">#ORD-{{ item.order.pk }}</span></td>
-                    <td>{{ item.order.customer.name }}</td>
-                    <td>{{ item.product_variant.product.name }}</td>
-                    <td>{{ item.order.order_date|date:"M d, Y" }}</td>
+                    <td><span class="fw-bold text-primary-custom">#ORD-{{ order.pk }}</span></td>
+                    <td>{{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</td>
                     <td>
-                        <span class="status-badge {% if item.shipment.status == 'delivered' %}status-active{% elif item.shipment.status == 'cancelled' %}status-inactive{% endif %}">
-                            <i class="fas {% if item.shipment.status == 'delivered' %}fa-check-circle{% elif item.shipment.status == 'pending' %}fa-pause-circle{% else %}fa-truck{% endif %}"></i>
-                            {{ item.shipment.status|title }}
-                        </span>
+                        <div class="d-flex align-items-center gap-2">
+                            {% with first_item=order.vendor_items.0 %}
+                            <div class="rounded-1 bg-light-custom" style="width: 32px; height: 32px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                                {% if first_item.product_variant.image %}
+                                    <img src="{{ first_item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% elif first_item.product_variant.product.product_image %}
+                                    <img src="{{ first_item.product_variant.product.product_image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="fas fa-shoe-prints text-muted" style="font-size: 0.8rem;"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="fw-bold" style="color: var(--text-main); font-size: 0.85rem;">{{ first_item.product_variant.product.name }}</div>
+                                {% if order.vendor_items|length > 1 %}
+                                    <small class="text-muted" style="font-size: 0.7rem;">+{{ order.vendor_items|length|add:"-1" }} other items</small>
+                                {% endif %}
+                            </div>
+                            {% endwith %}
+                        </div>
                     </td>
-                    <td class="fw-bold">₹{{ item.price }}</td>
+                    <td>{{ order.order_date|date:"M d, Y" }}</td>
+                    <td>
+                        {% with first_item=order.vendor_items.0 %}
+                        <div class="small fw-bold {% if first_item.shipment.status == 'delivered' %}text-success-custom{% elif first_item.shipment.status == 'preparing' %}status-warning{% else %}text-primary-custom{% endif %}">
+                            <i class="fas {% if first_item.shipment.status == 'delivered' %}fa-check-circle{% elif first_item.shipment.status == 'preparing' %}fa-clock{% else %}fa-truck{% endif %} me-1"></i>
+                            {{ first_item.shipment.get_status_display|upper }}
+                        </div>
+                        {% endwith %}
+                    </td>
+                    <td class="fw-bold">₹{{ order.vendor_total }}</td>
                     <td class="text-end">
-                        <a href="#" class="btn-icon-soft" title="View Detail">
+                        <a href="{% url 'vendor_orders' %}?q={{ order.pk }}" class="btn-icon-soft" title="View Detail">
                             <i class="fas fa-eye"></i>
                         </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center p-4">
+                        <div class="text-muted small">No recent orders.</div>
                     </td>
                 </tr>
                 {% endfor %}

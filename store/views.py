@@ -478,15 +478,6 @@ def order_list(request):
 
 @login_required(login_url='login')
 def order_detail(request, order_id):
-    # Handle Demo IDs for the popup
-    if str(order_id) in ["001234", "001235", "1234", "1235", "123", "000123"]:
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # For demo, we just pass the ID, the template handles static demo content
-            return render(request, 'includes/order_detail_partial.html', {
-                'order': {'id': str(order_id).zfill(6), 'total_amount': '438.50'}
-            })
-        return redirect('order_list')
-
     try:
         customer = request.user.customer_profile
         order = Order.objects.get(id=order_id, customer=customer, is_deleted=False)

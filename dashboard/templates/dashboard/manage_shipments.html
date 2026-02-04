@@ -10,23 +10,37 @@
 
 {% block admin_content %}
 <div class="custom-card">
-    <div class="card-header-custom">
-        <div class="d-flex gap-2">
-            <input type="text" class="form-control-custom" placeholder="Search tracking..." style="width: 200px;">
-            <input type="text" class="form-control-custom" placeholder="Order ID" style="width: 120px;">
-            <select class="form-select-custom" style="width: 150px;">
-                <option value="">Vendor</option>
-                {% for vendor in vendors %}
-                <option value="{{ vendor.pk }}">{{ vendor.shopName }}</option>
-                {% endfor %}
-            </select>
-            <select class="form-select-custom" style="width: 150px;">
-                <option value="">Status</option>
-                <option value="pending">Pending</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
+    <div class="card-header-custom d-flex justify-content-between flex-wrap gap-2">
+        <h5 class="card-title-custom mb-0">Shipment Management</h5>
+        <div class="d-flex align-items-center">
+            <form method="get" class="d-flex gap-2">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" 
+                    class="form-control-custom form-control-sm" placeholder="Search tracking..." style="width: 180px;"
+                    onchange="this.form.submit()">
+                
+                <input type="text" name="order_id" list="adminOrderIdsList" value="{{ order_id_filter|default:'' }}" 
+                    class="form-control-custom form-control-sm" placeholder="Order ID..." style="width: 130px;"
+                    onchange="this.form.submit()">
+                <datalist id="adminOrderIdsList">
+                    {% for oid in admin_order_ids %}
+                    <option value="#ORD-{{ oid }}">
+                    {% endfor %}
+                </datalist>
+
+                <select name="vendor" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="">All Vendors</option>
+                    {% for v in vendors %}
+                    <option value="{{ v.pk }}" {% if current_vendor == v.pk %}selected{% endif %}>{{ v.shopName }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="status" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    {% for status_val, status_label in status_choices %}
+                    <option value="{{ status_val }}" {% if current_status == status_val %}selected{% endif %}>{{ status_label }}</option>
+                    {% endfor %}
+                </select>
+            </form>
         </div>
     </div>
     
@@ -34,79 +48,140 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th scope="col">Order ID</th>
-                    <th scope="col">Tracking Number</th>
-                    <th scope="col">Vendor</th>
-                    <th scope="col">Courier</th>
-                    <th scope="col">Shipped Date</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th>Order ID</th>
+                    <th>Product Item</th>
+                    <th>Vendor</th>
+                    <th>Tracking #</th>
+                    <th>Courier</th>
+                    <th>Fulfillment</th>
+                    <th>Timeline</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for shipment in shipments %}
                 <tr>
-                    <!-- <td><a href="#" class="text-primary-custom fw-bold">#ORD-{{ shipment.order_item.order.pk }}</a></td> -->
-                    <td>#ORD-{{ shipment.order_item.order.pk }}</td>
-                    <td>{{ shipment.tracking_number|default:"-" }}</td>
-                    <td>{{ shipment.vendor.shopName }}</td>
-                    <td>{{ shipment.courier_name|default:"-" }}</td>
-                    <td>{{ shipment.shipped_at|date:"M d, Y" }}</td>
                     <td>
-                        <span class="badge-soft-{% if shipment.status == 'delivered' %}success{% elif shipment.status == 'pending' %}warning{% else %}primary{% endif %}">
-                            {{ shipment.status|title }}
-                        </span>
+                        <div class="fw-bold text-primary-custom">#ORD-{{ shipment.order_item.order.pk }}</div>
                     </td>
                     <td>
-                        <a href="{% url 'detail_shipment' shipment.pk %}" class="btn-icon-soft me-1" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <button type="button" class="btn-icon-soft text-primary-custom" data-bs-toggle="modal" data-bs-target="#adminUpdateShipment{{ shipment.pk }}">
-                            <i class="fas fa-edit"></i>
-                        </button>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-2 bg-light p-1 me-2" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                                {% if shipment.order_item.product_variant.image %}
+                                    <img src="{{ shipment.order_item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% elif shipment.order_item.product_variant.product.product_image %}
+                                    <img src="{{ shipment.order_item.product_variant.product.product_image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="fas fa-shoe-prints text-muted opacity-50" style="font-size: 0.7rem;"></i>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold" style="color: var(--text-main); font-size: 0.9rem;">{{ shipment.order_item.product_variant.product.name }}</span>
+                                <span class="small text-muted" style="font-size: 0.75rem;">{{ shipment.order_item.product_variant.size.size_label }} / {{ shipment.order_item.product_variant.color.name }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-truncate" style="max-width: 15ch; color: var(--text-main);" title="{{ shipment.vendor.shopName }}">
+                            {{ shipment.vendor.shopName }}
+                        </div>
+                    </td>
+                    <td><span class="font-monospace small fw-bold" style="color: var(--text-main);">{{ shipment.tracking_number|default:"-" }}</span></td>
+                    <td class="small">{{ shipment.courier_name|default:"-" }}</td>
+                    <td>
+                        <div class="small fw-bold {% if shipment.status == 'delivered' %}text-success-custom{% elif shipment.status == 'preparing' %}status-warning{% else %}text-primary-custom{% endif %}">
+                            <i class="fas {% if shipment.status == 'delivered' %}fa-check-circle{% elif shipment.status == 'preparing' %}fa-clock{% else %}fa-truck{% endif %} me-1"></i>
+                            {{ shipment.get_status_display|upper }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small">
+                            <span class="text-muted">Shipped:</span> {{ shipment.shipped_at|date:"d M"|default:"TBA" }}<br>
+                            <span class="text-muted">Est:</span> {{ shipment.expected_delivery|date:"d M"|default:"TBA" }}
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'detail_shipment' shipment.pk %}" class="btn-icon-soft" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button type="button" class="btn-icon-soft text-primary-custom" data-bs-toggle="modal" data-bs-target="#adminUpdateShipment{{ shipment.pk }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
                         
-                        <!-- Modal for this shipment -->
+                        <!-- Premium Admin Modal -->
                         <div class="modal fade" id="adminUpdateShipment{{ shipment.pk }}" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content" style="background-color: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color);">
-                                    <div class="modal-header border-bottom">
-                                        <h5 class="modal-title">Admin Update #ORD-{{ shipment.order_item.order.pk }}</h5>
+                                <div class="modal-content custom-card p-0" style="border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                                    <div class="modal-header p-4" style="border-bottom: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                        <h5 class="modal-title fw-bold" style="color: var(--text-main);">Update Fulfillment</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
                                     </div>
                                     
                                     <form method="POST" action="{% url 'admin_update_shipment_status' shipment.pk %}">
                                         {% csrf_token %}
                                         <div class="modal-body p-4 text-start">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold small">Status Override</label>
-                                                <select name="status" class="form-select form-select-custom" id="select-status-{{ shipment.pk }}" onchange="toggleTracking('{{ shipment.pk }}')">
-                                                    <option value="pending" {% if shipment.status == 'pending' %}selected{% endif %}>Pending</option>
-                                                    <option value="in_transit" {% if shipment.status == 'in_transit' %}selected{% endif %}>In Transit</option>
-                                                    <option value="delivered" {% if shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
-                                                    <option value="cancelled" {% if shipment.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                            <div class="mb-4">
+                                                <div class="d-flex align-items-center gap-3 mb-3">
+                                                    <div style="width: 48px; height: 48px; background-color: var(--bg-light-custom); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                                                        <i class="fas fa-box text-primary-custom"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold" style="color: var(--text-main);">#ORD-{{ shipment.order_item.order.pk }}</div>
+                                                        <p class="text-muted small mb-0">{{ shipment.order_item.product_variant.product.name }}</p>
+                                                    </div>
+                                                </div>
+
+                                                <label class="form-label fw-bold small" style="color: var(--text-main);">Internal Status Override</label>
+                                                <select name="status" class="form-select-custom w-100" id="admin-status-{{ shipment.pk }}" 
+                                                    onchange="toggleAdminTracking('{{ shipment.pk }}')" 
+                                                    style="background-color: var(--bg-card); border-color: rgba(var(--text-main-rgb), 0.1);">
+                                                    {% if shipment.status == 'preparing' %}
+                                                    <option value="preparing" selected>Preparing</option>
+                                                    <option value="shipped">Shipped</option>
+                                                    <option value="in_transit">In Transit</option>
+                                                    <option value="delivered">Delivered</option>
+                                                    {% elif shipment.status == 'shipped' %}
+                                                    <option value="shipped" selected>Shipped</option>
+                                                    <option value="in_transit">In Transit</option>
+                                                    <option value="delivered">Delivered</option>
+                                                    {% elif shipment.status == 'in_transit' %}
+                                                    <option value="in_transit" selected>In Transit</option>
+                                                    <option value="delivered">Delivered</option>
+                                                    {% elif shipment.status == 'delivered' %}
+                                                    <option value="delivered" selected>Delivered (Final)</option>
+                                                    {% endif %}
                                                 </select>
+                                                <div class="text-muted mt-2" style="font-size: 11px;">
+                                                    <i class="fas fa-info-circle me-1"></i> Admin can update status, but cannot revert to a previous stage.
+                                                </div>
                                             </div>
 
-                                            <div id="tracking-input-{{ shipment.pk }}" style="display: {% if shipment.status == 'in_transit' %}block{% else %}none{% endif %};">
+                                            <!-- Tracking Block -->
+                                            <div id="admin-tracking-block-{{ shipment.pk }}" style="display: {% if shipment.status == 'preparing' or shipment.status == 'delivered' %}none{% else %}block{% endif %};">
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-bold small">Courier Name <span class="text-danger">*</span></label>
-                                                    <input type="text" name="courier_name" class="form-control form-control-custom" id="courier-{{ shipment.pk }}" value="{{ shipment.courier_name|default:'' }}" placeholder="Enter Courier Name">
+                                                    <label class="form-label fw-bold small" style="color: var(--text-main);">Courier Name <span class="text-danger">*</span></label>
+                                                    <input type="text" name="courier_name" class="form-control-custom w-100" id="admin-courier-{{ shipment.pk }}" 
+                                                        value="{{ shipment.courier_name|default:'' }}" placeholder="e.g. FedEx, BlueDart"
+                                                        style="background-color: var(--bg-card); border-color: rgba(var(--text-main-rgb), 0.1);">
                                                 </div>
                                                  <div class="mb-3">
-                                                    <label class="form-label fw-bold small">Tracking Number <span class="text-danger">*</span></label>
-                                                    <input type="text" name="tracking_number" class="form-control form-control-custom" id="tracking-{{ shipment.pk }}" value="{{ shipment.tracking_number|default:'' }}" placeholder="Enter Tracking Number">
+                                                    <label class="form-label fw-bold small" style="color: var(--text-main);">Tracking Number <span class="text-danger">*</span></label>
+                                                    <input type="text" name="tracking_number" class="form-control-custom w-100" id="admin-tracking-{{ shipment.pk }}" 
+                                                        value="{{ shipment.tracking_number|default:'' }}" placeholder="Enter TRK number"
+                                                        style="background-color: var(--bg-card); border-color: rgba(var(--text-main-rgb), 0.1);">
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="modal-footer border-top">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn btn-primary-custom">Save</button>
+                                        <div class="modal-footer p-3" style="border-top: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary-custom px-4">Update Fulfillment</button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         </div>
-
                     </td>
                 </tr>
                 {% empty %}
@@ -119,17 +194,17 @@
 </div>
 
 <script>
-function toggleTracking(id) {
-    const status = document.getElementById('select-status-' + id).value;
-    const trackingDiv = document.getElementById('tracking-input-' + id);
-    if (status === 'in_transit') {
-        trackingDiv.style.display = 'block';
-        document.getElementById('courier-' + id).required = true;
-        document.getElementById('tracking-' + id).required = true;
+function toggleAdminTracking(id) {
+    const status = document.getElementById('admin-status-' + id).value;
+    const trackingBlock = document.getElementById('admin-tracking-block-' + id);
+    if (status === 'preparing' || status === 'delivered') {
+        trackingBlock.style.display = 'none';
+        document.getElementById('admin-courier-' + id).required = false;
+        document.getElementById('admin-tracking-' + id).required = false;
     } else {
-        trackingDiv.style.display = 'none';
-        document.getElementById('courier-' + id).required = false;
-        document.getElementById('tracking-' + id).required = false;
+        trackingBlock.style.display = 'block';
+        document.getElementById('admin-courier-' + id).required = true;
+        document.getElementById('admin-tracking-' + id).required = true;
     }
 }
 </script>

@@ -22,8 +22,8 @@ urlpatterns = [
     path("", include('store.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('vendor/', include('vendor.urls')),
-    path('shop/', include('cart.urls')), # Using 'shop/' prefix or root? Let's use root include or specific.
-    path('', include('cart.urls')),
+    path('cart/', include('cart.urls')),
+
     path('', include('django.contrib.auth.urls')), # For password reset confirm flow
 ]
 

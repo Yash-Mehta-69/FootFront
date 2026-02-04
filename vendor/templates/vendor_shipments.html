@@ -7,13 +7,34 @@
 
 {% block vendor_content %}
 <div class="custom-card">
-    <div class="card-header-custom" style="align-items: center; flex-wrap: wrap; gap: 15px;">
-        <h5 class="card-title-custom">All Shipments</h5>
-        <div class="btn-group" role="group" style="box-shadow: none;">
-            <button type="button" class="btn btn-outline-primary active" style="border-radius: 20px 0 0 20px;">All</button>
-            <button type="button" class="btn btn-outline-primary">Pending</button>
-            <button type="button" class="btn btn-outline-primary">In Transit</button>
-            <button type="button" class="btn btn-outline-primary" style="border-radius: 0 20px 20px 0;">Delivered</button>
+    <div class="card-header-custom d-flex justify-content-between flex-wrap gap-2">
+        <h5 class="card-title-custom mb-0">Shipment Tracking</h5>
+        <div class="d-flex align-items-center">
+            <form method="get" class="d-flex gap-2">
+                <input type="text" name="order_id" list="orderIdsList" value="{{ order_id_filter|default:'' }}" 
+                    class="form-control-custom form-control-sm" placeholder="Order ID..." style="width: 140px;"
+                    onchange="this.form.submit()">
+                <datalist id="orderIdsList">
+                    {% for oid in vendor_order_ids %}
+                    <option value="#ORD-{{ oid }}">
+                    {% endfor %}
+                </datalist>
+                <input type="text" name="q" value="{{ search_query|default:'' }}" 
+                    class="form-control-custom form-control-sm" placeholder="Search tracking..." style="width: 160px;"
+                    onchange="this.form.submit()">
+                <select name="status" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    {% for status_val, status_label in status_choices %}
+                    <option value="{{ status_val }}" {% if current_status == status_val %}selected{% endif %}>{{ status_label }}</option>
+                    {% endfor %}
+                </select>
+                <select name="sort" class="form-select-custom form-select-sm" style="width: 160px;" onchange="this.form.submit()">
+                    <option value="shipped_newest" {% if current_sort == 'shipped_newest' %}selected{% endif %}>Shipped: Newest</option>
+                    <option value="shipped_oldest" {% if current_sort == 'shipped_oldest' %}selected{% endif %}>Shipped: Oldest</option>
+                    <option value="delivery_newest" {% if current_sort == 'delivery_newest' %}selected{% endif %}>Delivery: Newest</option>
+                    <option value="delivery_oldest" {% if current_sort == 'delivery_oldest' %}selected{% endif %}>Delivery: Oldest</option>
+                </select>
+            </form>
         </div>
     </div>
 
@@ -21,32 +42,54 @@
         <table class="table-custom">
             <thead>
                 <tr>
-                    <th scope="col">Shipment ID</th>
-                    <th scope="col">Order ID</th>
-                    <th scope="col">Tracking Number</th>
-                    <th scope="col">Courier</th>
-                    <th scope="col">Expected Delivery</th>
-                    <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Actions</th>
+                    <th>Order ID</th>
+                    <th>Product</th>
+                    <th>Tracking #</th>
+                    <th>Courier</th>
+                    <th>Status</th>
+                    <th>Shipped Date</th>
+                    <th>Est. Delivery</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for shipment in shipments %}
                 <tr>
-                    <td><span class="fw-bold text-muted">#SHP-{{ shipment.pk }}</span></td>
-                    <td><span class="text-primary-custom fw-bold">#ORD-{{ shipment.order_item.order.pk }}</span></td>
-                    <td><span class="font-monospace">{{ shipment.tracking_number|default:"-" }}</span></td>
-                    <td>{{ shipment.courier_name|default:"-" }}</td>
+                    <td><span class="fw-bold text-primary-custom">#ORD-{{ shipment.order_item.order.pk }}</span></td>
                     <td>
-                        <span class="text-muted">
-                            <i class="far fa-calendar-alt me-1"></i>
-                            {{ shipment.expected_delivery|date:"M d, Y"|default:"-" }}
-                        </span>
+                        <div class="d-flex align-items-center">
+                            <div class="rounded-2 bg-light p-1 me-2" style="width: 40px; height: 40px; overflow: hidden; border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                                {% if shipment.order_item.product_variant.image %}
+                                    <img src="{{ shipment.order_item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                    <i class="fas fa-shoe-prints text-muted opacity-50" style="font-size: 0.7rem;"></i>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold" style="color: var(--text-main); font-size: 0.9rem;">{{ shipment.order_item.product_variant.product.name }}</span>
+                                <span class="small text-muted" style="font-size: 0.75rem;">{{ shipment.order_item.product_variant.size.size_label }} / {{ shipment.order_item.product_variant.color.name }}</span>
+                            </div>
+                        </div>
                     </td>
-                    <td id="status-s{{ shipment.pk }}">
-                        <span class="badge-soft-{% if shipment.status == 'delivered' %}success{% elif shipment.status == 'pending' %}warning{% else %}primary{% endif %}">
-                            {{ shipment.status|title }}
-                        </span>
+                    <td><span class="font-monospace small">{{ shipment.tracking_number|default:"-" }}</span></td>
+                    <td class="small">{{ shipment.courier_name|default:"-" }}</td>
+                    <td>
+                        <div class="small fw-bold {% if shipment.status == 'delivered' %}text-success-custom{% elif shipment.status == 'preparing' %}status-warning{% else %}text-primary-custom{% endif %}">
+                            <i class="fas {% if shipment.status == 'delivered' %}fa-check-circle{% elif shipment.status == 'preparing' %}fa-clock{% else %}fa-truck{% endif %} me-1"></i>
+                            {{ shipment.get_status_display|upper }}
+                        </div>
+                    </td>
+                    <td class="small">
+                        {% if shipment.shipped_at %}
+                            <i class="far fa-calendar-alt me-1 text-muted"></i>
+                            {{ shipment.shipped_at|date:"d M, Y"|default:"-" }}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td class="small fw-bold">
+                        {% if shipment.expected_delivery %}
+                            <i class="far fa-calendar-alt me-1 text-muted"></i>
+                            {{ shipment.expected_delivery|date:"d M, Y" }}
+                        {% else %}-{% endif %}
                     </td>
                     <td class="text-end">
                         <a href="{% url 'vendor_shipment_detail' shipment.pk %}" class="btn-icon-soft me-1" title="View Details">
@@ -62,9 +105,9 @@
                 <!-- Update Modal for Shipment -->
                 <div class="modal fade" id="updateShipmentModal{{ shipment.pk }}" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered">
-                         <div class="modal-content custom-card p-0">
-                            <div class="modal-header border-bottom p-4">
-                                <h5 class="modal-title fw-bold">Update Shipment #SHP-{{ shipment.pk }}</h5>
+                         <div class="modal-content custom-card p-0" style="border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                            <div class="modal-header p-4" style="border-bottom: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                <h5 class="modal-title fw-bold" style="color: var(--text-main);">Update Shipment #ORD-{{ shipment.order_item.order.pk }}</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
                             </div>
                             
@@ -81,24 +124,38 @@
                                     <div class="mb-3">
                                         <label class="form-label fw-bold small">New Status</label>
                                         <select name="status" class="form-select form-select-custom" id="select-status-s{{ shipment.pk }}" onchange="toggleTracking('s{{ shipment.pk }}')">
-                                            <option value="pending" {% if shipment.status == 'pending' %}selected{% endif %}>Pending</option>
-                                            <option value="in_transit" {% if shipment.status == 'in_transit' %}selected{% endif %}>In Transit</option>
-                                            <option value="delivered" {% if shipment.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                            {% if shipment.status == 'preparing' %}
+                                            <option value="preparing" selected>Preparing</option>
+                                            <option value="shipped">Shipped</option>
+                                            <option value="in_transit">In Transit</option>
+                                            <option value="delivered">Delivered</option>
+                                            {% elif shipment.status == 'shipped' %}
+                                            <option value="shipped" selected>Shipped</option>
+                                            <option value="in_transit">In Transit</option>
+                                            <option value="delivered">Delivered</option>
+                                            {% elif shipment.status == 'in_transit' %}
+                                            <option value="in_transit" selected>In Transit</option>
+                                            <option value="delivered">Delivered</option>
+                                            {% elif shipment.status == 'delivered' %}
+                                            <option value="delivered" selected>Delivered (Final)</option>
+                                            {% endif %}
                                         </select>
                                     </div>
                                     
-                                    <div id="tracking-input-s{{ shipment.pk }}" style="display: none;">
+                                    <div id="tracking-input-s{{ shipment.pk }}" style="display: {% if shipment.status == 'preparing' or shipment.status == 'delivered' %}none{% else %}block{% endif %};">
                                         <div class="mb-3">
                                             <label class="form-label fw-bold small">Courier Name <span class="text-danger">*</span></label>
-                                            <input type="text" name="courier_name" class="form-control-custom w-100" id="courier-s{{ shipment.pk }}" placeholder="e.g. BlueDart">
+                                            <input type="text" name="courier_name" class="form-control-custom w-100" id="courier-s{{ shipment.pk }}" 
+                                                value="{{ shipment.courier_name|default:'' }}" placeholder="e.g. BlueDart">
                                         </div>
                                          <div class="mb-3">
                                             <label class="form-label fw-bold small">Tracking Number <span class="text-danger">*</span></label>
-                                            <input type="text" name="tracking_number" class="form-control-custom w-100" id="tracking-s{{ shipment.pk }}" placeholder="e.g. TRK123456789">
+                                            <input type="text" name="tracking_number" class="form-control-custom w-100" id="tracking-s{{ shipment.pk }}" 
+                                                value="{{ shipment.tracking_number|default:'' }}" placeholder="e.g. TRK123456789">
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer border-top p-3">
+                                <div class="modal-footer p-3" style="border-top: 1px solid rgba(var(--text-main-rgb), 0.05);">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                     <button type="submit" class="btn btn-primary-custom">Update Status</button>
                                 </div>
@@ -106,17 +163,49 @@
                         </div>
                     </div>
                 </div>
+                {% empty %}
+                <tr>
+                    <td colspan="8">
+                        <div class="text-center p-5 text-muted">
+                            <i class="fas fa-truck-loading mb-3" style="font-size: 3rem; opacity: 0.2;"></i>
+                            <h5>No matching shipments found</h5>
+                            <p>Try adjusting your search or filters.</p>
+                        </div>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    {% if shipments.has_other_pages %}
+    <nav class="p-3 border-top">
+        <ul class="pagination pagination-sm justify-content-end custom-pagination mb-0">
+            {% if shipments.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ shipments.previous_page_number }}&q={{ search_query|default:'' }}&status={{ current_status|default:'' }}&sort={{ current_sort|default:'' }}">Previous</a></li>
+            {% endif %}
+            
+            {% for num in shipments.paginator.page_range %}
+            <li class="page-item {% if shipments.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}&q={{ search_query|default:'' }}&status={{ current_status|default:'' }}&sort={{ current_sort|default:'' }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if shipments.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ shipments.next_page_number }}&q={{ search_query|default:'' }}&status={{ current_status|default:'' }}&sort={{ current_sort|default:'' }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 
 <script>
 function toggleTracking(id) {
-    const status = document.getElementById('select-status-' + id).value;
+    const selector = document.getElementById('select-status-' + id);
+    if (!selector) return;
+    const status = selector.value;
     const trackingDiv = document.getElementById('tracking-input-' + id);
-    if (status === 'in_transit') {
+    if (status === 'in_transit' || status === 'shipped') {
         trackingDiv.style.display = 'block';
         document.getElementById('courier-' + id).required = true;
         document.getElementById('tracking-' + id).required = true;

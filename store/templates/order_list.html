@@ -142,7 +142,13 @@
                                             <i class="far fa-calendar-alt me-2"></i> {{ order.order_date|date:"F d, Y" }}
                                         </div>
                                     </div>
-                                    <span class="order-status status-pending" style="font-size: 0.7rem; letter-spacing: 1px;">PROCESSING</span>
+                                    {% if order.payment.status == 'completed' %}
+                                        <span class="order-status status-completed" style="font-size: 0.7rem; letter-spacing: 1px;">PAID</span>
+                                    {% elif order.payment.status == 'failed' %}
+                                        <span class="order-status status-cancelled" style="font-size: 0.7rem; letter-spacing: 1px;">FAILED</span>
+                                    {% else %}
+                                        <span class="order-status status-pending" style="font-size: 0.7rem; letter-spacing: 1px;">{{ order.payment.status|upper|default:"PREPARING" }}</span>
+                                    {% endif %}
                                 </div>
                                 
                                 <div class="d-flex justify-content-between align-items-end mt-2">
@@ -158,59 +164,17 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <!-- Static Demo Data (Enhanced) -->
                 <div class="glass-grid orders-wrapper" style="grid-template-columns: 1fr; gap: 1.5rem;">
-                    
-                    <div class="glass-card order-card-tech" style="flex-direction: row; align-items: stretch; padding: 0; overflow: hidden; min-height: 120px;">
-                        <div class="order-visuals" style="width: 120px; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; border-right: 1px solid var(--glass-border);">
-                            <div style="width: 100%; height: 100%; background: #222; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-shoe-prints" style="font-size: 2rem; color: #444;"></i>
-                            </div>
+                    <div class="glass-card p-5 text-center">
+                        <div style="margin-bottom: 2rem; opacity: 0.3;">
+                            <i class="fas fa-box-open" style="font-size: 5rem; color: var(--color-accent);"></i>
                         </div>
-                        <div class="p-4" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h4 style="margin: 0; font-family: var(--font-heading); color: var(--color-accent);">ORDER #001234</h4>
-                                    <div style="font-size: 0.8rem; color: #888; margin-top: 0.3rem;">
-                                        <i class="far fa-calendar-alt me-2"></i> Jan 12, 2026
-                                    </div>
-                                </div>
-                                <span class="order-status status-completed" style="font-size: 0.7rem; letter-spacing: 1px;">DELIVERED</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-end mt-2">
-                                <div style="font-family: monospace;">
-                                    TOTAL: <span style="font-weight: bold; font-size: 1.1rem;">₹249.00</span>
-                                </div>
-                                <button onclick="openOrderModal('001234')" class="btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem; clip-path: none; border-radius: 4px; border: none;">DETAILS <i class="fas fa-arrow-right ms-2"></i></button>
-                            </div>
-                        </div>
+                        <h3 style="font-family: var(--font-heading); color: var(--color-text);">NO_ORDERS_FOUND</h3>
+                        <p class="text-muted-theme mt-3">Your transaction history is currently empty. Start exploring our collection.</p>
+                        <a href="{% url 'shop' %}" class="btn-primary mt-4" style="display: inline-block;">
+                            GO TO SHOP <i class="fas fa-shopping-cart ms-2"></i>
+                        </a>
                     </div>
-
-                    <div class="glass-card order-card-tech" style="flex-direction: row; align-items: stretch; padding: 0; overflow: hidden; min-height: 120px;">
-                        <div class="order-visuals" style="width: 120px; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; border-right: 1px solid var(--glass-border);">
-                            <div style="width: 100%; height: 100%; background: #222; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-tshirt" style="font-size: 2rem; color: #444;"></i>
-                            </div>
-                        </div>
-                        <div class="p-4" style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h4 style="margin: 0; font-family: var(--font-heading); color: var(--color-accent);">ORDER #001235</h4>
-                                    <div style="font-size: 0.8rem; color: #888; margin-top: 0.3rem;">
-                                        <i class="far fa-calendar-alt me-2"></i> Jan 14, 2026
-                                    </div>
-                                </div>
-                                <span class="order-status status-pending" style="font-size: 0.7rem; letter-spacing: 1px;">SHIPPED</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-end mt-2">
-                                <div style="font-family: monospace;">
-                                    TOTAL: <span style="font-weight: bold; font-size: 1.1rem;">₹189.50</span>
-                                </div>
-                                <button onclick="openOrderModal('001235')" class="btn-primary" style="padding: 0.4rem 1rem; font-size: 0.8rem; clip-path: none; border-radius: 4px; border: none;">DETAILS <i class="fas fa-arrow-right ms-2"></i></button>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             {% endif %}
         </main>

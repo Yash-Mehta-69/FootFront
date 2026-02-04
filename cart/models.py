@@ -46,25 +46,42 @@ class OrderItem(SoftDeleteModel):
     quantity = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    @property
+    def total_price(self):
+        return self.price * self.quantity
+
     def __str__(self):
         return f"{self.quantity} x {self.product_variant.product.name} in Order #{self.order.pk}"
 
 class Shipment(SoftDeleteModel):
     STATUS_CHOICES = (
-        ('pending', 'Pending'),
+        ('preparing', 'Preparing'),
+        ('shipped', 'Shipped'),
         ('in_transit', 'In Transit'),
         ('delivered', 'Delivered'),
     )
     order_item = models.OneToOneField(OrderItem, on_delete=models.CASCADE, related_name='shipment')
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    tracking_number = models.CharField(max_length=100)
-    courier_name = models.CharField(max_length=100)
-    shipped_at = models.DateTimeField(auto_now_add=True)
+    tracking_number = models.CharField(max_length=100, blank=True)
+    courier_name = models.CharField(max_length=100, blank=True)
+    shipped_at = models.DateTimeField(null=True, blank=True)
     expected_delivery = models.DateField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='preparing')
 
     def __str__(self):
-        return f"Shipment for {self.order_item}"
+        return f"Shipment for OrderItem #{self.order_item.pk}"
+
+class ShipmentStatusHistory(SoftDeleteModel):
+    shipment = models.ForeignKey(Shipment, on_delete=models.CASCADE, related_name='history')
+    status = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.status} for Shipment #{self.shipment.pk}"
 
 class Payment(SoftDeleteModel):
     STATUS_CHOICES = (
@@ -72,10 +89,17 @@ class Payment(SoftDeleteModel):
         ('completed', 'Completed'),
         ('failed', 'Failed'),
     )
+    METHOD_CHOICES = (
+        ('card', 'Card'),
+        ('upi', 'UPI'),
+        ('netbanking', 'Netbanking'),
+        ('wallet', 'Wallet'),
+        ('emi', 'EMI'),
+    )
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='payment')
     payment_date = models.DateTimeField(auto_now_add=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_method = models.CharField(max_length=50, default='Razorpay')
+    payment_method = models.CharField(max_length=50, choices=METHOD_CHOICES)
     razorpay_order_id = models.CharField(max_length=100, blank=True)
     razorpay_payment_id = models.CharField(max_length=100, blank=True)
     razorpay_signature = models.CharField(max_length=255, blank=True)

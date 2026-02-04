@@ -2,15 +2,17 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
-from django.db.models import Q, Min
+from django.db.models import Q, Min, Sum, F, Count
 from django.core.paginator import Paginator
 from store.decorators import vendor_required
 from store.models import Category, Product, ProductVariant, Size, Color
 from store.forms import VendorProductForm
-from cart.models import Shipment, OrderItem
+from cart.models import Order, Shipment, OrderItem, ShipmentStatusHistory
 from django.utils import timezone
 from datetime import timedelta, datetime
 from utils import panel_messages
+from django.db.models import Prefetch
+
 
 class MockObj:
     def __init__(self, **kwargs):
@@ -23,39 +25,101 @@ class MockObj:
 def vendor_dashboard(request):
     vendor = request.user.vendor_profile
     
-    # Analytics Data
+    # Real Analytics Data
+    now = timezone.now()
+    first_day_current = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    month_prev = first_day_current - timedelta(days=1)
+    first_day_prev = month_prev.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Base Queryset
+    base_qs = OrderItem.objects.filter(product_variant__product__vendor=vendor, order__payment__status='completed', is_deleted=False)
+    vendor_order_items = base_qs
+
+    # Current Month Data
+    current_month_items = base_qs.filter(order__order_date__gte=first_day_current)
+    current_sales = current_month_items.aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    current_orders = current_month_items.values('order').distinct().count()
+    current_qty = current_month_items.aggregate(total=Sum('quantity'))['total'] or 0
+    current_aov = current_sales / current_orders if current_orders > 0 else 0
+
+    # Previous Month Data
+    prev_month_items = base_qs.filter(order__order_date__gte=first_day_prev, order__order_date__lt=first_day_current)
+    prev_sales = prev_month_items.aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    prev_orders = prev_month_items.values('order').distinct().count()
+    prev_qty = prev_month_items.aggregate(total=Sum('quantity'))['total'] or 0
+    prev_aov = prev_sales / prev_orders if prev_orders > 0 else 0
+
+    def calc_growth(current, prev):
+        if prev == 0:
+            return 100.0 if current > 0 else 0.0
+        return ((current - prev) / prev) * 100
+
+    # Overall Totals (Lifetime)
+    total_sales = base_qs.aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+    total_orders = base_qs.values('order').distinct().count()
+    products_sold = base_qs.aggregate(total=Sum('quantity'))['total'] or 0
+    avg_order_val = total_sales / total_orders if total_orders > 0 else 0
+    
+    # Growth Calculations
+    sales_growth_val = calc_growth(current_sales, prev_sales)
+    orders_growth_val = calc_growth(current_orders, prev_orders)
+    aov_growth_val = calc_growth(current_aov, prev_aov)
+    products_sold_growth_val = calc_growth(current_qty, prev_qty)
+
     analytics = MockObj(
-        total_sales="₹24,500",
-        sales_growth="12.5",
-        total_orders="156",
-        orders_growth="5.8",
-        avg_order_value="₹157",
-        aov_growth="1.2",
-        products_sold="45",
-        products_sold_growth="10.4"
+        total_sales=f"₹{total_sales:,.2f}",
+        sales_growth=f"{abs(sales_growth_val):.1f}",
+        sales_growth_pos=sales_growth_val >= 0,
+        
+        total_orders=str(total_orders),
+        orders_growth=f"{abs(orders_growth_val):.1f}",
+        orders_growth_pos=orders_growth_val >= 0,
+
+        avg_order_value=f"₹{avg_order_val:,.2f}",
+        aov_growth=f"{abs(aov_growth_val):.1f}",
+        aov_growth_pos=aov_growth_val >= 0,
+
+        products_sold=str(products_sold),
+        products_sold_growth=f"{abs(products_sold_growth_val):.1f}",
+        products_sold_growth_pos=products_sold_growth_val >= 0
     )
 
-    # Recent Orders (Mock)
-    order_items = [
-        MockObj(
-            pk=1,
-            order=MockObj(pk=7829, customer=MockObj(name="John Maker"), order_date=datetime.now() - timedelta(days=2)),
-            product_variant=MockObj(product=MockObj(name="Nike Air Max 90")),
-            price=4999.00,
-            shipment=MockObj(status='delivered')
-        ),
-         MockObj(
-            pk=2,
-            order=MockObj(pk=7835, customer=MockObj(name="Sarah Connor"), order_date=datetime.now() - timedelta(days=1)),
-            product_variant=MockObj(product=MockObj(name="Puma T-Shirt")),
-            price=1299.00,
-            shipment=MockObj(status='shipped')
+    # Top Products (Real)
+    top_products = Product.objects.filter(vendor=vendor, is_deleted=False).annotate(
+        total_revenue=Sum(F('productvariant__orderitem__price') * F('productvariant__orderitem__quantity'), filter=Q(productvariant__orderitem__order__payment__status='completed'))
+    ).filter(total_revenue__gt=0).order_by('-total_revenue')[:3]
+
+    # Recent Orders (Real)
+    # Get IDs of recent orders for this vendor
+    vendor_recent_order_ids = OrderItem.objects.filter(
+        product_variant__product__vendor=vendor,
+        is_deleted=False
+    ).values_list('order_id', flat=True).distinct().order_by('-order__order_date')[:5]
+
+    recent_orders = Order.objects.filter(
+        pk__in=vendor_recent_order_ids
+    ).select_related(
+        'customer', 'customer__user', 'payment'
+    ).prefetch_related(
+        Prefetch(
+            'items',
+            queryset=OrderItem.objects.filter(
+                product_variant__product__vendor=vendor,
+                is_deleted=False
+            ).select_related('product_variant', 'product_variant__product', 'shipment'),
+            to_attr='vendor_items'
         )
-    ]
+    ).annotate(
+        vendor_total=Sum(
+            F('items__price') * F('items__quantity'),
+            filter=Q(items__product_variant__product__vendor=vendor)
+        )
+    ).order_by('-order_date')
 
     context = {
         'analytics': analytics,
-        'order_items': order_items,
+        'top_products': top_products,
+        'recent_orders': recent_orders,
     }
     return render(request, 'vendor_dashboard.html', context)
 
@@ -109,127 +173,87 @@ def vendor_products(request):
 
 @vendor_required
 def vendor_orders(request):
-    # Mock Data for Vendor Orders
-    # In a real scenario, this would filter OrderItems by the current vendor
-    from .views import MockObj # Ensure MockObj is available or define it if needed (it is defined at top of file)
+    vendor = request.user.vendor_profile
     
-    order_items = [
-        MockObj(
-            pk=1, # OrderItem ID
-            order=MockObj(
-                pk=7829, # Order ID
-                customer=MockObj(
-                    user=MockObj(first_name="John", last_name="Maker", email="j***@example.com"),
-                    phone="+91 *********10"
-                ),
-                order_date=datetime.now() - timedelta(days=2),
-                payment=MockObj(status='completed', payment_method='Razorpay', razorpay_order_id='razor_O123'),
-                shipping_address=MockObj(
-                    address_line1="123, Green Park Avenue",
-                    address_line2="Sector 15",
-                    city="New Delhi",
-                    state="Delhi",
-                    postal_code="110016"
-                )
+    # Filtering parameters
+    q = request.GET.get('q', '')
+    status = request.GET.get('status', '')
+    sort = request.GET.get('sort', 'date_newest')
+    
+    # Get IDs of orders that contain at least one item from this vendor
+    vendor_order_ids = OrderItem.objects.filter(
+        product_variant__product__vendor=vendor,
+        is_deleted=False
+    ).values_list('order_id', flat=True).distinct()
+    
+    # Base queryset for Orders
+    orders = Order.objects.filter(
+        pk__in=vendor_order_ids,
+        is_deleted=False
+    ).select_related(
+        'customer', 'customer__user', 'payment', 'shipping_address'
+    ).prefetch_related(
+        Prefetch(
+            'items',
+            queryset=OrderItem.objects.filter(
+                product_variant__product__vendor=vendor,
+                is_deleted=False
+            ).select_related(
+                'product_variant', 'product_variant__product',
+                'product_variant__size', 'product_variant__color', 'shipment'
             ),
-            price=14999.00,
-            quantity=1,
-            product_variant=MockObj(
-                product=MockObj(name="Nike Air Jordan 1 Low"),
-                size=MockObj(size_label="UK 9"),
-                color=MockObj(name="Chicago Red"),
-                image=MockObj(url="/media/photos/products/p1.png")
-            ),
-            shipment=MockObj(
-                pk=101, # Shipment ID
-                status='delivered', 
-                tracking_number="BD_AJ123456", 
-                courier_name="BlueDart",
-                expected_delivery=datetime.now() - timedelta(hours=5),
-                history=[
-                    MockObj(status="Delivered", date=datetime.now() - timedelta(hours=5), description="Handed over to customer."),
-                    MockObj(status="In Transit", date=datetime.now() - timedelta(days=1), description="Arrived at local hub."),
-                    MockObj(status="Shipped", date=datetime.now() - timedelta(days=2), description="Picked up by BlueDart.")
-                ]
-            )
-        ),
-         MockObj(
-            pk=2,
-            order=MockObj(
-                pk=7835,
-                customer=MockObj(
-                    user=MockObj(first_name="Sarah", last_name="Connor", email="s***@example.com"),
-                    phone="+91 *********55"
-                ),
-                order_date=datetime.now() - timedelta(days=1),
-                payment=MockObj(status='pending', payment_method='COD', razorpay_order_id='-'),
-                shipping_address=MockObj(
-                    address_line1="456, Cyberdyne Systems",
-                    address_line2="Industrial Block B",
-                    city="Los Angeles",
-                    state="California",
-                    postal_code="90001"
-                )
-            ),
-            price=24999.00,
-            quantity=1,
-            product_variant=MockObj(
-                product=MockObj(name="Adidas Yeezy Boost 350"),
-                size=MockObj(size_label="UK 8"),
-                color=MockObj(name="Onyx"),
-                image=None
-            ),
-            shipment=MockObj(
-                pk=102,
-                status='in_transit', 
-                tracking_number="DL_YZ987654", 
-                courier_name="Delhivery",
-                expected_delivery=datetime.now() + timedelta(days=2),
-                history=[
-                    MockObj(status="In Transit", date=datetime.now() - timedelta(hours=2), description="In transit to destination."),
-                    MockObj(status="Shipped", date=datetime.now() - timedelta(days=1), description="Dispatched from hub.")
-                ]
-            )
-        ),
-        MockObj(
-            pk=3,
-            order=MockObj(
-                pk=7840,
-                customer=MockObj(
-                    user=MockObj(first_name="Mike", last_name="Ross", email="m***@pearson-specter.com"),
-                    phone="+91 *********44"
-                ),
-                order_date=datetime.now(),
-                payment=MockObj(status='completed', payment_method='Credit Card', razorpay_order_id='razor_O440'),
-                shipping_address=MockObj(
-                    address_line1="789, Wall Street",
-                    address_line2="Floor 42",
-                    city="Manhattan",
-                    state="New York",
-                    postal_code="10005"
-                )
-            ),
-            price=8999.00,
-            quantity=1,
-            product_variant=MockObj(
-                product=MockObj(name="Nike Pegasus 40"),
-                size=MockObj(size_label="UK 10"),
-                color=MockObj(name="Volt Green"),
-                image=None
-            ),
-            shipment=MockObj(
-                pk=103,
-                status='pending', 
-                tracking_number=None, 
-                courier_name=None,
-                expected_delivery=datetime.now() + timedelta(days=4),
-                history=[
-                    MockObj(status="Pending", date=datetime.now(), description="Awaiting pickup.")
-                ]
-            )
+            to_attr='vendor_items'
         )
-    ]
-    return render(request, 'vendor_orders.html', {'order_items': order_items})
+    )
+    
+    # Searching
+    if q:
+        orders = orders.filter(
+            Q(pk__icontains=q) |
+            Q(customer__user__first_name__icontains=q) |
+            Q(customer__user__last_name__icontains=q) |
+            Q(items__product_variant__product__name__icontains=q)
+        ).distinct()
+        
+    # Filtering by Status (if any vendor item has the status)
+    if status:
+        orders = orders.filter(
+            items__product_variant__product__vendor=vendor,
+            items__shipment__status=status
+        ).distinct()
+        
+    # Annotate total vendor price for sorting if needed
+    orders = orders.annotate(
+        vendor_total=Sum(
+            F('items__price') * F('items__quantity'),
+            filter=Q(items__product_variant__product__vendor=vendor)
+        )
+    )
+
+    # Sorting
+    if sort == 'date_newest':
+        orders = orders.order_by('-order_date')
+    elif sort == 'date_oldest':
+        orders = orders.order_by('order_date')
+    elif sort == 'price_high':
+        orders = orders.order_by('-vendor_total')
+    elif sort == 'price_low':
+        orders = orders.order_by('vendor_total')
+        
+    # Pagination
+    paginator = Paginator(orders, 10)
+    page_number = request.GET.get('page')
+    orders_page = paginator.get_page(page_number)
+    
+    context = {
+        'orders': orders_page,
+        'search_query': q,
+        'current_status': status,
+        'current_sort': sort,
+        'status_choices': Shipment.STATUS_CHOICES
+    }
+    
+    return render(request, 'vendor_orders.html', context)
 
 @vendor_required
 def add_product(request):
@@ -431,46 +455,15 @@ def vendor_review_detail(request, pk):
 
 @vendor_required
 def vendor_shipment_detail(request, pk):
-    try:
-        shipment = Shipment.objects.get(pk=pk)
-    except Shipment.DoesNotExist:
-        # Rich Mock Data Fallback
-        shipment = MockObj(
-            pk=pk,
-            status="in_transit",
-            courier_name="BlueDart",
-            tracking_number="BD_8822991100",
-            shipped_at=datetime.now() - timedelta(days=1),
-            expected_delivery=datetime.now() + timedelta(days=3),
-            history=[
-                MockObj(status="In Transit", date=datetime.now() - timedelta(hours=5), description="Shipment is out for delivery."),
-                MockObj(status="Shipped", date=datetime.now() - timedelta(days=1), description="Shipment left the vendor facility."),
-                MockObj(status="Pending", date=datetime.now() - timedelta(days=1, hours=4), description="Shipment order created.")
-            ],
-            order_item=MockObj(
-                order=MockObj(
-                    pk=7829, 
-                    customer=MockObj(
-                        user=MockObj(first_name="John", last_name="Maker", email="j***@example.com"),
-                        phone="+91 *********10"
-                    ),
-                    shipping_address=MockObj(
-                        address_line1="123, Green Park Avenue",
-                        address_line2="Sector 15",
-                        city="New Delhi",
-                        state="Delhi",
-                        postal_code="110016"
-                    )
-                ),
-                product_variant=MockObj(
-                    product=MockObj(name="Nike Air Max 90"),
-                    size=MockObj(size_label="UK 9"),
-                    color=MockObj(name="White/Red"),
-                    image=MockObj(url="/media/photos/products/p1.png")
-                ),
-                quantity=1
-            )
-        )
+    shipment = get_object_or_404(
+        Shipment.objects.select_related(
+            'order_item', 'order_item__order', 'order_item__order__customer',
+            'order_item__order__customer__user', 'order_item__order__shipping_address',
+            'order_item__product_variant', 'order_item__product_variant__product',
+            'order_item__product_variant__size', 'order_item__product_variant__color'
+        ).prefetch_related('history'),
+        pk=pk, vendor=request.user.vendor_profile
+    )
     return render(request, 'vendor_shipment_detail.html', {'shipment': shipment})
 
 @vendor_required
@@ -480,45 +473,97 @@ def vendor_categories(request):
 
 @vendor_required
 def vendor_shipments(request):
-    # Mock Data
-    shipments = [
-        MockObj(
-            pk=101,
-            order_item=MockObj(
-                product_variant=MockObj(
-                    product=MockObj(name="Nike Air Max"), 
-                    size=MockObj(size_label="US 9"), 
-                    color=MockObj(name="Red")
-                ),
-                order=MockObj(pk=1001)
-            ),
-            tracking_number="TRK9988776655",
-            courier_name="UPS",
-            status="pending",
-            shipped_at=datetime.now(),
-            expected_delivery=datetime.now() + timedelta(days=5)
-        ),
-        MockObj(
-            pk=102,
-            order_item=MockObj(
-                product_variant=MockObj(
-                    product=MockObj(name="Adidas UltraBoost"), 
-                    size=MockObj(size_label="US 10"), 
-                    color=MockObj(name="Black")
-                ),
-                order=MockObj(pk=1002)
-            ),
-            tracking_number="TRK1122334455",
-            courier_name="DHL",
-            status="delivered",
-            shipped_at=datetime.now() - timedelta(days=3),
-            expected_delivery=datetime.now() - timedelta(days=1)
+    vendor = request.user.vendor_profile
+    
+    # Filtering parameters
+    q = request.GET.get('q', '')
+    status = request.GET.get('status', '')
+    order_id = request.GET.get('order_id', '')
+    sort = request.GET.get('sort', 'shipped_newest')
+    
+    # Fetch real shipments for this vendor
+    shipments = Shipment.objects.filter(
+        vendor=vendor,
+        is_deleted=False
+    ).select_related(
+        'order_item', 'order_item__order', 'order_item__product_variant',
+        'order_item__product_variant__product', 'order_item__product_variant__size',
+        'order_item__product_variant__color'
+    )
+    
+    # Searching
+    if q:
+        shipments = shipments.filter(
+            Q(tracking_number__icontains=q) |
+            Q(order_item__product_variant__product__name__icontains=q) |
+            Q(order_item__order__pk__icontains=q)
         )
-    ]
-    return render(request, 'vendor_shipments.html', {'shipments': shipments})
+        
+    # Filtering by Status
+    if status:
+        shipments = shipments.filter(status=status)
+        
+    # Filtering by Order ID
+    if order_id:
+        try:
+            clean_id = order_id.upper().replace('#ORD-', '').strip()
+            if clean_id.isdigit():
+                shipments = shipments.filter(order_item__order__pk=int(clean_id))
+            else:
+                shipments = shipments.filter(order_item__order__pk__icontains=clean_id)
+        except:
+            pass
+        
+    # Get all unique Order IDs for this vendor (for searchable datalist)
+    # Using the unfiltered queryset to give the vendor all their order options
+    vendor_order_ids = OrderItem.objects.filter(
+        product_variant__product__vendor=vendor,
+        is_deleted=False
+    ).values_list('order_id', flat=True).distinct().order_by('-order_id')
+        
+    # Sorting
+    if sort == 'shipped_newest':
+        shipments = shipments.order_by('-shipped_at')
+    elif sort == 'shipped_oldest':
+        shipments = shipments.order_by('shipped_at')
+    elif sort == 'delivery_newest':
+        shipments = shipments.order_by('-expected_delivery')
+    elif sort == 'delivery_oldest':
+        shipments = shipments.order_by('expected_delivery')
+        
+    # Pagination
+    paginator = Paginator(shipments, 10)
+    page_number = request.GET.get('page')
+    shipments_page = paginator.get_page(page_number)
+    
+    context = {
+        'shipments': shipments_page,
+        'search_query': q,
+        'order_id_filter': order_id,
+        'vendor_order_ids': vendor_order_ids,
+        'current_status': status,
+        'current_sort': sort,
+        'status_choices': Shipment.STATUS_CHOICES
+    }
+    
+    return render(request, 'vendor_shipments.html', context)
 
 @vendor_required
 def update_shipment_status(request, pk):
+    vendor = request.user.vendor_profile
+    
+    # Try finding shipment directly by PK (from vendor_shipments) 
+    # or by OrderItem ID (from vendor_orders)
+    shipment = Shipment.objects.filter(
+        Q(pk=pk) | Q(order_item_id=pk),
+        vendor=vendor,
+        is_deleted=False
+    ).first()
+    
+    if not shipment:
+        panel_messages.add_vendor_message(request, 'error', "Shipment record not found.")
+        return redirect(request.META.get('HTTP_REFERER', 'vendor_orders'))
+
     if request.method == 'POST':
         status = request.POST.get('status')
         courier = request.POST.get('courier_name')
@@ -527,9 +572,36 @@ def update_shipment_status(request, pk):
         if status == 'in_transit' and (not courier or not tracking):
             panel_messages.add_vendor_message(request, 'error', "Courier and Tracking Number are required for In Transit status.")
         else:
-            # Here we would update the actual model
-            # Shipment.objects.filter(pk=pk).update(status=status, ...)
-            panel_messages.add_vendor_message(request, 'success', f"Shipment #{pk} updated successfully to {status.replace('_', ' ').title()}.")
+            # Lifecycle Enforcement: Define rank for statuses to prevent reverting
+            rank = {'preparing': 1, 'shipped': 2, 'in_transit': 3, 'delivered': 4}
+            current_rank = rank.get(shipment.status, 0)
+            new_rank = rank.get(status, 0)
+            
+            if new_rank < current_rank:
+                panel_messages.add_vendor_message(request, 'error', f"Cannot revert status from {shipment.get_status_display()} to {status.title()}.")
+                return redirect(request.META.get('HTTP_REFERER', 'vendor_orders'))
+
+            shipment.status = status
+            if courier: shipment.courier_name = courier
+            if tracking: shipment.tracking_number = tracking
+            
+            if status == 'shipped' and not shipment.shipped_at:
+                shipment.shipped_at = timezone.now()
+            
+            # Optional: Automatic expected delivery 7 days from now if not set
+            if status == 'shipped' and not shipment.expected_delivery:
+                shipment.expected_delivery = (timezone.now() + timedelta(days=7)).date()
+                
+            shipment.save()
+            
+            # Log History
+            ShipmentStatusHistory.objects.create(
+                shipment=shipment,
+                status=status.replace('_', ' ').title(),
+                description=f"Shipment status updated to {status.replace('_', ' ').title()} by Vendor."
+            )
+            
+            panel_messages.add_vendor_message(request, 'success', f"Shipment updated successfully to {status.replace('_', ' ').title()}.")
             
     return redirect(request.META.get('HTTP_REFERER', 'vendor_orders'))
 

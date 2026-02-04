@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <h3 class="fw-bold mb-1">{{ analytics.total_sales }}</h3>
-                <div class="text-success small fw-semibold">
+                <div class="text-success-custom small fw-semibold">
                     <i class="fas fa-arrow-up"></i> {{ analytics.sales_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
                 </div>
             </div>
@@ -29,12 +29,12 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size: 12px;">Total Orders</h6>
-                    <div class="icon-circle bg-soft-success text-success">
+                    <div class="icon-circle bg-soft-success text-success-custom">
                         <i class="fas fa-shopping-bag"></i>
                     </div>
                 </div>
                 <h3 class="fw-bold mb-1">{{ analytics.total_orders }}</h3>
-                <div class="text-success small fw-semibold">
+                <div class="text-success-custom small fw-semibold">
                     <i class="fas fa-arrow-up"></i> {{ analytics.orders_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
                 </div>
             </div>
@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <h3 class="fw-bold mb-1">{{ analytics.avg_order_value }}</h3>
-                <div class="text-danger small fw-semibold">
+                <div class="text-danger-custom small fw-semibold">
                     <i class="fas fa-arrow-down"></i> {{ analytics.aov_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
                 </div>
             </div>
@@ -61,12 +61,12 @@
             <div class="card-body p-4">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h6 class="text-muted text-uppercase fw-semibold mb-0" style="font-size: 12px;">Products Sold</h6>
-                    <div class="icon-circle bg-soft-warning text-warning">
+                    <div class="icon-circle bg-soft-warning status-warning">
                         <i class="fas fa-box-open"></i>
                     </div>
                 </div>
                 <h3 class="fw-bold mb-1">{{ analytics.products_sold }}</h3>
-                <div class="text-success small fw-semibold">
+                <div class="text-success-custom small fw-semibold">
                     <i class="fas fa-arrow-up"></i> {{ analytics.products_sold_growth }}% <span class="text-muted fw-normal ms-1">vs last month</span>
                 </div>
             </div>
@@ -203,22 +203,22 @@
                 <tr>
                     <td>New Order #ORD-1024 confirmed</td>
                     <td>Today, 10:30 AM</td>
-                    <td><span class="badge-soft-success">Completed</span></td>
+                    <td><span class="text-success-custom fw-bold small"><i class="fas fa-check-circle me-1"></i>COMPLETED</span></td>
                 </tr>
                 <tr>
                     <td>Shipment #TRK-9988 sent to courier</td>
                     <td>Yesterday, 4:15 PM</td>
-                    <td><span class="badge-soft-primary">Shipped</span></td>
+                    <td><span class="text-primary-custom fw-bold small"><i class="fas fa-truck me-1"></i>SHIPPED</span></td>
                 </tr>
                  <tr>
                     <td>Product "Nike Air Force 1" stock updated</td>
                     <td>Oct 24, 2023</td>
-                    <td><span class="badge-soft-info">Updated</span></td>
+                    <td><span class="text-primary-custom fw-bold small"><i class="fas fa-edit me-1"></i>UPDATED</span></td>
                 </tr>
                  <tr>
                     <td>Order #ORD-1020 Cancelled by user</td>
                     <td>Oct 22, 2023</td>
-                    <td><span class="badge-soft-danger">Cancelled</span></td>
+                    <td><span class="text-danger-custom fw-bold small"><i class="fas fa-times-circle me-1"></i>CANCELLED</span></td>
                 </tr>
             </tbody>
         </table>
