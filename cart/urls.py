@@ -11,6 +11,7 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('create-order/', views.create_order, name='create_order'),
     path('payment-callback/', views.payment_callback, name='payment_callback'),
+    path('update-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
 ]
 
 

@@ -119,3 +119,85 @@ window.parseFirebaseError = function(errorInput) {
     
     return mapping[cleanCode] || mapping[rawStr] || rawStr || message;
 };
+
+window.toggleWishlist = async function(variantId, productId, btn, csrfToken, url) {
+    if (!variantId && !productId) {
+        showToast('Identification failed', 'error');
+        return;
+    }
+
+    const icon = btn.querySelector('i');
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ 
+                variant_id: variantId || null,
+                product_id: productId || null
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            const isAdded = data.action === 'added';
+            if (icon) {
+                icon.classList.toggle('fas', isAdded);
+                icon.classList.toggle('far', !isAdded);
+            }
+            
+            // If we are on product card, toggle the 'active' class on button
+            btn.classList.toggle('active', isAdded);
+            
+            // If we are on product detail page, update the local allVariants state if it exists
+            if (typeof allVariants !== 'undefined' && variantId) {
+                const vari = allVariants.find(v => v.id == variantId);
+                if (vari) vari.in_wishlist = isAdded;
+            }
+
+            const feedbackMsg = data.message || (isAdded ? `Wishlisted ${data.variant_name}!` : `Extracted ${data.variant_name} from node.`);
+            showToast(feedbackMsg, 'success');
+            return data;
+        } else {
+            if (data.message === 'login_required') {
+                showToast('PLEASE LOGIN TO MANAGE WISHLIST', 'info');
+            } else {
+                showToast(data.message || 'Error updating wishlist', 'error');
+            }
+        }
+    } catch (error) {
+        console.error("Wishlist error:", error);
+        showToast('Network error.', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+};
+
+window.showToast = function(msg, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `tech-toast ${type}`;
+    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i> ${msg}`;
+    document.body.appendChild(toast);
+    
+    // Handle custom cursor for dynamic links
+    const cursorOutline = document.querySelector('.cursor-outline');
+    if (cursorOutline) {
+        toast.querySelectorAll('a').forEach(link => {
+            link.addEventListener('mouseenter', () => cursorOutline.classList.add('hovered'));
+            link.addEventListener('mouseleave', () => cursorOutline.classList.remove('hovered'));
+        });
+    }
+
+    setTimeout(() => {
+        toast.classList.add('show');
+        const duration = (type === 'info') ? 5000 : 3000; 
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        }, duration);
+    }, 100);
+};

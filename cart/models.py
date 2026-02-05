@@ -11,6 +11,9 @@ class Cart(SoftDeleteModel):
     def __str__(self):
         return f"Cart for {self.customer.user.email}"
 
+    def get_total_price(self):
+        return sum(item.sub_total for item in self.items.filter(is_deleted=False))
+
 class CartItem(SoftDeleteModel):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)

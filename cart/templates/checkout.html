@@ -14,8 +14,8 @@
     
     .checkout-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 3rem;
+        grid-template-columns: 1.8fr 1.2fr;
+        gap: 2.5rem;
     }
     
     @media(max-width: 900px) {
@@ -25,81 +25,109 @@
     }
     
     .form-section {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 8px;
-        padding: 2rem;
+        background: var(--card-bg-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 2.5rem;
         margin-bottom: 2rem;
+        box-shadow: var(--shadow-md);
+    }
+
+    [data-theme="light"] .form-section {
+        border-color: rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
     
     .section-title {
         font-family: var(--font-heading);
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         color: var(--color-text);
         margin-bottom: 1.5rem;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--glass-border);
+        padding-bottom: 0.75rem;
+        letter-spacing: 1.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title::before {
+        content: '';
+        width: 4px;
+        height: 1.2rem;
+        background: var(--color-accent);
+        border-radius: 2px;
     }
     
     .address-card {
-        background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(15, 15, 15, 1);
+        border: 1px solid var(--glass-border);
         border-radius: 12px;
         padding: 1.5rem;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1.25rem;
         cursor: pointer;
         transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
         display: flex;
-        align-items: center;
-        gap: 1.2rem;
+        align-items: flex-start;
+        gap: 1rem;
         position: relative;
         overflow: hidden;
     }
     
     .address-card:hover {
-        background: rgba(255,255,255,0.05);
-        border-color: rgba(255,255,255,0.3);
-        transform: translateY(-2px);
+        background: var(--glass-hover-bg);
+        border-color: var(--color-accent);
+        transform: translateX(5px);
     }
     
     .address-card.active {
+        background: rgba(var(--color-accent-rgb, 204, 255, 0), 0.08);
         border-color: var(--color-accent);
-        background: rgba(0, 255, 213, 0.05);
-        box-shadow: 0 0 20px rgba(0, 255, 213, 0.1);
+        box-shadow: var(--shadow-glow);
     }
 
-    .address-card::before {
+    [data-theme="light"] .address-card.active {
+        background: rgba(0, 204, 0, 0.05);
+    }
+    
+    [data-theme="light"] .address-card {
+        background: #ffffff;
+        border-color: rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .address-card::after {
         content: '';
         position: absolute;
         top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
+        right: 0;
+        width: 40px;
+        height: 40px;
         background: var(--color-accent);
-        transform: scaleY(0);
-        transition: transform 0.3s ease;
+        clip-path: polygon(100% 0, 0 0, 100% 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
 
-    .address-card.active::before {
-        transform: scaleY(1);
+    .address-card.active::after {
+        opacity: 0.1;
     }
     
     .address-card input[type="radio"] {
-        display: none; /* Hide radio, use card as button */
+        display: none;
     }
 
     .selection-indicator {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: 2px solid rgba(255,255,255,0.2);
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 2px solid var(--glass-border);
         display: flex;
         align-items: center;
         justify-content: center;
         transition: all 0.3s ease;
         flex-shrink: 0;
+        margin-top: 2px;
     }
 
     .address-card.active .selection-indicator {
@@ -109,7 +137,7 @@
 
     .selection-indicator i {
         color: #000;
-        font-size: 0.8rem;
+        font-size: 0.7rem;
         opacity: 0;
         transform: scale(0.5);
         transition: all 0.3s ease;
@@ -123,7 +151,7 @@
     .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
+        gap: 1.25rem;
     }
     
     @media(max-width: 600px) {
@@ -132,87 +160,119 @@
         }
     }
     
-    input, select {
+    .tech-input {
+        background: rgba(15, 15, 15, 1);
+        border: 1px solid var(--glass-border);
         width: 100%;
-        background: rgba(255,255,255,0.03);
-        border: none;
-        border-bottom: 1px solid rgba(255,255,255,0.2);
         color: var(--color-text);
-        padding: 0.8rem 0;
-        font-family: monospace; /* Tech aesthetic */
+        padding: 0.75rem 1.25rem;
+        font-family: var(--font-body);
         transition: all 0.3s ease;
-    }
-    
-    input:focus, select:focus {
-        outline: none;
-        border-bottom-color: var(--color-accent);
-        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
     }
 
-    /* Target inputs within glass panels specifically if needed */
-    .glass-input {
-         background: transparent;
+    [data-theme="light"] .tech-input {
+        background: rgba(0,0,0,0.02);
+    }
+    
+    .tech-input:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        background: rgba(var(--color-accent-rgb, 204, 255, 0), 0.05);
+        box-shadow: 0 0 10px rgba(var(--color-accent-rgb, 204, 255, 0), 0.1);
     }
 
     /* Payment Methods */
-    .payment-option {
+    .payment-badge {
         display: flex;
         align-items: center;
-        padding: 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 6px;
-        margin-bottom: 1rem;
-        cursor: pointer;
+        padding: 1.25rem;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
         transition: all 0.3s ease;
+        position: relative;
     }
-    
-    .payment-option:hover, .payment-option.active {
+
+    .payment-badge:hover {
         border-color: var(--color-accent);
-        background: rgba(255,255,255,0.05);
+        background: var(--glass-hover-bg);
     }
-    
-    .payment-radio {
-        margin-right: 1rem;
-        accent-color: var(--color-accent);
+
+    .payment-badge.active {
+        border-color: var(--color-accent);
+        background: rgba(var(--color-accent-rgb, 204, 255, 0), 0.05);
     }
     
     /* Summary Panel (Sticky) */
-    .summary-panel {
-        background: var(--glass-bg);
-        border: 1px dashed rgba(255,255,255,0.2);
+    .order-summary-box {
+        background: var(--card-bg-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
         padding: 2rem;
         position: sticky;
         top: 150px;
+        box-shadow: var(--shadow-md);
+    }
+    .summary-panel {
+        background: var(--card-bg-dark); /* Made solid */
+        border: 1px solid var(--glass-border);
+        padding: 2rem;
+        position: sticky;
+        top: 120px;
+        border-radius: 20px;
+        box-shadow: var(--shadow-md);
+    }
+
+    [data-theme="light"] .summary-panel {
+        border-color: rgba(0,0,0,0.1);
     }
     
     .summary-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 0.8rem;
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        font-family: monospace;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+        letter-spacing: 0.5px;
     }
     
     .summary-total {
         margin-top: 1.5rem;
         padding-top: 1.5rem;
-        border-top: 1px solid rgba(255,255,255,0.1);
+        border-top: 1px dashed var(--glass-border);
         display: flex;
         justify-content: space-between;
+        align-items: baseline;
+    }
+
+    .total-label {
         font-family: var(--font-heading);
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+        color: var(--color-text);
+        letter-spacing: 1px;
+    }
+
+    .total-amount {
+        font-family: var(--font-heading);
+        font-size: 2rem;
         color: var(--color-accent);
+        text-shadow: var(--text-glow);
+    }
+
+    [data-theme="light"] .total-amount {
+        text-shadow: none;
     }
 
     /* Label Styling */
     label {
-        font-size: 0.8rem;
-        color: var(--text-muted);
+        font-size: 0.7rem;
+        color: var(--color-text-subtle);
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 0.2rem;
+        letter-spacing: 1.5px;
+        margin-bottom: 0.5rem;
         display: block;
+        font-weight: 600;
     }
 
     .loader-overlay {
@@ -221,36 +281,100 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.8);
+        background: rgba(0,0,0,0.9);
         display: none;
         justify-content: center;
         align-items: center;
         z-index: 9999;
         flex-direction: column;
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(10px);
     }
 
-    .loader {
-        border: 4px solid rgba(255,255,255,0.1);
-        border-left-color: var(--color-accent);
-        border-radius: 50%;
+    .loader-scanner {
+        width: 200px;
+        height: 2px;
+        background: var(--color-accent);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .loader-scanner::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, #fff, transparent);
+        animation: scan 1.5s infinite;
+        width: 80%;
+        height: 4px;
+        background: var(--color-accent);
+        top: 50%; left: 10%;
+        box-shadow: 0 0 15px var(--color-accent);
+        animation: scan-vertical 1.5s ease-in-out infinite;
+        opacity: 0.5;
+    }
+
+    @keyframes spin-premium {
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes scan-vertical {
+        0%, 100% { transform: translateY(-40px); opacity: 0.2; }
+        50% { transform: translateY(40px); opacity: 0.8; }
+    }
+
+    .hud-text {
+        font-family: monospace;
+        letter-spacing: 4px;
+        font-size: 0.7rem;
+        color: var(--color-accent);
+        opacity: 0.6;
+        margin-top: 1rem;
+    }
+
+    .glitch-text {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        letter-spacing: 2px;
+        color: var(--color-text);
+        position: relative;
+    }
+
+    .item-thumbnail {
         width: 50px;
         height: 50px;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #151515;
+        border: 1px solid var(--glass-border);
     }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+    .form-label-tech {
+        font-family: var(--font-heading);
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        display: block;
+        text-transform: uppercase;
+        font-weight: 500;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="loader-overlay" id="loader">
-    <div class="loader"></div>
-    <div class="glitch-text" style="font-family: var(--font-heading);">SECURE TRANSACTION IN PROGRESS</div>
+    <div class="encryption-status-wrapper">
+        <div class="status-badge mb-4" style="color: var(--color-accent); border-color: var(--color-accent);">SECURE_NODE_V1.0.1</div>
+        <div class="glitch-text mb-2">ENCRYPTING</div>
+        <div class="pulse-bar"></div>
+        <div class="hud-text glitch-mini" style="font-family: monospace; font-size: 0.8rem; color: var(--color-text-muted);">
+            // SECURE NODE VERIFICATION : 0x7F2A_001
+        </div>
+        <div class="mt-4" style="font-size: 0.6rem; color: var(--color-accent); letter-spacing: 2px;">ESTABLISHING HANDSHAKE...</div>
+    </div>
 </div>
 
 <div class="checkout-container">
@@ -299,26 +423,39 @@
                         </div>
                     </div>
 
-                    <div id="new-address-form" style="display: {% if addresses %}none{% else %}block{% endif %}; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem; margin-top: 1.5rem;">
+                    <div id="new-address-form" style="display: {% if addresses %}none{% else %}block{% endif %}; border-top: 1px solid var(--glass-border); padding-top: 2rem; margin-top: 1.5rem;">
+                        <h4 class="mb-4" style="font-family: var(--font-heading); font-size: 0.9rem; letter-spacing: 1px; color: var(--color-text-muted);">NEW_DELIVERY_PROTOCOL</h4>
+                        
                         <div class="form-group mb-4">
-                            <label>STREET Address</label>
-                            <input type="text" name="address" placeholder="STREET ADDRESS, P.O. BOX, ETC.">
+                            <label class="form-label-tech">ADDRESS LINE 1 (STREET / HOUSE NO)</label>
+                            <input type="text" name="address_line1" class="tech-input" placeholder="e.g. 123 CYBER ST." required>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label class="form-label-tech">ADDRESS LINE 2 (LANDMARK / LOCALITY)</label>
+                            <input type="text" name="address_line2" class="tech-input" placeholder="e.g. NEAR TECH HUB">
                         </div>
                         
-                        <div class="form-grid mb-4">
+                        <div class="checkout-form-grid mb-4">
                             <div class="form-group">
-                                <label>City</label>
-                                <input type="text" name="city" placeholder="CITY">
+                                <label class="form-label-tech">CITY / DISTRICT</label>
+                                <input type="text" name="city" class="tech-input" placeholder="CITY" required>
                             </div>
                             <div class="form-group">
-                                <label>State / Province</label>
-                                <input type="text" name="state" placeholder="STATE">
+                                <label class="form-label-tech">STATE / PROVINCE</label>
+                                <input type="text" name="state" class="tech-input" placeholder="STATE" required>
                             </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label>Zip / Postal Code</label>
-                            <input type="text" name="zipcode" placeholder="00000">
+                        <div class="checkout-form-grid">
+                            <div class="form-group">
+                                <label class="form-label-tech">POSTAL CODE</label>
+                                <input type="text" name="postal_code" class="tech-input" placeholder="000000" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label-tech">PHONE CO-ORDINATES</label>
+                                <input type="text" name="phone" class="tech-input" placeholder="+91 00000 00000">
+                            </div>
                         </div>
                     </div>
                 </div>

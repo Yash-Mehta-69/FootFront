@@ -1,0 +1,8 @@
+
+/* Round 8.5: Hero Action Button (Matches Home Page 'Shop Now') */
+.btn-hero-action {
+    padding: 1rem 4rem !important;
+    font-size: 1.2rem !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}

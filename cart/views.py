@@ -26,7 +26,8 @@ def cart_detail(request):
         
     context = {
         'items': items,
-        'total': total
+        'total': total,
+        'wishlist_product_ids': list(Wishlist.objects.filter(customer=request.user.customer_profile, is_deleted=False).values_list('product_variant__product_id', flat=True).distinct())
     }
     return render(request, 'cart.html', context)
 
@@ -49,6 +50,10 @@ def add_to_cart_ajax(request):
             cart, created = Cart.objects.get_or_create(customer=request.user.customer_profile, is_deleted=False)
             cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product_variant=variant)
             
+            # Ensure the item is not deleted (resurrection)
+            if cart_item.is_deleted:
+                cart_item.is_deleted = False
+                
             if not item_created:
                 cart_item.quantity += quantity
             else:
@@ -59,13 +64,15 @@ def add_to_cart_ajax(request):
             # Count items in cart (quantities sum)
             cart_count = cart.items.filter(is_deleted=False).aggregate(total=Sum('quantity'))['total'] or 0
             
-            # Render updated mini cart HTML
-            cart_html = render_to_string('includes/mini_cart_content.html', request=request)
+            # Render mini-cart HTML
+            cart_html = render_to_string('includes/mini_cart_content.html', {'cart': cart}, request=request)
             
             return JsonResponse({
                 'success': True, 
-                'cart_count': cart_count,
-                'cart_html': cart_html
+                'cart_count': cart_count, # Fix: Use the calculated sum, not unique row count
+                'cart_total': cart.get_total_price(),
+                'cart_html': cart_html,
+                'item_quantity': cart_item.quantity 
             })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
@@ -94,19 +101,80 @@ def add_to_cart(request, product_id):
 
 @login_required(login_url='login')
 def remove_from_cart(request, item_id):
-    from django.http import JsonResponse
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST request required.'})
+        
     item = get_object_or_404(CartItem, id=item_id, cart__customer=request.user.customer_profile)
+    cart = item.cart
     item.delete()
     
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'success': True})
-        
-    return redirect('cart_detail')
+    items = cart.items.filter(is_deleted=False)
+    total = sum(i.product_variant.price * i.quantity for i in items)
+    cart_count = items.aggregate(total_qty=Sum('quantity'))['total_qty'] or 0
+    
+    return JsonResponse({
+        'success': True, 
+        'cart_total': total,
+        'cart_count': cart_count,
+        'is_empty': not items.exists()
+    })
+
+@login_required(login_url='login')
+def update_cart_quantity(request):
+    import json
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            item_id = data.get('item_id')
+            variant_id = data.get('variant_id') # Support variant_id lookup
+            action = data.get('action') # 'plus' or 'minus'
+            
+            if item_id:
+                item = get_object_or_404(CartItem, id=item_id, cart__customer=request.user.customer_profile)
+            elif variant_id:
+                item = get_object_or_404(CartItem, product_variant_id=variant_id, cart__customer=request.user.customer_profile)
+            else:
+                 return JsonResponse({'success': False, 'message': 'Missing item identifier.'})
+            
+            if action == 'plus':
+                if item.product_variant.stock > item.quantity:
+                    item.quantity += 1
+                else:
+                    return JsonResponse({'success': False, 'message': f'Only {item.product_variant.stock} units available.'})
+            elif action == 'minus':
+                if item.quantity > 1:
+                    item.quantity -= 1
+                else:
+                    item.delete()
+                    return JsonResponse({'success': True, 'action': 'removed'})
+            
+            item.save()
+            
+            # Recalculate totals
+            cart = item.cart
+            items = cart.items.filter(is_deleted=False)
+            total = sum(i.product_variant.price * i.quantity for i in items)
+            cart_count = items.aggregate(total_qty=Sum('quantity'))['total_qty'] or 0
+            
+            return JsonResponse({
+                'success': True,
+                'quantity': item.quantity,
+                'sub_total': item.sub_total,
+                'cart_total': total,
+                'cart_count': cart_count
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
 
 @login_required(login_url='login')
 def wishlist_detail(request):
     wishlist_items = Wishlist.objects.filter(customer=request.user.customer_profile, is_deleted=False)
-    return render(request, 'wishlist.html', {'items': wishlist_items})
+    wishlist_product_ids = list(wishlist_items.values_list('product_variant__product_id', flat=True).distinct())
+    return render(request, 'wishlist.html', {
+        'items': wishlist_items,
+        'wishlist_product_ids': wishlist_product_ids
+    })
 
 @login_required(login_url='login')
 def checkout(request):
@@ -148,20 +216,22 @@ def create_order(request):
             shipping_address = get_object_or_404(ShippingAddress, id=address_id, customer=customer)
         else:
             # Create new address
-            address_line1 = request.POST.get('address')
+            address_line1 = request.POST.get('address_line1')
+            address_line2 = request.POST.get('address_line2', '')
             city = request.POST.get('city')
             state = request.POST.get('state')
-            zipcode = request.POST.get('zipcode')
+            postal_code = request.POST.get('postal_code')
             
-            if not all([address_line1, city, zipcode]):
+            if not all([address_line1, city, postal_code]):
                 return JsonResponse({'success': False, 'message': 'Please provide all shipping details'})
                 
             shipping_address = ShippingAddress.objects.create(
                 customer=customer,
                 address_line1=address_line1,
+                address_line2=address_line2,
                 city=city,
                 state=state,
-                postal_code=zipcode
+                postal_code=postal_code
             )
 
         # 1. Create Order

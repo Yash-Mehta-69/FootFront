@@ -27,9 +27,9 @@
     .cart-row {
         display: flex;
         align-items: center;
-        /* properties handled by .glass-row-theme */
+        /* properties handled by .solid-row-theme */
         padding: 1.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem; /* Increased gap */
     }
     
     .cart-row:hover {
@@ -76,11 +76,11 @@
     }
     
     .summary-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px dashed rgba(255,255,255,0.2);
-        padding: 2rem;
+        background: var(--card-bg-dark);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--shadow-md);
+        padding: 2.5rem;
+        border-radius: 12px;
         position: sticky;
         top: 150px;
     }
@@ -103,6 +103,14 @@
         display: flex;
         justify-content: space-between;
     }
+
+    /* Transition for removing items */
+    .cart-row.removing {
+        opacity: 0;
+        transform: translateX(50px);
+        pointer-events: none;
+    }
+
 </style>
 {% endblock %}
 
@@ -110,13 +118,13 @@
 <div class="cart-container container">
     <div class="d-flex align-items-center mb-5">
         <h1 class="glitch-text" style="font-family: var(--font-heading); font-size: 4rem; color: var(--color-text); margin: 0;">YOUR BAG</h1>
-        <span class="ms-4 text-muted-theme" style="font-family: monospace;">// {{ items|length }} ITEMS DETECTED</span>
+        <span class="ms-4 text-muted-theme" style="font-family: monospace;" id="cart-count-display">// {{ items|length }} ITEMS DETECTED</span>
     </div>
 
     <div class="cart-grid">
-        <div class="cart-list" id="cart-list">
+        <div class="cart-items">
             {% for item in items %}
-            <div class="cart-row glass-row-theme" id="cart-item-{{ item.id }}">
+            <div class="cart-row solid-row-theme" id="cart-item-{{ item.id }}">
                  <img src="{% if item.product_variant.image %}{{ item.product_variant.image.url }}{% else %}{{ item.product_variant.product.product_image.url }}{% endif %}" class="cart-thumb" alt="{{ item.product_variant.product.name }}">
                 <div class="cart-details">
                     <h3 class="cart-title">{{ item.product_variant.product.name }}</h3>
@@ -127,8 +135,17 @@
                     <span class="cart-price">₹{{ item.product_variant.price }}</span>
                 </div>
                 <div class="text-end">
-                    <div class="mb-2 text-theme">QTY: {{ item.quantity }}</div>
-                    <button onclick="removeItem({{ item.id }})" class="btn-link" style="color: var(--color-secondary); font-size: 0.8rem; text-decoration: underline; background: none; border: none; padding: 0;">REMOVE</button>
+                    <div class="mb-3 text-theme" style="font-size: 0.8rem; letter-spacing: 1px; opacity: 0.7;">ALLOCATION</div>
+                    <div class="qty-selector mb-3">
+                        <button type="button" class="qty-btn" onclick="updateQuantity({{ item.id }}, 'minus')" aria-label="Decrease quantity">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <input type="number" class="qty-input-cart" id="qty-val-{{ item.id }}" value="{{ item.quantity }}" readonly>
+                        <button type="button" class="qty-btn" onclick="updateQuantity({{ item.id }}, 'plus')" aria-label="Increase quantity">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <button onclick="removeItem({{ item.id }})" class="btn-link" style="color: var(--color-secondary); font-size: 0.8rem; text-decoration: underline; background: none; border: none; padding: 0;">REMOVE FROM NODE</button>
                 </div>
             </div>
             {% empty %}
@@ -144,7 +161,7 @@
             <h3 class="mb-4 text-theme" style="font-family: var(--font-heading);">ORDER SUMMARY</h3>
             <div class="summary-row">
                 <span class="text-muted-theme">SUBTOTAL</span>
-                <span class="text-theme">₹{{ total }}</span>
+                <span class="text-theme" id="summary-subtotal">₹{{ total }}</span>
             </div>
             <div class="summary-row">
                 <span class="text-muted-theme">SHIPPING</span>
@@ -152,24 +169,65 @@
             </div>
             <div class="summary-total">
                 <span>TOTAL</span>
-                <span>₹{{ total }}</span>
+                <span id="summary-total">₹{{ total }}</span>
             </div>
             
-            {% if items %}
-            <button class="btn-primary w-100 mt-4" onclick="window.location.href='{% url 'checkout' %}'">PROCEED TO TERMINAL</button>
-            {% else %}
-            <button class="btn-primary w-100 mt-4" disabled style="opacity: 0.5; cursor: not-allowed;">BAG EMPTY</button>
-            {% endif %}
+            <div id="checkout-action-area">
+                {% if items %}
+                <button class="btn-primary w-100 mt-4" onclick="window.location.href='{% url 'checkout' %}'">PROCEED TO TERMINAL</button>
+                {% else %}
+                <button class="btn-primary w-100 mt-4" disabled style="opacity: 0.5; cursor: not-allowed;">BAG EMPTY</button>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
 {% block extra_js %}
 <script>
-async function removeItem(itemId) {
-    if (!confirm('Remove this item from your bag?')) return;
-    
+async function updateQuantity(itemId, action) {
     try {
-        const response = await fetch(`/remove-from-cart/${itemId}/`, {
+        const response = await fetch('{% url "update_cart_quantity" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ item_id: itemId, action: action })
+        });
+        
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('Server error:', errText);
+            throw new Error(`Server returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            if (data.action === 'removed') {
+                handleItemRemoval(itemId, data);
+            } else {
+                // Update specific item QTY
+                document.getElementById(`qty-val-${itemId}`).value = data.quantity;
+                updateSummary(data);
+            }
+        } else {
+            showToast(data.message, 'error');
+        }
+    } catch (error) {
+        console.error('Update quantity error:', error);
+    }
+}
+
+async function removeItem(itemId) {
+    if (!confirm('CONFIRM ENTITY EXTRACTION FROM NODE?')) return;
+    
+    // Add loading state to row
+    const row = document.getElementById(`cart-item-${itemId}`);
+    if (row) row.style.opacity = '0.5';
+
+    try {
+        const response = await fetch(`/cart/remove-from-cart/${itemId}/`, {
             method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -177,22 +235,64 @@ async function removeItem(itemId) {
             }
         });
         
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error('Server error during removal:', errText);
+            throw new Error(`Server returned ${response.status}`);
+        }
+
         const data = await response.json();
         if (data.success) {
-            const row = document.getElementById(`cart-item-${itemId}`);
-            if (row) {
-                row.style.opacity = '0';
-                row.style.transform = 'translateX(20px)';
-                row.style.transition = 'all 0.3s ease';
-                setTimeout(() => {
-                    row.remove();
-                    window.location.reload(); 
-                }, 300);
+            handleItemRemoval(itemId, data);
+            if (window.showToast) {
+                window.showToast('Entity extracted successfully.', 'success');
             }
+        } else {
+             if (row) row.style.opacity = '1';
+             if (window.showToast) {
+                window.showToast(data.message || 'Extraction failed.', 'error');
+             }
         }
     } catch (error) {
         console.error('Error removing item:', error);
-        alert('Failed to remove item. Please try again.');
+        if (row) row.style.opacity = '1';
+        if (window.showToast) {
+            window.showToast('Network disruption during extraction.', 'error');
+        } else {
+            alert('Network error during extraction');
+        }
+    }
+}
+
+function handleItemRemoval(itemId, data) {
+    const row = document.getElementById(`cart-item-${itemId}`);
+    if (row) {
+        row.classList.add('removing');
+        setTimeout(() => {
+            row.remove();
+            if (data.is_empty) {
+                location.reload(); // Show empty state
+            } else {
+                updateSummary(data);
+            }
+        }, 300);
+    }
+}
+
+function updateSummary(data) {
+    if (data.cart_total !== undefined) {
+        document.getElementById('summary-subtotal').innerText = `₹${data.cart_total}`;
+        document.getElementById('summary-total').innerText = `₹${data.cart_total}`;
+    }
+    if (data.cart_count !== undefined) {
+        document.getElementById('cart-count-display').innerText = `// ${data.cart_count} ITEMS DETECTED`;
+        
+        // Update header/mini-cart icons if they exist
+        const cartBadges = document.querySelectorAll('.cart-badge');
+        cartBadges.forEach(badge => {
+            badge.textContent = data.cart_count;
+            badge.style.display = data.cart_count > 0 ? 'flex' : 'none';
+        });
     }
 }
 </script>

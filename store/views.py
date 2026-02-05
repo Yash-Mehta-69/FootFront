@@ -159,11 +159,21 @@ def index(request):
     # Homepage Reviews (Top rated, latest 5)
     featured_reviews = Review.objects.filter(is_deleted=False, rating__gte=4).order_by('-created_at')[:5]
 
+    # Wishlist states
+    wishlist_product_ids = []
+    if request.user.is_authenticated:
+        from cart.models import Wishlist
+        wishlist_product_ids = list(Wishlist.objects.filter(
+            customer=request.user.customer_profile,
+            is_deleted=False
+        ).values_list('product_variant__product_id', flat=True).distinct())
+
     context = {
         'categories': categories,
         'trending_products': trending_products,
         'all_products': all_products,
         'featured_reviews': featured_reviews,
+        'wishlist_product_ids': wishlist_product_ids,
     }
     return render(request, 'index.html', context)
 
@@ -558,12 +568,22 @@ def shop(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Wishlist states
+    wishlist_product_ids = []
+    if request.user.is_authenticated:
+        from cart.models import Wishlist
+        wishlist_product_ids = list(Wishlist.objects.filter(
+            customer=request.user.customer_profile,
+            is_deleted=False
+        ).values_list('product_variant__product_id', flat=True).distinct())
+
     context = {
-        'products': page_obj, # This is now the page object, but template can iterate it same way
+        'products': page_obj, 
         'categories': categories,
         'colors': colors,
         'sizes': sizes,
         'genders': Product.GENDER_CHOICES,
+        'wishlist_product_ids': wishlist_product_ids,
     }
     return render(request, 'shop.html', context)
 
@@ -660,9 +680,9 @@ def product_detail(request, slug):
         product = Product.objects.annotate(price=Min('productvariant__price')).get(slug=slug, is_deleted=False)
         variants = product.productvariant_set.filter(is_deleted=False)
         
-        # Get unique colors and sizes available for this product
-        colors = sorted(list(set(v.color for v in variants)), key=lambda c: c.name)
-        sizes = sorted(list(set(v.size for v in variants)), key=lambda s: s.size_label)
+        # Get unique colors and sizes available for this product, filtering out None values safely
+        colors = sorted([c for c in set(v.color for v in variants) if c], key=lambda c: c.name)
+        sizes = sorted([s for s in set(v.size for v in variants) if s], key=lambda s: s.size_label)
         
         # Reviews
         reviews = Review.objects.filter(product=product, is_deleted=False).order_by('-created_at')
@@ -681,7 +701,35 @@ def product_detail(request, slug):
             star: int((count / review_count) * 100) if review_count > 0 else 0
             for star, count in rating_counts.items()
         }
+        # Cart and Wishlist states for variants
+        in_cart_variant_ids = []
+        in_cart_quantities = {} # New: Map variant_id -> quantity
+        in_wishlist_variant_ids = []
         
+        if request.user.is_authenticated:
+            try:
+                customer = request.user.customer_profile
+                # Get variant IDs and quantities in cart
+                from cart.models import CartItem, Wishlist
+                cart_items = CartItem.objects.filter(
+                    cart__customer=customer, 
+                    product_variant__product=product,
+                    is_deleted=False
+                )
+                in_cart_variant_ids = list(cart_items.values_list('product_variant_id', flat=True))
+                # Create map: {variant_id: quantity}
+                for item in cart_items:
+                    in_cart_quantities[item.product_variant_id] = item.quantity
+                
+                # Get variant IDs in wishlist
+                in_wishlist_variant_ids = list(Wishlist.objects.filter(
+                    customer=customer,
+                    product_variant__product=product,
+                    is_deleted=False
+                ).values_list('product_variant_id', flat=True))
+            except Exception as e:
+                print(f"DEBUG: Error fetching cart/wishlist states: {e}")
+
     except Product.DoesNotExist:
         return redirect('shop')
             
@@ -694,6 +742,10 @@ def product_detail(request, slug):
         'avg_rating': round(avg_rating, 1),
         'review_count': review_count,
         'rating_percentages': rating_percentages,
+        'rating_percentages': rating_percentages,
+        'in_cart_variant_ids': in_cart_variant_ids,
+        'in_cart_quantities': in_cart_quantities, # New context
+        'in_wishlist_variant_ids': in_wishlist_variant_ids,
     }
     return render(request, 'product_detail.html', context)
 
@@ -890,22 +942,50 @@ def toggle_wishlist(request):
         try:
             data = json.loads(request.body)
             variant_id = data.get('variant_id')
-            variant = get_object_or_404(ProductVariant, id=variant_id)
-            customer = request.user.customer_profile
+            product_id = data.get('product_id')
             
+            customer = request.user.customer_profile
+            variant = None
+            
+            if variant_id:
+                variant = get_object_or_404(ProductVariant, id=variant_id)
+            elif product_id:
+                product = get_object_or_404(Product, id=product_id)
+                # Check if any variant of this product is already in wishlist
+                existing_wishlist = Wishlist.objects.filter(customer=customer, product_variant__product=product, is_deleted=False)
+                
+                if existing_wishlist.exists():
+                    # If we toggle from product card and it exists, remove ALL variants to clear it
+                    count = existing_wishlist.count()
+                    existing_wishlist.delete()
+                    return JsonResponse({'success': True, 'action': 'removed', 'message': f'Removed {count} variants of {product.name}'})
+                else:
+                    # Otherwise, add the first available variant
+                    variant = product.productvariant_set.filter(is_deleted=False).first()
+                    if not variant:
+                        return JsonResponse({'success': False, 'message': 'No variants available.'})
+            else:
+                return JsonResponse({'success': False, 'message': 'Target missing.'})
+
             wishlist_item, created = Wishlist.objects.get_or_create(
                 customer=customer,
-                product_variant=variant
+                product_variant=variant,
+                is_deleted=False
             )
             
+            variant_name = f"{variant.product.name} ({variant.color.name} / {variant.size.size_label})"
+            
             if not created:
-                # If it already exists, remove it (toggle)
                 wishlist_item.delete()
                 action = 'removed'
             else:
                 action = 'added'
                 
-            return JsonResponse({'success': True, 'action': action})
+            return JsonResponse({
+                'success': True, 
+                'action': action, 
+                'variant_name': variant_name
+            })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
             

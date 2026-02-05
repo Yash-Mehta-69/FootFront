@@ -8,9 +8,15 @@
         {% endif %}
         {% if product.is_new %}
             <div class="glass-badge">NEW</div>
-        {% elif extra_badge % }
+        {% elif extra_badge %}
             <div class="glass-badge">{{ extra_badge }}</div>
         {% endif %}
+        <button class="wishlist-toggle-card {% if product.id in wishlist_product_ids %}active{% endif %}" 
+                onclick="window.toggleWishlist(null, {{ product.id }}, this, '{{ csrf_token }}', '{% url 'toggle_wishlist' %}')"
+                aria-label="Toggle Wishlist"
+                title="Save primary variant to wishlist">
+            <i class="{% if product.id in wishlist_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+        </button>
     </div>
     <div class="glass-card-body">
         <a href="{% url 'product_detail' product.slug %}">

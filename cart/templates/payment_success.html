@@ -2,15 +2,155 @@
 {% load static %}
 
 {% block content %}
-<div class="container" style="padding-top: 200px; text-align: center; min-height: 80vh;">
-    <div style="background: var(--glass-bg); padding: 4rem; border-radius: 12px; border: 1px solid var(--color-accent);">
-        <i class="fas fa-check-circle" style="font-size: 5rem; color: var(--color-accent); margin-bottom: 2rem;"></i>
-        <h1 class="glitch-text" style="font-size: 3rem;">PAYMENT SUCCESSFUL</h1>
-        <p class="mt-4" style="font-family: monospace;">Transaction ID: {{ payment_id }}</p>
-        <p class="text-muted-theme">Your order has been placed and is being processed.</p>
+<style>
+    .success-container {
+        padding-top: 15rem;
+        padding-bottom: 5rem;
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 1000px;
+    }
+
+    .success-card {
+        background: var(--card-bg-dark);
+        border: 1px solid var(--glass-border);
+        padding: 4.5rem;
+        border-radius: 24px;
+        text-align: center;
+        max-width: 600px;
+        width: 90%;
+        position: relative;
+        box-shadow: var(--shadow-lg), 0 0 50px rgba(0, 0, 0, 0.3);
+        animation: card-appear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes card-appear {
+        from { opacity: 0; transform: translateY(30px) rotateX(-5deg); }
+        to { opacity: 1; transform: translateY(0) rotateX(0); }
+    }
+
+    .success-icon-wrapper {
+        width: 120px;
+        height: 120px;
+        background: rgba(var(--color-accent-rgb, 204, 255, 0), 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2.5rem;
+        position: relative;
+        border: 1px solid rgba(var(--color-accent-rgb, 204, 255, 0), 0.2);
+        box-shadow: 0 0 30px rgba(var(--color-accent-rgb, 204, 255, 0), 0.1);
+    }
+
+    .success-icon-wrapper i {
+        font-size: 4rem;
+        color: var(--color-accent);
+        text-shadow: 0 0 20px rgba(var(--color-accent-rgb, 204, 255, 0), 0.4);
+        animation: scale-in 0.5s 0.3s both;
+    }
+
+    @keyframes scale-in {
+        from { transform: scale(0); }
+        to { transform: scale(1); }
+    }
+
+    .status-badge {
+        font-family: monospace;
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        color: var(--color-accent);
+        border: 1px solid var(--color-accent);
+        padding: 4px 12px;
+        border-radius: 100px;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        animation: fade-in 1s 0.6s both;
+    }
+
+    .transaction-box {
+        background: rgba(15, 15, 15, 1);
+        border: 1px solid var(--glass-border);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin: 2.5rem 0;
+        font-family: monospace;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    [data-theme="light"] .transaction-box {
+        background: rgba(0,0,0,0.03);
+    }
+
+    .transaction-box::before {
+        content: 'TXN_ID';
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-size: 0.6rem;
+        padding: 2px 6px;
+        background: var(--glass-border);
+        color: var(--color-text-subtle);
+    }
+
+    .tx-id {
+        color: var(--color-text);
+        font-size: 1rem;
+        letter-spacing: 1px;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        margin-top: 3rem;
+    }
+
+    @media (max-width: 500px) {
+        .btn-group {
+            flex-direction: column;
+        }
+    }
+
+    .btn-outline-tech {
+        padding: 1rem 2rem;
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        color: var(--color-text);
+        font-family: var(--font-heading);
+        text-transform: uppercase;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        letter-spacing: 1px;
+    }
+
+    .btn-outline-tech:hover {
+        border-color: var(--color-text);
+        background: var(--glass-hover-bg);
+    }
+</style>
+
+<div class="success-container">
+    <div class="success-card">
+        <div class="status-badge">PAYMENT_CONFIRMED</div>
+        <div class="success-icon-wrapper">
+            <i class="fas fa-check-circle"></i>
+        </div>
         
-        <div class="mt-5">
-            <a href="{% url 'shop' %}" class="btn-primary">CONTINUE SHOPPING</a>
+        <h1 class="glitch-text" style="font-size: 2.5rem; color: var(--color-text); margin-bottom: 1rem; line-height: 1.2;">TRANSACTION<br>SUCCESSFUL</h1>
+        <p class="text-muted-theme" style="max-width: 400px; margin: 0 auto; line-height: 1.6;">Your order manifest has been successfully allocated. Processing is underway in our logistics node.</p>
+        
+        <div class="transaction-box">
+            <span class="tx-id">{{ payment_id }}</span>
+        </div>
+        
+        <div class="btn-group">
+            <a href="{% url 'shop' %}" class="btn-primary">CONTINUE_SHOPPING</a>
+            <a href="{% url 'profile' %}" class="btn-outline-tech">VIEW_ORDER_HISTORY</a>
         </div>
     </div>
 </div>

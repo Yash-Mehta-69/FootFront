@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 
 {% block extra_css %}
@@ -273,34 +274,6 @@
         margin-top: 2rem;
     }
     
-    .qty-selector {
-        display: flex;
-        height: 55px;
-        border: 1px solid var(--glass-border);
-        border-radius: 8px; /* Fallback */
-        overflow: hidden;
-    }
-    .qty-btn {
-        width: 35px;
-        background: rgba(255,255,255,0.05);
-        border: none;
-        color: var(--color-text);
-        font-size: 1.2rem;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .qty-btn:hover { background: rgba(255,255,255,0.1); }
-    .qty-input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: var(--color-text);
-        text-align: center;
-        font-weight: 600;
-        width: 100%;
-    }
-    .qty-input:focus { outline: none; }
-
     .btn-add-cart {
         height: 55px;
         background: var(--color-bg);
@@ -773,13 +746,12 @@
                             </div>
 
                             <!-- Cart Button -->
-                            <!-- Cart Button -->
-                            <button type="button" id="add-btn" class="btn-add-cart" onclick="addToCart()" disabled>
-                                <span>SELECT OPTIONS</span> <i class="fas fa-shopping-bag"></i>
+                            <button type="button" id="add-btn" class="btn-primary btn-hero-action w-100" onclick="addToCart()" disabled>
+                                SELECT OPTIONS <i class="fas fa-lock ms-2"></i>
                             </button>
 
                             <!-- Wishlist -->
-                            <button type="button" class="btn-wishlist" title="Add to Wishlist" onclick="toggleWishlist(this)">
+                            <button type="button" class="btn-wishlist" title="Add to Wishlist" onclick="handleToggleWishlist(this)">
                                 <i class="far fa-heart fa-lg"></i>
                             </button>
                         </div>
@@ -1011,11 +983,14 @@
     {% for v in variants %}
     {
         "id": "{{ v.id }}",
-        "color": "{{ v.color.name }}",
-        "size": "{{ v.size.size_label }}",
+        "color": "{{ v.color.name|default:'' }}",
+        "size": "{{ v.size.size_label|default:'' }}",
         "price": "{{ v.price }}",
         "stock": {{ v.stock }},
-        "image": "{% if v.image %}{{ v.image.url }}{% else %}#{% endif %}"
+        "image": "{% if v.image %}{{ v.image.url }}{% else %}#{% endif %}",
+        "in_cart": {% if v.id in in_cart_variant_ids %}true{% else %}false{% endif %},
+        "qty_in_cart": {{ in_cart_quantities|get_item:v.id|default:0 }},
+        "in_wishlist": {% if v.id in in_wishlist_variant_ids %}true{% else %}false{% endif %}
     }{% if not forloop.last %},{% endif %}
     {% endfor %}
 ]
@@ -1113,12 +1088,25 @@
         }
 
         window.addToCart = async function() {
-            if (!selectedColor || !selectedSize) {
-                showToast('Please select Color and Size', 'error');
-                return;
+            if (selectedColor === null || selectedSize === null) {
+                // If options are hidden/not present, we still need to be able to "select" the only variant
+                if (allVariants.length === 1) {
+                    selectedColor = allVariants[0].color;
+                    selectedSize = allVariants[0].size;
+                } else {
+                    showToast('Please select Color and Size', 'error');
+                    return;
+                }
             }
 
             const variant = getVariant(selectedColor, selectedSize);
+            
+            // IF ALREADY IN CART -> REDIRECT TO BAG
+            if (variant && variant.in_cart) {
+                window.location.href = '{% url "cart_detail" %}';
+                return;
+            }
+
             const qty = document.getElementById('qty-input').value;
 
             addBtn.disabled = true;
@@ -1141,12 +1129,24 @@
                 if (data.success) {
                     showToast('Item added to cart!', 'success');
                     
+                    // Reactive update for local variant state
+                    const vari = allVariants.find(v => v.id == variant.id);
+                    if (vari) {
+                        vari.in_cart = true;
+                        // Sync quantity from backend response
+                        if (data.item_quantity) {
+                            vari.qty_in_cart = data.item_quantity;
+                        }
+                    }
+
                     // Update all cart badges (desktop + mobile)
                     const cartBadges = document.querySelectorAll('.cart-badge');
                     cartBadges.forEach(badge => {
                         badge.textContent = data.cart_count;
                         badge.style.display = data.cart_count > 0 ? 'flex' : 'none';
                     });
+                    
+                    updateUI(); // Refresh buttons and inputs
                     
                     // Update mini cart content
                     const cartBody = document.getElementById('mini-cart-body');
@@ -1169,68 +1169,13 @@
             }
         }
 
-        window.toggleWishlist = async function(btn) {
+        window.handleToggleWishlist = function(btn) {
             if (!selectedColor || !selectedSize) {
                 showToast('Select variant first', 'info');
                 return;
             }
-
             const variant = getVariant(selectedColor, selectedSize);
-            const icon = btn.querySelector('i');
-            btn.disabled = true;
-
-            try {
-                const response = await fetch('{% url "toggle_wishlist" %}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    },
-                    body: JSON.stringify({ variant_id: variant.id })
-                });
-
-                const data = await response.json();
-                if (data.success) {
-                    icon.classList.toggle('fas', data.action === 'added');
-                    icon.classList.toggle('far', data.action === 'removed');
-                    showToast(`Wishlist ${data.action}!`, 'success');
-                } else {
-                    if (data.message === 'login_required') {
-                        showToast('PLEASE <a href="{% url "login" %}" style="color:var(--color-accent);text-decoration:underline !important;cursor:pointer;">LOGIN</a> TO ADD TO WISHLIST', 'info');
-                    } else {
-                        showToast(data.message || 'Error updating wishlist', 'error');
-                    }
-                }
-            } catch (error) {
-                showToast('Network error.', 'error');
-            } finally {
-                btn.disabled = false;
-            }
-        }
-
-        window.showToast = function(msg, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `tech-toast ${type}`;
-            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i> ${msg}`;
-            document.body.appendChild(toast);
-            
-            // Handle custom cursor for dynamic links
-            const cursorOutline = document.querySelector('.cursor-outline');
-            if (cursorOutline) {
-                toast.querySelectorAll('a').forEach(link => {
-                    link.addEventListener('mouseenter', () => cursorOutline.classList.add('hovered'));
-                    link.addEventListener('mouseleave', () => cursorOutline.classList.remove('hovered'));
-                });
-            }
-
-            setTimeout(() => {
-                toast.classList.add('show');
-                const duration = (type === 'info') ? 5000 : 3000; // Longer for info/login prompts
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 500);
-                }, duration);
-            }, 100);
+            window.toggleWishlist(variant.id, null, btn, '{{ csrf_token }}', '{% url "toggle_wishlist" %}');
         }
         
         window.switchImage = function(src, variantId = null) {
@@ -1255,18 +1200,91 @@
             }
         }
         
-        window.updateQty = function(change) {
+        window.updateQty = async function(change) {
             const input = document.getElementById('qty-input');
-            let val = parseInt(input.value) + change;
-            if(val < 1) val = 1;
+            let val = parseInt(input.value) || 1;
+            const originalVal = val; // Store for revert
+            val += change;
+            
+            let maxStock = 10; 
+            let currentVariant = null;
+
             if (selectedColor && selectedSize) {
-                const variant = getVariant(selectedColor, selectedSize);
-                if (val > variant.stock) {
-                    val = variant.stock;
-                    showToast(`Only ${variant.stock} left in stock!`, 'info');
+                currentVariant = getVariant(selectedColor, selectedSize);
+                if (currentVariant) {
+                    maxStock = Math.min(currentVariant.stock, 10);
                 }
             }
+
+            if (val < 1) val = 1;
+            if (val > maxStock) {
+                val = maxStock;
+                if (maxStock > 0 && change > 0) showToast(`System limit: Only ${maxStock} units can be allocated.`, 'info');
+            }
+            
+            // Update input immediately for responsiveness
             input.value = val;
+
+            // Real-time Sync Logic
+            if (currentVariant && currentVariant.in_cart) {
+                // If value didn't change (due to limits), don't fire AJAX
+                if (val === originalVal) return;
+
+                // Determine action explicitly for backend
+                const action = change > 0 ? 'plus' : 'minus';
+                
+                // Show loading state or just background sync? 
+                // Background sync is better for UX, but need to handle errors.
+                
+                try {
+                     const response = await fetch('{% url "update_cart_quantity" %}', {
+                         method: 'POST',
+                         headers: {
+                             'Content-Type': 'application/json',
+                             'X-CSRFToken': '{{ csrf_token }}'
+                         },
+                         body: JSON.stringify({
+                             variant_id: currentVariant.id,
+                             action: action
+                         })
+                     });
+                     
+                     const data = await response.json();
+                     if (data.success) {
+                         // Update local state with confirmed backend value
+                         currentVariant.qty_in_cart = data.quantity;
+                         input.value = data.quantity;
+                         
+                         // Update Badges & Totals (if available in response)
+                         document.querySelectorAll('.cart-badge').forEach(b => {
+                             b.textContent = data.cart_count;
+                             b.style.display = data.cart_count > 0 ? 'flex' : 'none';
+                         });
+                         
+                         // Optionally update mini-cart HTML if returned
+                         if (data.cart_html) {
+                             const cartBody = document.getElementById('mini-cart-body');
+                             if (cartBody) cartBody.innerHTML = data.cart_html;
+                         }
+
+                         console.log('Cart updated:', data);
+                     } else {
+                         // Revert on failure
+                         input.value = originalVal;
+                         showToast(data.message || 'Error updating cart', 'error');
+                         
+                         if (data.action === 'removed') {
+                             currentVariant.in_cart = false;
+                             currentVariant.qty_in_cart = 0;
+                             updateUI();
+                         }
+                     }
+                } catch (e) {
+                    console.error('Cart sync error:', e);
+                    input.value = originalVal;
+                    showToast('Network error, could not update cart', 'error');
+                }
+            }
         }
 
         function isVariantAvailable(color, size) {
@@ -1279,81 +1297,129 @@
 
         function updateUI() {
             // Update Labels
-            colorLabel.textContent = selectedColor || 'Select Color';
-            colorLabel.style.color = selectedColor ? 'var(--color-accent)' : 'var(--color-text-muted)';
-            sizeLabel.textContent = selectedSize || 'Select Size';
-            sizeLabel.style.color = selectedSize ? 'var(--color-accent)' : 'var(--color-text-muted)';
+            if (colorLabel) {
+                colorLabel.textContent = selectedColor || 'Select Color';
+                colorLabel.style.color = selectedColor ? 'var(--color-accent)' : 'var(--color-text-muted)';
+            }
+            if (sizeLabel) {
+                sizeLabel.textContent = selectedSize || 'Select Size';
+                sizeLabel.style.color = selectedSize ? 'var(--color-accent)' : 'var(--color-text-muted)';
+            }
+
+            const wishlistIcon = document.querySelector('.btn-wishlist i');
 
             // Update Color Swatches
             colorOpts.forEach(opt => {
                 const c = opt.dataset.color;
                 opt.classList.toggle('active', c === selectedColor);
-                if (selectedSize) {
-                    const valid = allVariants.some(v => v.color === c && v.size === selectedSize && v.stock > 0);
-                    opt.classList.toggle('disabled', !valid);
-                } else {
-                    const hasStock = allVariants.some(v => v.color === c && v.stock > 0);
-                    opt.classList.toggle('disabled', !hasStock);
-                }
+                const valid = allVariants.some(v => v.color === c && (selectedSize === null || v.size === selectedSize) && v.stock > 0);
+                opt.classList.toggle('disabled', !valid);
             });
 
             // Update Size Buttons
             sizeOpts.forEach(opt => {
                 const s = opt.dataset.size;
                 opt.classList.toggle('active', s === selectedSize);
-                if (selectedColor) {
-                    const valid = allVariants.some(v => v.color === selectedColor && v.size === s && v.stock > 0);
-                    opt.classList.toggle('disabled', !valid);
-                } else {
-                    const hasStock = allVariants.some(v => v.size === s && v.stock > 0);
-                    opt.classList.toggle('disabled', !hasStock);
-                }
+                const valid = allVariants.some(v => (selectedColor === null || v.color === selectedColor) && v.size === s && v.stock > 0);
+                opt.classList.toggle('disabled', !valid);
             });
 
             // Master Button & Stock Feedback
-            if (selectedColor && selectedSize) {
+            // Force selection if only one variant exists total
+            if (allVariants.length === 1 && selectedColor === null && selectedSize === null) {
+                selectedColor = allVariants[0].color;
+                selectedSize = allVariants[0].size;
+            }
+
+            if (selectedColor !== null && selectedSize !== null) {
                 const variant = getVariant(selectedColor, selectedSize);
                 if (variant) {
                     displayPrice.textContent = `₹${variant.price}`;
                     variantInput.value = variant.id;
+                    
                     if (variant.stock <= 0) {
                         stockFeedback.innerHTML = '<i class="fas fa-times-circle me-1"></i>OUT OF STOCK';
                         stockFeedback.style.color = 'var(--text-danger, #ff4d4d)';
                         addBtn.disabled = true;
                         addBtn.innerHTML = 'OUT OF STOCK <i class="fas fa-ban ms-2"></i>';
+                        addBtn.classList.remove('in-bag');
+                        addBtn.className = 'btn-primary btn-hero-action w-100';
+                    } else if (variant.in_cart) {
+                        // GO TO BAG STATE
+                        stockFeedback.innerHTML = '<i class="fas fa-shopping-bag me-1"></i>IN YOUR BAG';
+                        stockFeedback.style.color = 'var(--color-accent)';
+                        addBtn.disabled = false;
+                        addBtn.innerHTML = 'GO TO BAG <i class="fas fa-arrow-right ms-2"></i>';
+                        addBtn.classList.add('in-bag');
+                        // Use btn-primary + hero action style
+                        addBtn.className = 'btn-primary btn-hero-action w-100'; 
+                        
+                        // Sync Quantity
+                        if (variant.qty_in_cart) {
+                             document.getElementById('qty-input').value = variant.qty_in_cart;
+                        }
                     } else if (variant.stock < 5) {
                         stockFeedback.innerHTML = `<i class="fas fa-exclamation-triangle me-1"></i>ONLY ${variant.stock} LEFT`;
                         stockFeedback.style.color = 'var(--text-warning, #ffaa00)';
                         addBtn.disabled = false;
-                        addBtn.innerHTML = 'ADD TO CART <i class="fas fa-shopping-bag ms-2"></i>';
+                        addBtn.innerHTML = 'ADD TO BAG <i class="fas fa-shopping-bag ms-2"></i>';
+                        addBtn.classList.remove('in-bag');
+                        addBtn.className = 'btn-primary btn-hero-action w-100';
+                        document.getElementById('qty-input').value = 1; // Reset to 1 if not in cart
                     } else {
                         stockFeedback.innerHTML = '<i class="fas fa-check-circle me-1"></i>IN STOCK';
                         stockFeedback.style.color = 'var(--color-success, #00ff88)';
                         addBtn.disabled = false;
-                        addBtn.innerHTML = 'ADD TO CART <i class="fas fa-shopping-bag ms-2"></i>';
+                        addBtn.innerHTML = 'ADD TO BAG <i class="fas fa-shopping-bag ms-2"></i>';
+                        addBtn.classList.remove('in-bag');
+                        addBtn.className = 'btn-primary btn-hero-action w-100';
+                        document.getElementById('qty-input').value = 1; // Reset to 1 if not in cart
                     }
+                    
                     if (variant.image && variant.image !== '#') {
                         switchImage(variant.image);
                     }
+                    
+                    if (wishlistIcon) {
+                        wishlistIcon.classList.toggle('fas', !!variant.in_wishlist);
+                        wishlistIcon.classList.toggle('far', !variant.in_wishlist);
+                    }
+                    if (document.querySelector('.btn-wishlist')) {
+                        document.querySelector('.btn-wishlist').classList.toggle('active', !!variant.in_wishlist);
+                    }
                 }
             } else {
+                if (document.querySelector('.btn-wishlist')) {
+                    document.querySelector('.btn-wishlist').classList.remove('active');
+                }
+                if (wishlistIcon) {
+                    wishlistIcon.classList.remove('fas');
+                    wishlistIcon.classList.add('far');
+                }
                 // If only color is selected, show its first available variant image
-                if (selectedColor) {
+                if (selectedColor !== null) {
                     const firstVariant = allVariants.find(v => v.color === selectedColor && v.image !== '#');
                     if (firstVariant) switchImage(firstVariant.image);
                 }
                 stockFeedback.textContent = '';
                 addBtn.disabled = true;
                 addBtn.innerHTML = 'SELECT OPTIONS <i class="fas fa-lock ms-2"></i>';
+                addBtn.classList.remove('in-bag');
+                addBtn.className = 'btn-primary btn-hero-action w-100';
             }
         }
 
         // Initial Selection Logic (Run at end of block)
-        if (colorOpts.length === 1) {
-            selectColor(colorOpts[0].dataset.color);
-        }
-        if (sizeOpts.length === 1) {
-            selectSize(sizeOpts[0].dataset.size);
+        if (allVariants.length === 1) {
+            selectedColor = allVariants[0].color;
+            selectedSize = allVariants[0].size;
+        } else {
+            if (colorOpts.length === 1) {
+                selectColor(colorOpts[0].dataset.color);
+            }
+            if (sizeOpts.length === 1) {
+                selectSize(sizeOpts[0].dataset.size);
+            }
         }
 
         updateUI(); // Initial UI update
