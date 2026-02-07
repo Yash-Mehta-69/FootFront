@@ -621,6 +621,21 @@
         from { transform: scale(0.9); opacity: 0; }
         to { transform: scale(1); opacity: 1; }
     }
+    .review-eligibility-alert {
+        padding: 1rem 1.5rem;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+    }
+    .review-eligibility-alert i {
+        color: var(--color-accent);
+        font-size: 1.1rem;
+    }
 </style>
 {% endblock %}
 
@@ -879,9 +894,16 @@
 
                 <div class="col-md-4 text-center text-md-end">
                     {% if user.is_authenticated %}
-                    <button id="btnWriteReview">
-                        <i class="fas fa-pen-nib me-2"></i> WRITE A REVIEW
-                    </button>
+                        {% if can_review %}
+                        <button id="btnWriteReview">
+                            <i class="fas fa-pen-nib me-2"></i> WRITE A REVIEW
+                        </button>
+                        {% else %}
+                        <div class="review-eligibility-alert">
+                            <i class="fas fa-info-circle"></i>
+                            <span>{{ eligibility_message }}</span>
+                        </div>
+                        {% endif %}
                     {% else %}
                     <a href="{% url 'login' %}" class="btn-login-review">
                         <i class="fas fa-sign-in-alt me-2"></i> Login to Review

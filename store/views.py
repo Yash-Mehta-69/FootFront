@@ -709,8 +709,57 @@ def product_detail(request, slug):
         if request.user.is_authenticated:
             try:
                 customer = request.user.customer_profile
-                # Get variant IDs and quantities in cart
-                from cart.models import CartItem, Wishlist
+                # Review Eligibility Logic
+                from cart.models import CartItem, Wishlist, OrderItem, Shipment
+                from django.utils import timezone
+                from datetime import timedelta
+
+                # 1. Purchase Check
+                delivered_order_items = OrderItem.objects.filter(
+                    order__customer=customer,
+                    product_variant__product=product,
+                    shipment__status='delivered',
+                    is_deleted=False
+                ).select_related('shipment')
+
+                if not delivered_order_items.exists():
+                    can_review = False
+                    eligibility_message = "Only verified buyers who have received the product can leave a review."
+                else:
+                    # 2. Existing Review Check
+                    if Review.objects.filter(customer=customer, product=product, is_deleted=False).exists():
+                        can_review = False
+                        eligibility_message = "You have already reviewed this product."
+                    else:
+                        # 3. Time Window Check (30 Days)
+                        # We'll check if any delivered order for this product is within 30 days
+                        window_days = 30
+                        eligible_with_window = False
+                        
+                        for item in delivered_order_items:
+                            shipment = item.shipment
+                            # Check status history if shipped_at/delivered_at is missing or for exact delivery time
+                            # For simplicity, if status is 'delivered', we check time since it reached that status
+                            # If shipped_at is used as a fallback or status history
+                            last_status = shipment.history.filter(status='delivered').first()
+                            delivery_time = last_status.created_at if last_status else shipment.shipped_at
+                            
+                            if delivery_time and (timezone.now() - delivery_time) <= timedelta(days=window_days):
+                                eligible_with_window = True
+                                break
+                            elif not delivery_time:
+                                # If no timestamp found but status is delivered, we'll allow it (fallback)
+                                eligible_with_window = True
+                                break
+                        
+                        if eligible_with_window:
+                            can_review = True
+                            eligibility_message = ""
+                        else:
+                            can_review = False
+                            eligibility_message = f"The review window for this purchase has expired ({window_days} days post-delivery)."
+
+                # Cart and Wishlist states for variants
                 cart_items = CartItem.objects.filter(
                     cart__customer=customer, 
                     product_variant__product=product,
@@ -728,7 +777,7 @@ def product_detail(request, slug):
                     is_deleted=False
                 ).values_list('product_variant_id', flat=True))
             except Exception as e:
-                print(f"DEBUG: Error fetching cart/wishlist states: {e}")
+                print(f"DEBUG: Error fetching review/cart/wishlist states: {e}")
 
     except Product.DoesNotExist:
         return redirect('shop')
@@ -746,6 +795,8 @@ def product_detail(request, slug):
         'in_cart_variant_ids': in_cart_variant_ids,
         'in_cart_quantities': in_cart_quantities, # New context
         'in_wishlist_variant_ids': in_wishlist_variant_ids,
+        'can_review': locals().get('can_review', False),
+        'eligibility_message': locals().get('eligibility_message', "Login to leave a review."),
     }
     return render(request, 'product_detail.html', context)
 
@@ -766,6 +817,48 @@ def add_review(request, product_id):
 
             form = ReviewForm(request.POST, request.FILES)
             if form.is_valid():
+                # --- Security Reinforcement: Re-verify Constraints ---
+                from cart.models import OrderItem, Shipment
+                from django.utils import timezone
+                from datetime import timedelta
+
+                # 1. Purchase & Delivery Check
+                delivered_order_items = OrderItem.objects.filter(
+                    order__customer=customer,
+                    product_variant__product=product,
+                    shipment__status='delivered',
+                    is_deleted=False
+                ).select_related('shipment')
+
+                if not delivered_order_items.exists():
+                    messages.error(request, "Only verified buyers who have received the product can leave a review.")
+                    return redirect('product_detail', slug=product.slug)
+
+                # 2. Existing Review Check
+                if Review.objects.filter(customer=customer, product=product, is_deleted=False).exists():
+                    messages.error(request, "You have already reviewed this product.")
+                    return redirect('product_detail', slug=product.slug)
+
+                # 3. Time Window Check (30 Days)
+                window_days = 30
+                eligible_with_window = False
+                for item in delivered_order_items:
+                    shipment = item.shipment
+                    last_status = shipment.history.filter(status='delivered').first()
+                    delivery_time = last_status.created_at if last_status else shipment.shipped_at
+                    
+                    if delivery_time and (timezone.now() - delivery_time) <= timedelta(days=window_days):
+                        eligible_with_window = True
+                        break
+                    elif not delivery_time:
+                        eligible_with_window = True
+                        break
+                
+                if not eligible_with_window:
+                    messages.error(request, f"The review window for this purchase has expired ({window_days} days post-delivery).")
+                    return redirect('product_detail', slug=product.slug)
+                # --- End Constraints ---
+
                 review = form.save(commit=False)
                 review.product = product
                 review.customer = customer
@@ -902,11 +995,17 @@ def vendor_shop(request):
         
     products = Product.objects.filter(vendor=vendor, is_deleted=False).select_related('category')
     
-    # Calculate Stats
+    # Calculate Real Stats
+    from django.db.models import Avg, Sum
     products_count = products.count()
-    # Mock data for now, real orders require complex aggregation
-    sold_count = 120 # Placeholder or aggregate OrderItems
-    rating_avg = 4.9 # Placeholder or aggregate Reviews
+    
+    # Real Avg Rating: Average of all reviews for all products of this vendor
+    rating_avg_data = Review.objects.filter(product__vendor=vendor, is_deleted=False).aggregate(Avg('rating'))
+    rating_avg = round(rating_avg_data['rating__avg'] or 4.9, 1) # Default to 4.9 for display if no reviews
+    
+    # Real Sold Count: Sum of quantities in OrderItems for all products of this vendor
+    sold_count_data = OrderItem.objects.filter(product_variant__product__vendor=vendor, is_deleted=False).aggregate(Sum('quantity'))
+    sold_count = sold_count_data['quantity__sum'] or 0
     
     # Filtering/Sorting Logic (Reuse from shop view)
     from django.db.models import Min
@@ -920,6 +1019,16 @@ def vendor_shop(request):
         products = products.order_by('-price')
     else: # Default: Newest
         products = products.order_by('-created_at')
+    # Pagination
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(products, 5) # Show 2 products per page to force pagination visibility
+    page = request.GET.get('page')
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
 
     context = {
         'vendor': vendor,
