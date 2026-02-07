@@ -34,6 +34,7 @@ urlpatterns = [
     path('reviews/detail/<int:pk>/', views.detail_review, name='detail_review'),
     path('reviews/delete/<int:pk>/', views.delete_review, name='delete_review'),
     path("complaints/", views.view_complaints, name='view_complaints'),
+    path('complaints/update/<int:pk>/', views.admin_update_complaint_status, name='admin_update_complaint_status'),
     path('complaints/delete/<int:pk>/', views.delete_complaint, name='delete_complaint'),
     path("profile/", views.admin_profile, name='admin_profile'),
     path("change-password/", views.change_password, name='admin_change_password'),

@@ -81,7 +81,7 @@ def dashboard(request):
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
 
-from store.models import Customer, Category, Product, ProductVariant, Size, Color, AttributeRequest, Review
+from store.models import Customer, Category, Product, ProductVariant, Size, Color, AttributeRequest, Review ,Complaint
 from store.forms import CategoryForm, ProductForm, SizeForm, ColorForm, CustomerAdminForm, VendorAdminForm
 from vendor.models import Vendor
 
@@ -946,6 +946,29 @@ def view_complaints(request):
     complaints_page = paginator.get_page(page_number)
     
     return render(request, 'dashboard/view_complaints.html', {'complaints': complaints_page})
+
+@admin_required
+def admin_update_complaint_status(request, pk):
+    complaint = get_object_or_404(Complaint, pk=pk, is_deleted=False)
+    
+    if request.method == 'POST':
+        try:
+            new_status = request.POST.get('status')
+            if new_status in dict(Complaint.STATUS_CHOICES):
+                complaint.status = new_status
+                if new_status == 'Resolved':
+                    complaint.resolved_at = timezone.now()
+                else:
+                    complaint.resolved_at = None
+                complaint.save()
+                
+                panel_messages.add_admin_message(request, 'success', f"Complaint #{pk} status updated to {new_status}.")
+            else:
+                panel_messages.add_admin_message(request, 'error', "Invalid status selected.")
+        except Exception as e:
+            panel_messages.add_admin_message(request, 'error', f"Error updating complaint: {str(e)}")
+            
+    return redirect('view_complaints')
 
 @admin_required
 def delete_complaint(request, pk):
