@@ -1495,6 +1495,29 @@ input[type=number] {
     visibility: visible;
 }
 
+.tech-modal-content {
+    background: var(--color-bg);
+    border: 1px solid var(--color-secondary);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    transform: translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.tech-modal-overlay.active .tech-modal-content {
+    transform: translateY(0);
+}
+
+[data-theme="light"] .tech-modal-content {
+    background: #ffffff;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+}
+
 /* Checkout Encryption Modal & Special Animations */
 .encryption-status-wrapper {
     background: rgba(var(--color-accent-rgb, 204, 255, 0), 0.05);
@@ -1584,6 +1607,7 @@ input[type=number] {
     color: var(--color-text);
     letter-spacing: 2px;
     word-break: break-word;
+    font-size: 1.8rem;
 }
 
 .tech-modal-body p {
