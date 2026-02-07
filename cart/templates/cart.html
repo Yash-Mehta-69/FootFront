@@ -53,10 +53,6 @@
         font-family: var(--font-heading);
         font-size: 1.5rem;
         margin-bottom: 0.5rem;
-    .cart-title {
-        font-family: var(--font-heading);
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
         color: var(--color-text);
     }
 
@@ -76,32 +72,47 @@
     }
     
     .summary-card {
-        background: var(--card-bg-dark);
+        background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        box-shadow: var(--shadow-md);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         padding: 2.5rem;
-        border-radius: 12px;
+        border-radius: 16px;
         position: sticky;
         top: 150px;
+        backdrop-filter: blur(20px);
     }
     
     .summary-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 1rem;
-        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+        font-size: 0.95rem;
         letter-spacing: 1px;
+        color: var(--color-text-muted);
+        font-family: monospace;
+    }
+
+    .summary-row span:last-child {
+        color: var(--color-text);
+        font-weight: bold;
     }
     
     .summary-total {
-        font-size: 2rem;
+        font-size: 1.8rem; /* Slightly reduced for better fit */
         font-family: var(--font-heading);
         color: var(--color-accent);
-        border-top: 1px solid rgba(255,255,255,0.1);
-        padding-top: 1rem;
+        border-top: 1px dashed rgba(255,255,255,0.1);
+        padding-top: 1.5rem;
         margin-top: 2rem;
         display: flex;
         justify-content: space-between;
+        align-items: center;
+    }
+
+    .summary-total span:first-child {
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+        letter-spacing: 3px;
     }
 
     /* Transition for removing items */
@@ -149,10 +160,16 @@
                 </div>
             </div>
             {% empty %}
-            <div class="text-center py-5">
-                <i class="fas fa-shopping-bag fa-3x mb-3 text-muted"></i>
-                <p class="text-muted-theme">Your bag is empty.</p>
-                <a href="{% url 'shop' %}" class="btn-primary mt-3">START SHOPPING</a>
+            <div class="glass-panel text-center py-5" style="padding: 5rem 2rem; border-radius: 20px;">
+                <div style="position: relative; display: inline-block; margin-bottom: 2rem;">
+                    <i class="fas fa-shopping-bag fa-4x" style="color: var(--color-text-muted); opacity: 0.3;"></i>
+                    <div style="position: absolute; top: -10px; right: -10px; background: var(--color-accent); color: black; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-family: monospace; font-weight: bold;">0</div>
+                </div>
+                <h3 class="glitch-text" style="font-family: var(--font-heading); color: var(--color-text); margin-bottom: 1rem;">YOUR BAG IS EMPTY</h3>
+                <p style="color: var(--color-text-muted); font-size: 1rem; margin-bottom: 2.5rem;">It looks like you haven't added anything to your bag yet.</p>
+                <a href="{% url 'shop' %}" class="btn-primary" style="display: inline-block; padding: 1rem 3rem;">
+                    GO TO SHOP <i class="fas fa-arrow-right ms-2"></i>
+                </a>
             </div>
             {% endfor %}
         </div>
@@ -168,8 +185,11 @@
                 <span class="text-theme">CALCULATED NEXT</span>
             </div>
             <div class="summary-total">
-                <span>TOTAL</span>
-                <span id="summary-total">₹{{ total }}</span>
+                <span class="text-muted-theme" style="font-size: 0.8rem; letter-spacing: 2px;">TOTAL VALUE</span>
+                <span id="summary-total" style="display: flex; align-items: baseline;">
+                    <small style="font-size: 1.2rem; color: var(--color-text-muted); margin-right: 0.3rem;">₹</small>
+                    {{ total }}
+                </span>
             </div>
             
             <div id="checkout-action-area">

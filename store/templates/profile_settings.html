@@ -19,6 +19,7 @@
         display: grid;
         grid-template-columns: 1fr 3fr;
         gap: 3rem;
+        align-items: start; /* Fix: prevent children from stretching vertically */
     }
 
     .form-group {
@@ -35,43 +36,99 @@
 
     .form-control {
         width: 100%;
-        padding: 0.8rem 1rem;
-        background: rgba(255, 255, 255, 0.05); /* Light/Dark friendly glass */
-        border: 1px solid rgba(128, 128, 128, 0.3);
-        color: var(--text-color);
-        font-family: monospace;
-        transition: all 0.3s ease;
-    }
-    
-    /* Dark mode specific override if needed, but using vars is better */
-    [data-theme="dark"] .form-control {
-         background: rgba(0, 0, 0, 0.3);
-         border-color: #333;
+        padding: 1rem 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--color-text);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 4px;
     }
 
     .form-control:focus {
         outline: none;
+        background: rgba(255, 255, 255, 0.07);
         border-color: var(--color-accent);
-        box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
+        color: var(--color-text);
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.1), inset 0 0 10px rgba(204, 255, 0, 0.05);
+    }
+
+    .form-control:disabled {
+        background: rgba(255, 255, 255, 0.02);
+        border-color: rgba(255, 255, 255, 0.05);
+        color: var(--color-text-subtle);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .email-field-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .email-field-wrapper .lock-icon {
+        position: absolute;
+        right: 1.25rem;
+        color: var(--color-text-subtle);
+        font-size: 0.8rem;
+        pointer-events: none;
     }
 
     .save-btn {
         background: var(--color-accent);
         color: black;
         border: none;
-        padding: 1rem 2rem;
+        padding: 1.2rem 2.5rem;
         font-family: var(--font-heading);
-        font-weight: bold;
+        font-weight: 800;
         text-transform: uppercase;
         cursor: pointer;
+        clip-path: polygon(15% 0, 100% 0, 100% 75%, 85% 100%, 0 100%, 0 25%);
         transition: all 0.3s ease;
         display: inline-block;
-        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        min-width: 200px;
+        text-align: center;
     }
 
     .save-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        background-color: var(--color-secondary);
+        color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    }
+
+    .secondary-btn {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--color-text-muted);
+        padding: 1.1rem 2rem;
+        font-family: var(--font-heading);
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+    
+    .secondary-btn:hover {
+         border-color: var(--color-accent);
+         color: var(--color-accent);
+         background: rgba(204, 255, 0, 0.05);
+    }
+
+    [data-theme="light"] .form-control {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.1);
+        color: black;
+    }
+
+    [data-theme="light"] .secondary-btn {
+        border-color: rgba(0, 0, 0, 0.1);
+        color: #666;
     }
 
     @media (max-width: 900px) {
@@ -129,17 +186,22 @@
                     </div>
                     <div class="col-md-6 form-group">
                         <label class="form-label">EMAIL ADDRESS</label>
-                        <input type="email" class="form-control" value="{{ user.email }}" disabled style="opacity: 0.7; cursor: not-allowed;">
-                        <small style="color: grey; font-size: 0.7rem;">Email cannot be changed directly.</small>
+                        <div class="email-field-wrapper">
+                            <input type="email" class="form-control" value="{{ user.email }}" disabled>
+                            <i class="fas fa-lock lock-icon"></i>
+                        </div>
+                        <!-- <div style="font-family: monospace; font-size: 0.65rem; color: var(--color-text-subtle); margin-top: 0.5rem; letter-spacing: 1px;">
+                            [STATUS: READ_ONLY] // Identity linked to Firebase
+                        </div> -->
                     </div>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-5">
                     <button type="submit" class="save-btn">
                         SAVE CHANGES
                     </button>
-                    <a href="{% url 'change_password' %}" class="text-accent ms-4" style="text-decoration: underline; font-size: 0.9rem;">
-                        CHANGE PASSWORD >
+                    <a href="{% url 'change_password' %}" class="secondary-btn" style="margin-left: 1.5rem;">
+                        CHANGE PASSWORD <i class="fas fa-chevron-right ms-2"></i>
                     </a>
                 </div>
             </form>

@@ -212,11 +212,18 @@ class ReviewMedia(models.Model):
         return f"Media for {self.review.id} ({self.media_type})"
     
 class Complaint(SoftDeleteModel):
+    STATUS_CHOICES = (
+        ('Pending', 'Pending'),
+        ('In Progress', 'In Progress'),
+        ('Resolved', 'Resolved'),
+        ('Rejected', 'Rejected'),
+    )
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
-    subject = models.CharField(max_length=200)
-    complaint_text = models.TextField()
+    subject = models.CharField(max_length=100)
+    description = models.TextField()
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Complaint: {self.subject} by {self.customer.user.email}"

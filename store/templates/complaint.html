@@ -365,6 +365,71 @@
         margin: 0;
         border: none;
     }
+    /* Flip Card Styles */
+    .support-card-container {
+        perspective: 1500px;
+        width: 100%;
+        height: 600px; /* Fixed height for stability during flip */
+        margin-bottom: 2rem;
+    }
+
+    .support-card-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform-style: preserve-3d;
+        cursor: pointer;
+    }
+
+    .support-card-container.flipped .support-card-inner {
+        transform: rotateY(180deg);
+    }
+
+    .support-card-front, .support-card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .support-card-back {
+        transform: rotateY(180deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .flip-trigger {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(var(--color-accent-rgb, 204, 255, 0), 0.3);
+        color: var(--color-accent);
+        padding: 0.6rem 1.2rem;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+        font-family: monospace;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .flip-trigger:hover {
+        background: var(--color-accent);
+        color: black;
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.2);
+    }
 </style>
 
 <div class="container" style="padding-bottom: 5rem;">
@@ -444,57 +509,58 @@
             </div>
         </div>
 
-        <!-- Contact Form -->
+        <!-- Contact Form & Existing Tickets (Flip Card) -->
         <div class="col-lg-5">
-            <div class="form-container">
-                <h2 class="section-heading" style="font-size: 2rem; margin-bottom: 2rem;">Submit a Ticket</h2>
-                
-                <!-- {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; {% if message.tags == 'error' %}background: rgba(255,0,0,0.1); color: #ff4444; border: 1px solid #ff4444;{% else %}background: rgba(0,255,0,0.1); color: #00cc00; border: 1px solid #00cc00;{% endif %}">
-                            {{ message }}
+            <div class="support-card-container" id="supportFlipContainer">
+                <div class="support-card-inner">
+                    <!-- Front: Submit Ticket -->
+                    <div class="support-card-front form-container" style="display: flex; flex-direction: column; justify-content: center;">
+                        <div class="flip-trigger" onclick="toggleFlip(event)">
+                            <span>HISTORY</span>
+                            <i class="fas fa-history"></i>
                         </div>
-                    {% endfor %}
-                {% endif %} -->
+                        <h2 class="section-heading" style="font-size: 2rem; margin-bottom: 2rem;">Submit a Ticket</h2>
+                        
+                        <form method="POST" novalidate>
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label>Subject</label>
+                                {{ form.subject }}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Description</label>
+                                {{ form.description }}
+                            </div>
+                            
+                            <button type="submit" class="btn-primary" style="width: 100%; font-size: 1.2rem; padding: 1.2rem; border-radius: 12px; font-weight: 800; text-transform: uppercase; border: none;">
+                                SUBMIT TICKET
+                            </button>
+                        </form>
+                    </div>
 
-                <form method="POST" novalidate>
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <label>Subject</label>
-                        {{ form.subject }}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Related Product (Optional)</label>
-                        {{ form.product }}
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Description</label>
-                        {{ form.complaint_text }}
-                    </div>
-                    
-                    <button type="submit" class="btn-submit-ticket">Submit Ticket</button>
-                </form>
-            </div>
-
-            {% if user_complaints %}
-            <div class="form-container mt-5">
-                 <h2 class="section-heading" style="font-size: 2rem; margin-bottom: 2rem;">My Complaints</h2>
-                 <div class="complaints-list">
-                    {% for complaint in user_complaints %}
-                    <div class="complaint-item" style="border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1rem;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                             <h5 style="margin:0; font-weight: bold; color: var(--color-text);">{{ complaint.subject }}</h5>
-                             <span class="badge" style="background: var(--color-accent); color: black; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem;">Open</span>
+                    <!-- Back: Existing Tickets -->
+                    <div class="support-card-back form-container" style="border-top: 2px solid var(--color-accent); border-bottom: 2px solid var(--color-accent);">
+                        <div class="flip-trigger" onclick="toggleFlip(event)">
+                            <span>NEW TICKET</span>
+                            <i class="fas fa-plus"></i>
                         </div>
-                         <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">Ticket #{{ complaint.pk }} • {{ complaint.created_at|date:"M d, Y" }}</p>
-                         <p style="color: var(--color-text); font-size: 0.95rem;">{{ complaint.complaint_text|truncatechars:100 }}</p>
+                        <div style="text-align: center; padding: 2rem;">
+                            <div style="font-size: 4rem; color: var(--color-accent); opacity: 0.5; margin-bottom: 2rem;">
+                                <i class="fas fa-ticket-alt"></i>
+                            </div>
+                            <h2 class="section-heading" style="font-size: 1.8rem; margin-bottom: 1.5rem;">My Activity</h2>
+                            <p style="color: var(--color-text-muted); margin-bottom: 2.5rem; line-height: 1.6;">
+                                Manage your active inquiries and check the progress of your support requests in real-time.
+                            </p>
+                            
+                            <a href="{% url 'my_complaints' %}" class="btn-primary" style="display: block; font-size: 1.2rem; width: 100%; padding: 1.2rem; border-radius: 12px; font-weight: 800; text-transform: uppercase;">
+                                View My Tickets
+                            </a>
+                        </div>
                     </div>
-                    {% endfor %}
-                 </div>
+                </div>
             </div>
-            {% endif %}
         </div>
 
     </div>
@@ -595,5 +661,12 @@
     document.addEventListener('click', () => {
         document.querySelectorAll('.custom-dropdown').forEach(d => d.classList.remove('open'));
     });
+
+    // Card Flip Logic
+    function toggleFlip(event) {
+        if (event) event.stopPropagation();
+        const container = document.getElementById('supportFlipContainer');
+        container.classList.toggle('flipped');
+    }
 </script>
 {% endblock %}

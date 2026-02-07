@@ -7,13 +7,13 @@
         padding-top: 150px;
         padding-bottom: 150px;
         min-height: 100vh;
-        max-width: 800px;
+        max-width: 600px; /* More focused width for a form */
     }
 
     .form-header {
-        margin-bottom: 2rem;
+        margin-bottom: 3rem;
         border-bottom: 2px solid var(--color-accent);
-        padding-bottom: 1rem;
+        padding-bottom: 1.5rem;
     }
 
     .form-group {
@@ -22,61 +22,103 @@
 
     .form-label {
         display: block;
-        margin-bottom: 0.5rem;
-        color: var(--text-color);
+        margin-bottom: 0.6rem;
+        color: var(--color-accent);
         font-family: var(--font-heading);
-        font-size: 0.9rem;
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        opacity: 0.8;
     }
     
     .form-control {
-         width: 100%;
-        padding: 0.8rem 1rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(128, 128, 128, 0.3);
-        color: var(--text-color);
-        font-family: monospace;
-        transition: all 0.3s ease;
+        width: 100%;
+        padding: 1rem 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--color-text);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 4px;
     }
 
+    /* Fix for white background on focus */
     .form-control:focus {
         outline: none;
+        background: rgba(255, 255, 255, 0.07);
         border-color: var(--color-accent);
-        box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.2);
+        color: var(--color-text);
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.1), inset 0 0 10px rgba(204, 255, 0, 0.05);
     }
     
+    /* Chrome/Safari autofill styling */
+    .form-control:-webkit-autofill,
+    .form-control:-webkit-autofill:hover, 
+    .form-control:-webkit-autofill:focus {
+        -webkit-text-fill-color: var(--color-text);
+        -webkit-box-shadow: 0 0 0px 1000px #0a0a0a inset;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+
     .submit-btn {
         background: var(--color-accent);
         color: black;
         border: none;
-        padding: 1rem 3rem;
+        padding: 1.2rem 2.5rem;
         font-family: var(--font-heading);
-        font-weight: bold;
+        font-weight: 800;
         text-transform: uppercase;
         cursor: pointer;
-        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        clip-path: polygon(15% 0, 100% 0, 100% 75%, 85% 100%, 0 100%, 0 25%);
         transition: all 0.3s ease;
+        display: inline-block;
+        min-width: 200px;
+        text-align: center;
     }
     
     .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        background-color: var(--color-secondary);
+        color: #fff;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.4);
     }
     
     .cancel-btn {
         background: transparent;
-        border: 1px solid rgba(128, 128, 128, 0.5);
-        color: var(--text-color);
-        padding: 1rem 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--color-text-muted);
+        padding: 1.1rem 2rem;
         font-family: var(--font-heading);
+        font-weight: 600;
         cursor: pointer;
-        margin-left: 1rem;
+        margin-left: 1.5rem;
         text-decoration: none;
         display: inline-block;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        font-size: 0.9rem;
     }
     
     .cancel-btn:hover {
-         background: rgba(128, 128, 128, 0.1);
-         color: var(--text-color);
+         border-color: var(--color-accent);
+         color: var(--color-accent);
+         background: rgba(204, 255, 0, 0.05);
+    }
+
+    [data-theme="light"] .form-control {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.1);
+        color: black;
+    }
+
+    [data-theme="light"] .form-control:focus {
+        background: rgba(0, 0, 0, 0.05);
+        color: black;
+    }
+
+    [data-theme="light"] .cancel-btn {
+        border-color: rgba(0, 0, 0, 0.1);
+        color: #666;
     }
 </style>
 {% endblock %}

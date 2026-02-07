@@ -18,7 +18,7 @@ class CustomerPasswordChangeForm(PasswordChangeForm):
 class ComplaintForm(forms.ModelForm):
     class Meta:
         model = Complaint
-        fields = ['subject', 'product', 'complaint_text']
+        fields = ['subject', 'description']
         widgets = {
             'subject': forms.TextInput(attrs={
                 'class': 'form-control', 
@@ -26,23 +26,17 @@ class ComplaintForm(forms.ModelForm):
                 'required': 'required',
                 'minlength': '5'
             }),
-            'complaint_text': forms.Textarea(attrs={
+            'description': forms.Textarea(attrs={
                 'class': 'form-control', 
                 'placeholder': 'Describe your issue in detail...', 
                 'rows': 5,
                 'required': 'required',
                 'minlength': '20'
             }),
-            'product': forms.Select(attrs={
-                'class': 'form-control',
-            }),
         }
 
     def __init__(self, *args, **kwargs):
         super(ComplaintForm, self).__init__(*args, **kwargs)
-        # Filter products to only those not deleted, if needed
-        self.fields['product'].queryset = Product.objects.filter(is_deleted=False)
-        self.fields['product'].empty_label = "General Inquiry (No specific product)"
 
 from .models import Review
 class ReviewForm(forms.ModelForm):

@@ -487,6 +487,16 @@ def order_list(request):
     return render(request, 'order_list.html', {'orders': orders})
 
 @login_required(login_url='login')
+def my_complaints(request):
+    try:
+        customer = request.user.customer_profile
+        user_complaints = Complaint.objects.filter(customer=customer, is_deleted=False).order_by('-created_at')
+    except:
+        user_complaints = []
+        
+    return render(request, 'my_complaints.html', {'user_complaints': user_complaints})
+
+@login_required(login_url='login')
 def order_detail(request, order_id):
     try:
         customer = request.user.customer_profile
@@ -666,11 +676,11 @@ def change_password(request):
 
 @login_required(login_url='login')
 def my_reviews(request):
-    # Fetch real reviews if any
     try:
         customer = request.user.customer_profile
         reviews = Review.objects.filter(customer=customer, is_deleted=False).order_by('-created_at')
-    except:
+    except Exception as e:
+        print(f"DEBUG: Error fetching reviews: {e}")
         reviews = []
         
     return render(request, 'my_reviews.html', {'reviews': reviews})
@@ -913,7 +923,7 @@ def complaint_view(request):
             'question': 'Are the sneakers authentic?',
             'answer': 'Absolutely. Every pair on FootFront is verified by our expert team of authenticators before being shipped to you.'
         },
-         {
+        {
             'question': 'How can I change my shipping address?',
             'answer': 'If your order hasn\'t shipped yet, please contact support immediately. Once shipped, we cannot change the destination.'
         },
@@ -927,8 +937,8 @@ def complaint_view(request):
 
     if request.method == 'POST':
         if not request.user.is_authenticated:
-             messages.error(request, "You must be logged in to submit a complaint.")
-             return redirect('login')
+            messages.error(request, "You must be logged in to submit a complaint.")
+            return redirect('login')
              
         # Check if user has a customer profile
         try:
@@ -941,28 +951,29 @@ def complaint_view(request):
         if form.is_valid():
             complaint = form.save(commit=False)
             complaint.customer = customer
+            complaint.status = 'Pending'
             complaint.save()
             messages.success(request, "Your ticket has been submitted successfully! We will contact you shortly.")
-            return redirect('help')
+            return redirect('complaint') # Redirect back to complaint page instead of help which might not exist
         else:
             messages.error(request, "Please correct the errors below.")
-
-    # Fetch User's Complaints
-    user_complaints = []
-    if request.user.is_authenticated:
-        try:
-            customer = request.user.customer_profile
-            user_complaints = Complaint.objects.filter(customer=customer, is_deleted=False).order_by('-created_at')
-        except:
-            pass
 
     context = {
         'company_details': company_details,
         'faqs': faqs,
         'form': form,
-        'user_complaints': user_complaints
     }
     return render(request, 'complaint.html', context)
+
+@login_required(login_url='login')
+def my_complaints(request):
+    try:
+        customer = request.user.customer_profile
+        user_complaints = Complaint.objects.filter(customer=customer, is_deleted=False).order_by('-created_at')
+    except:
+        user_complaints = []
+        
+    return render(request, 'my_complaints.html', {'user_complaints': user_complaints})
 
 
 

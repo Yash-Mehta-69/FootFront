@@ -22,6 +22,7 @@ urlpatterns = [
     path('terms/', views.terms_view, name='terms'),
     path('privacy/', views.privacy_view, name='privacy'),
     path('complaint/', views.complaint_view, name='complaint'),
+    path('profile/complaints/', views.my_complaints, name='my_complaints'),
     path('contact/', views.contact_view, name='contact'),
     path('become-vendor/', views.become_vendor, name='become_vendor'),
     path('vendor-shop/', views.vendor_shop, name='vendor_shop'), # Vendor Shop View

@@ -19,68 +19,109 @@
         display: grid;
         grid-template-columns: 1fr 3fr;
         gap: 3rem;
+        align-items: start;
+    }
+
+    .reviews-stack {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
     }
 
     .review-card {
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
-        border-radius: var(--border-radius-card); /* Consistent radius */
+        padding: 0;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        backdrop-filter: blur(15px);
     }
     
     .review-card:hover {
         border-color: var(--color-accent);
         background: var(--glass-hover-bg);
-        transform: translateY(-2px);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 20px rgba(204, 255, 0, 0.15);
     }
     
-    /* Remove manual light theme overrides */
-    [data-theme="light"] .review-card {
-        box-shadow: var(--shadow-sm);
+    .review-product-image {
+        width: 100%;
+        height: 250px; /* Increased height */
+        position: relative;
+        background: rgba(0,0,0,0.3);
+        overflow: hidden;
     }
 
-    .review-product-header {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        border-bottom: 1px solid rgba(128,128,128,0.2);
-        padding-bottom: 1rem;
-    }
-    
-    .review-thumb {
-        width: 60px;
-        height: 60px;
-        background: #333;
+    .review-product-image img, .review-product-image .placeholder-thumb {
+        width: 100%;
+        height: 100%;
         object-fit: cover;
+        transition: transform 0.6s ease;
     }
-    
+
+    .review-card:hover .review-product-image img {
+        transform: scale(1.08);
+    }
+
+    .review-content {
+        padding: 2rem; /* Increased padding */
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
     .product-name {
         font-family: var(--font-heading);
-        font-size: 1.1rem;
-        margin-bottom: 0.3rem;
+        font-size: 1.25rem; /* Increased size */
+        margin-bottom: 0.75rem;
+        color: var(--color-accent);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        letter-spacing: 1px;
     }
     
+    .review-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
     .rating-stars {
         color: var(--color-accent);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
     
     .review-date {
         font-family: monospace;
-        color: #888;
-        font-size: 0.8rem;
+        color: var(--color-text-muted);
+        opacity: 0.6;
+        letter-spacing: 1px;
     }
     
     .review-comment {
+        font-size: 1.05rem; /* Increased size */
+        line-height: 1.7;
+        color: var(--color-text);
+        display: -webkit-box;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex: 1;
         font-style: italic;
-        line-height: 1.6;
     }
 
-    @media (max-width: 900px) {
-        .reviews-grid {
-             grid-template-columns: 1fr;
+    @media (max-width: 1100px) {
+        .reviews-stack {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -101,83 +142,50 @@
 
         <main>
             {% if reviews %}
-                {% for review in reviews %}
-                     <!-- Real reviews loop -->
-                    <div class="glass-panel review-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                         <div class="review-product-header">
-                            {% if review.product.product_image %}
-                                <img src="{{ review.product.product_image.url }}" class="review-thumb">
-                            {% else %}
-                                <div class="review-thumb"></div>
-                            {% endif %}
-                            <div>
+                <div class="reviews-stack">
+                    {% for review in reviews %}
+                        <div class="review-card">
+                            <div class="review-product-image">
+                                {% if review.product.product_image %}
+                                    <img src="{{ review.product.product_image.url }}" alt="{{ review.product.name }}">
+                                {% else %}
+                                    <div class="placeholder-thumb" style="display: flex; align-items: center; justify-content: center; height: 100%;">
+                                        <i class="fas fa-shoe-prints" style="font-size: 3rem; color: rgba(255,255,255,0.1);"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="review-content">
                                 <div class="product-name">{{ review.product.name }}</div>
-                                <div class="rating-stars">
-                                    {% for i in "12345"|make_list %}
-                                        {% if forloop.counter <= review.rating %}
-                                            <i class="fas fa-star"></i>
-                                        {% else %}
-                                            <i class="far fa-star"></i>
-                                        {% endif %}
-                                    {% endfor %}
+                                <div class="review-meta">
+                                    <div class="rating-stars">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="review-comment">
+                                    "{{ review.comment }}"
                                 </div>
                             </div>
-                            <div style="margin-left: auto;">
-                                <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
-                            </div>
                         </div>
-                        <div class="review-comment">
-                            "{{ review.comment }}"
-                        </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="glass-panel text-center" style="padding: 4rem;">
+                    <i class="fas fa-comment" style="font-size: 4rem; color: var(--color-gray); margin-bottom: 1.5rem;"></i>
+                    <h3>NO REVIEWS FOUND</h3>
+                    <p style="color: var(--color-text-muted); margin-bottom: 2rem;">You haven't shared your feedback yet. Start reviewing your purchases.</p>
+                    <a href="{% url 'shop' %}" class="btn-primary" style="display: inline-block; width: fit-content; min-width: 250px;">
+                        GO TO SHOP <i class="fas fa-shopping-cart ms-2"></i>
+                    </a>
+                </div>
             {% endif %}
-            
-            <!-- Static Data for Demo -->
-            <div class="glass-panel review-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                 <div class="review-product-header">
-                     <!-- Check if placeholder image is available or just use div -->
-                     <img src="{% static 'img/dummy-shoe.jpg' %}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" class="review-thumb" style="display: none;">
-                     <div class="review-thumb" style="background: #444; display: flex; align-items: center; justify-content: center;">
-                         <i class="fas fa-shoe-prints" style="color: #666;"></i>
-                     </div>
-                     
-                    <div class="ms-3">
-                        <div class="product-name">CyberRunner 2077</div>
-                        <div class="rating-stars">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                        </div>
-                    </div>
-                    <div style="margin-left: auto;">
-                        <span class="review-date">Oct 15, 2025</span>
-                    </div>
-                </div>
-                <div class="review-comment">
-                    "Absolutely love the futuristic design! The fit is perfect and the materials feel premium. Definitely worth the price."
-                </div>
-            </div>
-
-             <div class="glass-panel review-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-                 <div class="review-product-header">
-                     <div class="review-thumb" style="background: #444; display: flex; align-items: center; justify-content: center;">
-                         <i class="fas fa-shoe-prints" style="color: #666;"></i>
-                     </div>
-                     
-                    <div class="ms-3">
-                        <div class="product-name">Neon Glide V4</div>
-                        <div class="rating-stars">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-                        </div>
-                    </div>
-                     <div style="margin-left: auto;">
-                        <span class="review-date">Sep 02, 2025</span>
-                    </div>
-                </div>
-                <div class="review-comment">
-                    "Great shoes for running at night. Visibility is amazing. A bit tight around the toes initially but they break in nicely."
-                </div>
-            </div>
-            
         </main>
     </div>
 </div>

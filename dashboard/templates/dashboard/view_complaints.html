@@ -22,7 +22,7 @@
                     <th>User</th>
                     <th>Subject</th>
                     <th>Date</th>
-
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -30,10 +30,23 @@
                 {% for complaint in complaints %}
                 <tr>
                     <td>#{{ complaint.pk }}</td>
-                    <td>{{ complaint.user }}</td>
-                    <td>{{ complaint.subject }}</td>
-                    <td>{{ complaint.date }}</td>
-
+                    <td>{{ complaint.customer.user.get_full_name }}<br><small class="text-muted">{{ complaint.customer.user.email }}</small></td>
+                    <td>
+                        <strong>{{ complaint.subject }}</strong>
+                        <p class="small text-muted mb-0">{{ complaint.description|truncatechars:50 }}</p>
+                    </td>
+                    <td>{{ complaint.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if complaint.status == 'Pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif complaint.status == 'In Progress' %}
+                            <span class="badge bg-primary">In Progress</span>
+                        {% elif complaint.status == 'Resolved' %}
+                            <span class="badge bg-success">Resolved</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ complaint.status }}</span>
+                        {% endif %}
+                    </td>
                     <td>
                         <form method="POST" action="{% url 'delete_complaint' complaint.pk %}" class="d-inline">
                             {% csrf_token %}

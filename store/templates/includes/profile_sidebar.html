@@ -17,7 +17,8 @@
         <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px dashed rgba(255,255,255,0.1);">
             <span style="display: block; font-family: var(--font-heading); font-size: 0.65rem; color: var(--color-accent); letter-spacing: 1px; margin-bottom: 0.4rem; padding-left: 1rem;">// HELP & SUPPORT</span>
             <a href="{% url 'contact' %}" class="dashboard-menu-item {% if active_page == 'contact' %}active{% endif %}">Contact Us</a>
-            <a href="{% url 'complaint' %}" class="dashboard-menu-item {% if active_page == 'complaint' %}active{% endif %}">Complain Center</a>
+            <a href="{% url 'complaint' %}" class="dashboard-menu-item {% if active_page == 'complaint' %}active{% endif %}">Support Center</a>
+            <a href="{% url 'my_complaints' %}" class="dashboard-menu-item {% if active_page == 'my_complaints' %}active{% endif %}">My Tickets</a>
         </div>
     </div>
 

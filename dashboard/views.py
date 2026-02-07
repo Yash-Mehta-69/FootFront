@@ -938,27 +938,28 @@ def delete_review(request, pk):
 
 @admin_required
 def view_complaints(request):
-    class MockObj:
-        def __init__(self, **kwargs):
-            self.__dict__.update(kwargs)
-
-    complaints = [
-        MockObj(pk=1, user="Mike Ross", subject="Late Delivery", message="My order is 3 days late.", date="2023-10-21", status="Open"),
-        MockObj(pk=2, user="Rachel Green", subject="Wrong Item", message="I received the wrong size.", date="2023-10-19", status="Resolved"),
-    ]
-    return render(request, 'dashboard/view_complaints.html', {'complaints': complaints})
+    complaints = Complaint.objects.filter(is_deleted=False).select_related('customer__user').order_by('-created_at')
+    
+    # Pagination
+    paginator = Paginator(complaints, 10)
+    page_number = request.GET.get('page')
+    complaints_page = paginator.get_page(page_number)
+    
+    return render(request, 'dashboard/view_complaints.html', {'complaints': complaints_page})
 
 @admin_required
 def delete_complaint(request, pk):
     try:
-        # Mock deletion logic
         if request.method == "POST":
-            messages.success(request, f"Complaint #{pk} deleted successfully (Mock)")
+            complaint = get_object_or_404(Complaint, pk=pk)
+            complaint.is_deleted = True
+            complaint.save()
+            panel_messages.add_admin_message(request, 'success', f"Complaint #{pk} deleted successfully.")
             return redirect('view_complaints')
         return redirect('view_complaints')
     except Exception as e:
         print(f"Error in delete_complaint: {e}")
-        messages.error(request, 'An error occurred.')
+        panel_messages.add_admin_message(request, 'error', 'An error occurred while deleting the complaint.')
         return redirect('view_complaints')
 
 @admin_required
