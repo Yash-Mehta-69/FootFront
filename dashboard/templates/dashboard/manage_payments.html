@@ -1,5 +1,5 @@
 {% extends 'dashboard/admin_base.html' %}
-
+{% load custom_filters %}
 {% block title %}Payments | Admin Panel{% endblock %}
 
 {% block header_title %}Payments{% endblock %}
@@ -47,6 +47,7 @@
                     <th>Date</th>
                     <th>Method</th>
                     <th>Amount</th>
+                    <th>Earnings (7%)</th>
                     <th>Status</th>
                 </tr>
             </thead>
@@ -73,6 +74,7 @@
                     </td>
                     <td><i class="fas fa-credit-card me-2 text-primary-custom"></i>{{ payment.payment_method|upper }}</td>
                     <td class="fw-bold text-primary-custom">₹{{ payment.amount }}</td>
+                    <td class="fw-bold text-success-custom">₹{{ payment.amount|multiply:0.07|floatformat:2 }}</td>
                     <td>
                         <div class="small fw-bold {% if payment.status == 'completed' %}text-success-custom{% elif payment.status == 'failed' %}text-danger-custom{% else %}status-warning{% endif %}">
                             <i class="fas {% if payment.status == 'completed' %}fa-check-circle{% elif payment.status == 'failed' %}fa-times-circle{% else %}fa-exclamation-circle{% endif %} me-1"></i>

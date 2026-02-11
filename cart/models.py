@@ -113,6 +113,8 @@ class Payment(SoftDeleteModel):
 
 class TransferLog(SoftDeleteModel):
     vendor = models.ForeignKey(Vendor, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='transfers', null=True)
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='transfers', null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -35,7 +35,7 @@
                     <option value="date_oldest" {% if current_sort == 'date_oldest' %}selected{% endif %}>Date: Oldest</option>
                 </select>
             </form>
-            <button onclick="exportData()" class="btn-secondary-custom">
+            <button onclick="exportData()" class="btn-primary-custom btn-sm">
                 <i class="fas fa-file-export"></i> Export CSV
             </button>
             <a href="{% url 'admin_add_product' %}" class="btn-primary-custom">

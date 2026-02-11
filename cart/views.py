@@ -3,11 +3,12 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db.models import Sum
+from django.db import transaction
 from django.template.loader import render_to_string
 import json
 import razorpay
 from django.conf import settings
-from .models import Cart, CartItem, Wishlist, Order, OrderItem, Payment, Shipment, ShipmentStatusHistory
+from .models import Cart, CartItem, Wishlist, Order, OrderItem, Payment, Shipment, ShipmentStatusHistory, TransferLog
 from store.models import Product, ProductVariant, ShippingAddress
 from store.decorators import redirect_special_users
 import os
@@ -243,21 +244,25 @@ def create_order(request):
                 postal_code=postal_code
             )
 
-        # 1. Create Order
-        order = Order.objects.create(
-            customer=customer,
-            total_amount=total,
-            shipping_address=shipping_address
-        )
-        
-        # 2. Create OrderItems
-        for item in items:
-            OrderItem.objects.create(
-                order=order,
-                product_variant=item.product_variant,
-                quantity=item.quantity,
-                price=item.product_variant.price
-            )
+        # 1. Create Order and OrderItems (Atomic)
+        try:
+            with transaction.atomic():
+                order = Order.objects.create(
+                    customer=customer,
+                    total_amount=total,
+                    shipping_address=shipping_address
+                )
+                
+                # 2. Create OrderItems
+                for item in items:
+                    OrderItem.objects.create(
+                        order=order,
+                        product_variant=item.product_variant,
+                        quantity=item.quantity,
+                        price=item.product_variant.price
+                    )
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Order Creation Error: {str(e)}'})
         
         # 3. Razorpay Integration
         client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET')))
@@ -314,49 +319,69 @@ def payment_callback(request):
             # Verify signature
             client.utility.verify_payment_signature(params_dict)
             
-            # Signature matches - Payment Success
-            payment = Payment.objects.get(razorpay_order_id=data.get('razorpay_order_id'))
-            payment.razorpay_payment_id = data.get('razorpay_payment_id')
-            payment.razorpay_signature = data.get('razorpay_signature')
-            payment.status = 'completed'
-            
-            # Fetch payment details to get method (card, upi, etc.)
-            try:
-                razor_pay_details = client.payment.fetch(payment.razorpay_payment_id)
-                if razor_pay_details and 'method' in razor_pay_details:
-                    payment.payment_method = razor_pay_details['method']
-            except:
-                pass
+            with transaction.atomic():
+                # Signature matches - Payment Success
+                payment = Payment.objects.get(razorpay_order_id=data.get('razorpay_order_id'))
+                payment.razorpay_payment_id = data.get('razorpay_payment_id')
+                payment.razorpay_signature = data.get('razorpay_signature')
+                payment.status = 'completed'
                 
-            payment.save()
-            
-            # 1. Create Shipments and Update Stock
-            order = payment.order
-            for item in order.items.all():
-                # Create Shipment for each order item
-                shipment = Shipment.objects.create(
-                    order_item=item,
-                    vendor=item.product_variant.product.vendor,
-                    status='preparing',
-                    tracking_number=f"TRACK-{order.id}-{item.id}", # Placeholder tracking
-                    courier_name="Processing" # Initial courier status
-                )
+                # Fetch payment details to get method (card, upi, etc.)
+                try:
+                    razor_pay_details = client.payment.fetch(payment.razorpay_payment_id)
+                    if razor_pay_details and 'method' in razor_pay_details:
+                        payment.payment_method = razor_pay_details['method']
+                except:
+                    pass
+                    
+                payment.save()
                 
-                # Log Initial History
-                ShipmentStatusHistory.objects.create(
-                    shipment=shipment,
-                    status='Preparing',
-                    description="Order confirmed. We're getting your item ready."
-                )
+                # 1. Create Shipments, Update Stock, and Calculate Transfers
+                order = payment.order
+                vendor_totals = {}
                 
-                # Update Stock
-                variant = item.product_variant
-                variant.stock -= item.quantity
-                variant.save()
+                for item in order.items.select_related('product_variant__product__vendor').all():
+                    vendor = item.product_variant.product.vendor
+                    item_total = item.price * item.quantity
+                    vendor_totals[vendor] = vendor_totals.get(vendor, 0) + float(item_total)
+                    
+                    # Create Shipment for each order item
+                    shipment = Shipment.objects.create(
+                        order_item=item,
+                        vendor=vendor,
+                        status='preparing',
+                        tracking_number=f"TRACK-{order.id}-{item.id}", 
+                        courier_name="Processing"
+                    )
+                    
+                    # Log Initial History
+                    ShipmentStatusHistory.objects.create(
+                        shipment=shipment,
+                        status='Preparing',
+                        description="Order confirmed. We're getting your item ready."
+                    )
+                    
+                    # Update Stock
+                    variant = item.product_variant
+                    variant.stock -= item.quantity
+                    variant.save()
 
-            # 2. Clear Cart
-            cart = Cart.objects.get(customer=request.user.customer_profile, is_deleted=False)
-            cart.items.filter(is_deleted=False).update(is_deleted=True)
+                # 2. Create Transfer Logs for Vendors
+                # 10% total commission (3% Razorpay + 7% Platform)
+                for vendor, amount in vendor_totals.items():
+                    transfer_amount = amount * 0.90 # 90% goes to vendor
+                    TransferLog.objects.create(
+                        vendor=vendor,
+                        order=order,
+                        payment=payment,
+                        amount=transfer_amount,
+                        transaction_id=f"TLOG-{payment.razorpay_payment_id}-{vendor.id}",
+                        status='pending' # Explicitly requested as log entry, not actual transfer yet
+                    )
+
+                # 3. Clear Cart
+                cart = Cart.objects.get(customer=request.user.customer_profile, is_deleted=False)
+                cart.items.filter(is_deleted=False).update(is_deleted=True)
             
             return render(request, 'payment_success.html', {'payment_id': payment.razorpay_payment_id})
             

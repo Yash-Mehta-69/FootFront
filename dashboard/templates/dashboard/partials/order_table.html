@@ -1,3 +1,4 @@
+{% load custom_filters %}
 <table class="table-custom">
     <thead>
         <tr>
@@ -7,6 +8,7 @@
             <th>Vendor</th>
             <th>Payment Info</th>
             <th>Fulfillment</th>
+            <th>Earnings (7%)</th>
             <th>Date</th>
             <th class="text-end">Actions</th>
         </tr>
@@ -81,6 +83,10 @@
                 {% endwith %}
             </td>
             <td>
+                <div class="fw-bold text-success-custom">₹{{ order.total_amount|multiply:0.07|floatformat:2 }}</div>
+                <div class="small text-muted" style="font-size: 0.7rem;">(7% Comm.)</div>
+            </td>
+            <td>
                 <div class="small" style="color: var(--text-main);">{{ order.order_date|date:"d M, Y" }}</div>
                 <div class="text-muted small">{{ order.order_date|date:"H:i" }}</div>
             </td>
@@ -145,6 +151,10 @@
                                             <div class="d-flex justify-content-between mb-2 small">
                                                 <span class="text-muted">Bill Amount:</span>
                                                 <span class="fw-bold text-primary-custom" style="font-size: 1.1rem;">₹{{ order.total_amount }}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2 small pt-2" style="border-top: 1px dashed rgba(var(--text-main-rgb), 0.1);">
+                                                <span class="text-muted">Platform Earnings (7%):</span>
+                                                <span class="fw-bold text-success-custom">₹{{ order.total_amount|multiply:0.07|floatformat:2 }}</span>
                                             </div>
                                         </div>
                                     </div>
