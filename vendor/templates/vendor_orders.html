@@ -7,24 +7,27 @@
 
 {% block vendor_content %}
 <div class="custom-card">
-    <div class="card-header-custom d-flex justify-content-between flex-wrap gap-2">
+    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
         <h5 class="card-title-custom mb-0">Order Inventory</h5>
-        <div class="d-flex align-items-center">
-            <form method="get" class="d-flex gap-2">
-                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control-custom form-control-sm" placeholder="Search orders..." style="width: 200px;">
-                <select name="status" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" class="d-flex gap-2" onsubmit="return false;">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control-custom" placeholder="Search orders..." style="width: 220px;">
+                <select name="status" class="form-select-custom" style="width: 160px;">
                     <option value="">All Statuses</option>
                     {% for status_val, status_label in status_choices %}
                     <option value="{{ status_val }}" {% if current_status == status_val %}selected{% endif %}>{{ status_label }}</option>
                     {% endfor %}
                 </select>
-                <select name="sort" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                <select name="sort" class="form-select-custom" style="width: 160px;">
                     <option value="date_newest" {% if current_sort == 'date_newest' %}selected{% endif %}>Date: Newest</option>
                     <option value="date_oldest" {% if current_sort == 'date_oldest' %}selected{% endif %}>Date: Oldest</option>
                     <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
                     <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
                 </select>
             </form>
+            <button onclick="exportData()" class="btn-primary-custom">
+                <i class="fas fa-file-export"></i> Export CSV
+            </button>
         </div>
     </div>
 

@@ -11,6 +11,7 @@ from cart.models import Order, Shipment, OrderItem, ShipmentStatusHistory
 from django.utils import timezone
 from datetime import timedelta, datetime
 from utils import panel_messages
+from utils.exports import export_to_csv
 from django.db.models import Prefetch
 
 
@@ -157,6 +158,25 @@ def vendor_products(request):
     else: # Default: Newest
         products = products.order_by('-created_at')
 
+    if request.GET.get('export') == 'csv':
+        # Enhanced export: One row per variant
+        variants = ProductVariant.objects.filter(product__in=products, is_deleted=False).select_related(
+            'product', 'product__category', 'size', 'color'
+        ).order_by('product__name', 'size__size_label')
+        
+        fields = [
+            ('product.name', 'Product Name'),
+            ('product.category.name', 'Category'),
+            ('size.size_label', 'Size'),
+            ('color.name', 'Color'),
+            ('price', 'Price'),
+            ('stock', 'Stock'),
+            ('product.gender', 'Gender'),
+            ('product.is_trending', 'Is Trending'),
+            ('product.created_at', 'Date Created')
+        ]
+        return export_to_csv(variants, 'vendor_products', fields)
+
     # Pagination
     paginator = Paginator(products, 10)
     page_number = request.GET.get('page')
@@ -169,6 +189,10 @@ def vendor_products(request):
         'current_category': int(category_id) if category_id else None,
         'current_sort': sort_by,
     }
+    
+    if request.GET.get('ajax') == '1':
+        return render(request, 'vendor_partials/product_table.html', context)
+        
     return render(request, 'vendor_products.html', context)
 
 @vendor_required
@@ -245,6 +269,22 @@ def vendor_orders(request):
     page_number = request.GET.get('page')
     orders_page = paginator.get_page(page_number)
     
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('pk', 'Order ID'),
+            ('customer.user.first_name', 'Customer First Name'),
+            ('customer.user.last_name', 'Customer Last Name'),
+            ('customer.user.email', 'Customer Email'),
+            ('shipping_address.address_line1', 'Address Line 1'),
+            ('shipping_address.address_line2', 'Address Line 2'),
+            ('shipping_address.city', 'City'),
+            ('shipping_address.state', 'State'),
+            ('shipping_address.postal_code', 'Pincode'),
+            ('vendor_total', 'Amount'),
+            ('order_date', 'Date')
+        ]
+        return export_to_csv(orders, 'vendor_orders', fields)
+    
     context = {
         'orders': orders_page,
         'search_query': q,
@@ -253,6 +293,9 @@ def vendor_orders(request):
         'status_choices': Shipment.STATUS_CHOICES
     }
     
+    if request.GET.get('ajax') == '1':
+        return render(request, 'vendor_partials/order_table.html', context)
+        
     return render(request, 'vendor_orders.html', context)
 
 @vendor_required
@@ -469,6 +512,16 @@ def vendor_shipment_detail(request, pk):
 @vendor_required
 def vendor_categories(request):
     categories = Category.objects.filter(is_deleted=False).select_related('parent_category')
+    
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('name', 'Category Name'),
+            ('parent_category.name', 'Parent Category'),
+            ('description', 'Description'),
+            ('cat_image', 'Image Path')
+        ]
+        return export_to_csv(categories, 'vendor_categories', fields)
+        
     return render(request, 'vendor_categories.html', {'categories': categories})
 
 @vendor_required
@@ -536,6 +589,20 @@ def vendor_shipments(request):
     page_number = request.GET.get('page')
     shipments_page = paginator.get_page(page_number)
     
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('tracking_number', 'Tracking Number'),
+            ('courier_name', 'Courier'),
+            ('order_item.order.pk', 'Order ID'),
+            ('order_item.product_variant.product.name', 'Product'),
+            ('order_item.product_variant.size.size_label', 'Size'),
+            ('order_item.product_variant.color.name', 'Color'),
+            ('status', 'Status'),
+            ('shipped_at', 'Shipped At'),
+            ('expected_delivery', 'Expected Delivery')
+        ]
+        return export_to_csv(shipments, 'vendor_shipments', fields)
+    
     context = {
         'shipments': shipments_page,
         'search_query': q,
@@ -546,6 +613,9 @@ def vendor_shipments(request):
         'status_choices': Shipment.STATUS_CHOICES
     }
     
+    if request.GET.get('ajax') == '1':
+        return render(request, 'vendor_partials/shipment_table.html', context)
+        
     return render(request, 'vendor_shipments.html', context)
 
 @vendor_required
@@ -659,17 +729,38 @@ def vendor_reviews(request):
         is_deleted=False
     ).order_by('-created_at')
     
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('product.name', 'Product'),
+            ('customer.user.first_name', 'Customer First Name'),
+            ('customer.user.last_name', 'Customer Last Name'),
+            ('rating', 'Rating'),
+            ('comment', 'Comment'),
+            ('created_at', 'Date')
+        ]
+        return export_to_csv(reviews, 'vendor_reviews', fields)
+    
     return render(request, 'vendor_reviews.html', {'reviews': reviews})
 
 
 @vendor_required
 def vendor_sizes(request):
     sizes = Size.objects.all()
+    
+    if request.GET.get('export') == 'csv':
+        fields = [('size_label', 'Size Label')]
+        return export_to_csv(sizes, 'vendor_sizes', fields)
+        
     return render(request, 'vendor_sizes.html', {'sizes': sizes})
 
 @vendor_required
 def vendor_colors(request):
     colors = Color.objects.all()
+    
+    if request.GET.get('export') == 'csv':
+        fields = [('name', 'Color Name'), ('hex_code', 'Hex Code')]
+        return export_to_csv(colors, 'vendor_colors', fields)
+        
     return render(request, 'vendor_colors.html', {'colors': colors})
 
 @vendor_required

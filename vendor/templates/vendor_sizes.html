@@ -7,13 +7,18 @@
 
 {% block vendor_content %}
 <div class="row">
-    <div class="col-lg-4">
+    <div class="col-lg-5">
         <div class="custom-card">
             <div class="card-header-custom d-flex justify-content-between align-items-center">
                 <h5 class="card-title-custom mb-0">Your Available Sizes</h5>
-                <button class="btn btn-primary-custom btn-sm" onclick="openRequestModal('Size')">
-                    <i class="fas fa-plus me-1"></i> Request
-                </button>
+                <div class="d-flex gap-2">
+                    <button onclick="exportData()" class="btn-primary-custom btn-sm">
+                        <i class="fas fa-file-export"></i> Export CSV
+                    </button>
+                    <button class="btn btn-primary-custom btn-sm" onclick="openRequestModal('Size')">
+                        <i class="fas fa-plus me-1"></i> Request
+                    </button>
+                </div>
             </div>
 
             <div class="table-responsive">
@@ -47,7 +52,7 @@
         </div>
     </div>
 
-    <div class="col-lg-8">
+    <div class="col-lg-7">
         <div class="custom-card">
             <div class="card-header-custom">
                 <h5 class="card-title-custom">Standard Conversion Chart</h5>

@@ -223,7 +223,7 @@ class CustomerAdminForm(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        qs = User.objects.filter(email=email)
+        qs = User.objects.filter(email=email, is_deleted=False)
         if self.instance_user:
             qs = qs.exclude(pk=self.instance_user.pk)
         if qs.exists():
@@ -261,6 +261,7 @@ class VendorAdminForm(CustomerAdminForm):
     def __init__(self, *args, **kwargs):
         self.vendor_instance = kwargs.pop('vendor', None)
         super().__init__(*args, **kwargs)
+        self.fields['phone'].required = False  # Vendor uses business_phone instead
         if not self.vendor_instance:
             self.fields['profile_picture'].required = True
             self.fields['panCard'].required = True
@@ -268,7 +269,7 @@ class VendorAdminForm(CustomerAdminForm):
 
     def clean_shopName(self):
         shopName = self.cleaned_data.get('shopName')
-        qs = Vendor.objects.filter(shopName=shopName)
+        qs = Vendor.objects.filter(shopName=shopName, is_deleted=False)
         if self.vendor_instance:
             qs = qs.exclude(pk=self.vendor_instance.pk)
         if qs.exists():

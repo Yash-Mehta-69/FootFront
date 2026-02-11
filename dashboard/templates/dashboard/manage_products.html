@@ -10,24 +10,24 @@
 
 {% block admin_content %}
 <div class="custom-card">
-    <div class="card-header-custom d-flex justify-content-between flex-wrap gap-2">
+    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
         <h5 class="card-title-custom mb-0">Product Inventory</h5>
-        <div class="d-flex align-items-center">
-            <form method="get" class="d-flex gap-2 me-2">
-                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control-custom form-control-sm" placeholder="Search products..." style="width: 200px;">
-                <select name="category" class="form-select-custom form-select-sm" style="width: 130px;" onchange="this.form.submit()">
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" class="d-flex gap-2" onsubmit="return false;">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control-custom" placeholder="Search products..." style="width: 200px;">
+                <select name="category" class="form-select-custom" style="width: 150px;">
                     <option value="">All Categories</option>
                     {% for cat in categories %}
                     <option value="{{ cat.id }}" {% if current_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
                     {% endfor %}
                 </select>
-                <select name="vendor" class="form-select-custom form-select-sm" style="width: 130px;" onchange="this.form.submit()">
+                <select name="vendor" class="form-select-custom" style="width: 150px;">
                     <option value="">All Vendors</option>
                     {% for v in vendors %}
                     <option value="{{ v.pk }}" {% if current_vendor == v.pk %}selected{% endif %}>{{ v.shopName }}</option>
                     {% endfor %}
                 </select>
-                <select name="sort" class="form-select-custom form-select-sm" style="width: 130px;" onchange="this.form.submit()">
+                <select name="sort" class="form-select-custom" style="width: 150px;">
                     <option value="">Sort By</option>
                     <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
                     <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
@@ -35,8 +35,11 @@
                     <option value="date_oldest" {% if current_sort == 'date_oldest' %}selected{% endif %}>Date: Oldest</option>
                 </select>
             </form>
-            <a href="{% url 'admin_add_product' %}" class="btn btn-primary-custom btn-sm">
-                <i class="fas fa-plus me-1"></i> Add Product
+            <button onclick="exportData()" class="btn-secondary-custom">
+                <i class="fas fa-file-export"></i> Export CSV
+            </button>
+            <a href="{% url 'admin_add_product' %}" class="btn-primary-custom">
+                <i class="fas fa-plus"></i> Add Product
             </a>
         </div>
     </div>

@@ -1,0 +1,56 @@
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Product</th>
+            <th>Tracking No</th>
+            <th>Status</th>
+            <th>Expected Delivery</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for shipment in shipments %}
+        <tr>
+            <td><div class="fw-bold text-primary-custom">#ORD-{{ shipment.order_item.order.pk }}</div></td>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded bg-light" style="width: 32px; height: 32px; overflow: hidden; border: 1px solid var(--border-color);">
+                        {% if shipment.order_item.product_variant.image %}
+                            <img src="{{ shipment.order_item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                    </div>
+                    <div class="small text-truncate" style="max-width: 20ch;">{{ shipment.order_item.product_variant.product.name }}</div>
+                </div>
+            </td>
+            <td>
+                {% if shipment.tracking_number %}
+                    <div class="font-monospace small">{{ shipment.tracking_number }}</div>
+                    <div class="small text-muted">{{ shipment.courier_name }}</div>
+                {% else %}
+                    <span class="text-muted small">Not Assigned</span>
+                {% endif %}
+            </td>
+            <td>
+                <span class="status-badge {% if shipment.status == 'delivered' %}status-active{% elif shipment.status == 'shipped' or shipment.status == 'in_transit' %}text-primary-custom{% else %}status-warning{% endif %}">
+                    <i class="fas {% if shipment.status == 'delivered' %}fa-check-circle{% elif shipment.status == 'preparing' %}fa-clock{% else %}fa-truck{% endif %} me-1"></i>
+                    {{ shipment.get_status_display|upper }}
+                </span>
+            </td>
+            <td>{{ shipment.expected_delivery|date:"d M, Y"|default:"-" }}</td>
+            <td>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'vendor_shipment_detail' shipment.pk %}" class="btn-icon-soft" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <button class="btn-icon-soft" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ shipment.pk }}" title="Update Status">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center p-5">No shipments found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -150,7 +150,6 @@ def initialize_firebase():
 
 # Create your views here.
 @redirect_special_users
-@redirect_special_users
 def index(request):
     categories = Category.objects.filter(is_deleted=False)
     trending_products = Product.objects.filter(is_deleted=False, is_trending=True).annotate(price=Min('productvariant__price'))[:10]
@@ -384,6 +383,7 @@ def profile_view(request):
 
 
 @login_required(login_url='login')
+@redirect_special_users
 def profile_settings(request):
     try:
         customer = request.user.customer_profile
@@ -413,6 +413,7 @@ def profile_settings(request):
     return render(request, 'profile_settings.html', context)
 
 @login_required(login_url='login')
+@redirect_special_users
 def address_list(request):
     try:
         customer = request.user.customer_profile
@@ -424,6 +425,7 @@ def address_list(request):
     return render(request, 'address_list.html', {'addresses': addresses})
 
 @login_required(login_url='login')
+@redirect_special_users
 def address_add(request):
     try:
         customer = request.user.customer_profile
@@ -444,6 +446,7 @@ def address_add(request):
     return render(request, 'address_form.html', {'form': form})
 
 @login_required(login_url='login')
+@redirect_special_users
 def address_edit(request, address_id):
     try:
         customer = request.user.customer_profile
@@ -463,6 +466,7 @@ def address_edit(request, address_id):
     return render(request, 'address_form.html', {'form': form})
 
 @login_required(login_url='login')
+@redirect_special_users
 def address_delete(request, address_id):
     try:
         customer = request.user.customer_profile
@@ -477,6 +481,7 @@ def address_delete(request, address_id):
 from cart.models import Order, OrderItem
 
 @login_required(login_url='login')
+@redirect_special_users
 def order_list(request):
     try:
         customer = request.user.customer_profile
@@ -487,6 +492,7 @@ def order_list(request):
     return render(request, 'order_list.html', {'orders': orders})
 
 @login_required(login_url='login')
+@redirect_special_users
 def my_complaints(request):
     try:
         customer = request.user.customer_profile
@@ -497,6 +503,7 @@ def my_complaints(request):
     return render(request, 'my_complaints.html', {'user_complaints': user_complaints})
 
 @login_required(login_url='login')
+@redirect_special_users
 def order_detail(request, order_id):
     try:
         customer = request.user.customer_profile
@@ -516,6 +523,7 @@ def order_detail(request, order_id):
 
 from django.db.models import Min, Q
 
+@redirect_special_users
 def shop(request):
     products = Product.objects.filter(is_deleted=False).select_related('category')
     categories = Category.objects.filter(is_deleted=False)
@@ -597,6 +605,7 @@ def shop(request):
     }
     return render(request, 'shop.html', context)
 
+@redirect_special_users
 def api_search(request):
     query = request.GET.get('q', '').strip()
     if not query:
@@ -625,6 +634,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 
 @login_required(login_url='login')
+@redirect_special_users
 def change_password(request):
     user = request.user
     is_customer = hasattr(user, 'customer_profile')
@@ -675,6 +685,7 @@ def change_password(request):
     return render(request, 'change_password.html', {'form': form})
 
 @login_required(login_url='login')
+@redirect_special_users
 def my_reviews(request):
     try:
         customer = request.user.customer_profile
@@ -685,6 +696,7 @@ def my_reviews(request):
         
     return render(request, 'my_reviews.html', {'reviews': reviews})
 
+@redirect_special_users
 def product_detail(request, slug):
     try:
         product = Product.objects.annotate(price=Min('productvariant__price')).get(slug=slug, is_deleted=False)
@@ -814,6 +826,7 @@ from .forms import ReviewForm
 from .models import ReviewMedia
 
 @login_required(login_url='login')
+@redirect_special_users
 def add_review(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     if request.method == 'POST':
@@ -904,6 +917,7 @@ def add_review(request, product_id):
              
     return redirect('product_detail', slug=product.slug)
 
+@redirect_special_users
 def complaint_view(request):
     # Dummy Company Details
     company_details = {
@@ -966,6 +980,7 @@ def complaint_view(request):
     return render(request, 'complaint.html', context)
 
 @login_required(login_url='login')
+@redirect_special_users
 def my_complaints(request):
     try:
         customer = request.user.customer_profile
@@ -977,26 +992,32 @@ def my_complaints(request):
 
 
 
+@redirect_special_users
 def terms_view(request):
     return render(request, 'terms.html')
 
+@redirect_special_users
 def privacy_view(request):
     return render(request, 'privacy.html')
 
+@redirect_special_users
 def contact_view(request):
     if request.method == 'POST':
         messages.success(request, "Thanks for reaching out! We'll get back to you shortly.")
         return redirect('contact')
     return render(request, 'contact.html')
 
+@redirect_special_users
 def cookie_policy_view(request):
     return render(request, 'cookie_policy.html')
 
 
+@redirect_special_users
 def become_vendor(request):
     return render(request, 'become_vendor.html')
 
 from vendor.models import Vendor
+@redirect_special_users
 def vendor_shop(request):
     vendor_id = request.GET.get('id')
     try:
@@ -1050,6 +1071,7 @@ def vendor_shop(request):
     }
     return render(request, 'vendor_shop.html', context)
 
+@redirect_special_users
 def toggle_wishlist(request):
     import json
     from django.http import JsonResponse

@@ -9,9 +9,14 @@
 <div class="custom-card">
     <div class="card-header-custom d-flex justify-content-between align-items-center">
         <h5 class="card-title-custom mb-0">All Categories</h5>
-        <button class="btn btn-primary-custom btn-sm" onclick="openRequestModal('Category')">
-            <i class="fas fa-plus me-1"></i> Request New
-        </button>
+        <div class="d-flex gap-2">
+            <button onclick="exportData()" class="btn-primary-custom btn-sm">
+                <i class="fas fa-file-export"></i> Export CSV
+            </button>
+            <button class="btn btn-primary-custom btn-sm" onclick="openRequestModal('Category')">
+                <i class="fas fa-plus me-1"></i> Request New
+            </button>
+        </div>
     </div>
 
     <div class="table-responsive">

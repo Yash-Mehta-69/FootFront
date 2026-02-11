@@ -19,6 +19,14 @@
                 <form method="POST" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
                     
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
                     <h6 class="text-primary-custom mb-3">User Information</h6>
                     <div class="row g-3">
                         <div class="col-md-6">

@@ -1,0 +1,290 @@
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th class="text-nowrap">Order ID</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Vendor</th>
+            <th>Payment Info</th>
+            <th>Fulfillment</th>
+            <th>Date</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>
+                <div class="fw-bold text-primary-custom text-nowrap">#ORD-{{ order.pk }}</div>
+            </td>
+            <td>
+                <div class="fw-bold" style="color: var(--text-main);">{{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</div>
+                <div class="small text-muted">{{ order.customer.user.email }}</div>
+            </td>          
+            <td>
+                <div class="d-flex flex-column gap-1">
+                    {% for item in order.all_items|slice:":2" %}
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-1 bg-light" style="width: 32px; height: 32px; overflow: hidden; flex-shrink: 0; border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                            {% if item.product_variant.image %}
+                                <img src="{{ item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% elif item.product_variant.product.product_image %}
+                                <img src="{{ item.product_variant.product.product_image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <i class="fas fa-shoe-prints text-muted opacity-50" style="font-size: 0.7rem;"></i>
+                            {% endif %}
+                        </div>
+                        <div class="small text-truncate fw-bold" style="max-width: 15ch; color: var(--text-main); font-size: 0.75rem;">{{ item.product_variant.product.name }}</div>
+                    </div>
+                    {% endfor %}
+                    {% if order.all_items|length > 2 %}
+                        <div class="text-primary-custom fw-bold" style="font-size: 9px; margin-left: 2px;">+{{ order.all_items|length|add:"-2" }} MORE ITEMS</div>
+                    {% endif %}
+                </div>
+            </td>
+            <td>
+                <div class="fw-bold text-truncate" title="{{ order.vendor_display_text }}" style="max-width: 15ch; color: var(--text-main);">
+                    {{ order.vendor_display_text }}
+                </div>
+            </td>
+            <td>
+                <div class="mb-1">
+                    <span class="fw-bold text-primary-custom">₹{{ order.total_amount }}</span>
+                    <span class="small text-muted ms-1">({{ order.payment.payment_method|upper }})</span>
+                </div>
+                {% if order.payment.status == 'completed' or order.payment.razorpay_payment_id %}
+                    <div class="text-success-custom small fw-bold">
+                        <i class="fas fa-check-circle me-1"></i>PAID
+                    </div>
+                    {% if order.payment.razorpay_payment_id %}
+                        <div class="font-monospace small text-muted mt-1" style="font-size: 0.7rem;">{{ order.payment.razorpay_payment_id }}</div>
+                    {% endif %}
+                {% elif order.payment.status == 'failed' %}
+                    <div class="text-danger-custom small fw-bold">
+                        <i class="fas fa-times-circle me-1"></i>FAILED
+                    </div>
+                {% else %}
+                    <div class="status-warning small fw-bold">
+                        <i class="fas fa-clock me-1"></i>PENDING
+                    </div>
+                {% endif %}
+            </td>
+            <td>
+                {% with first_item=order.all_items|first %}
+                <div class="small fw-bold {% if first_item.shipment.status == 'delivered' %}text-success-custom{% elif first_item.shipment.status == 'preparing' %}status-warning{% else %}text-primary-custom{% endif %}">
+                    <i class="fas {% if first_item.shipment.status == 'delivered' %}fa-check-circle{% elif first_item.shipment.status == 'preparing' %}fa-clock{% else %}fa-truck{% endif %} me-1"></i>
+                    {{ first_item.shipment.get_status_display|default:"No Shipment"|upper }}
+                    {% if order.all_items|length > 1 %}
+                        <span class="ms-1 text-muted" style="font-size: 0.7rem; font-weight: normal;">(+{{ order.all_items|length|add:"-1" }} more)</span>
+                    {% endif %}
+                </div>
+                {% endwith %}
+            </td>
+            <td>
+                <div class="small" style="color: var(--text-main);">{{ order.order_date|date:"d M, Y" }}</div>
+                <div class="text-muted small">{{ order.order_date|date:"H:i" }}</div>
+            </td>
+            <td class="text-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="btn-icon-soft" title="View Detail" data-bs-toggle="modal" data-bs-target="#orderDetailModal{{ order.pk }}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-icon-soft text-danger" title="Delete" onclick="if(confirm('Delete Order #{{ order.pk }}?')) window.location.href='#'">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+
+                <!-- Order Detail Modal -->
+                <div class="modal fade" id="orderDetailModal{{ order.pk }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content custom-card p-0 text-start" style="border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                            <div class="modal-header p-4" style="border-bottom: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                <div>
+                                    <h5 class="modal-title fw-bold" style="color: var(--text-main);">Order Details</h5>
+                                    <div class="d-flex gap-2 align-items-center mt-1">
+                                        <span class="badge bg-light-custom border fw-bold text-primary-custom">#ORD-{{ order.pk }}</span>
+                                        <span class="text-muted small">• {{ order.order_date|date:"M d, Y" }}</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-7">
+                                        <h6 class="fw-bold mb-3 px-1" style="color: var(--text-main);"><i class="fas fa-truck-fast me-2"></i>Shipping Address</h6>
+                                        <div class="rounded-3 p-3" style="background-color: var(--bg-card); border: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                            <div class="fw-bold small" style="color: var(--text-main);">{{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</div>
+                                            <div class="small text-muted mt-1">{{ order.shipping_address.address_line1 }}</div>
+                                            {% if order.shipping_address.address_line2 %}
+                                            <div class="small text-muted">{{ order.shipping_address.address_line2 }}</div>
+                                            {% endif %}
+                                            <div class="small text-muted">{{ order.shipping_address.city }}, {{ order.shipping_address.state }} - {{ order.shipping_address.postal_code }}</div>
+                                            <div class="small text-muted mt-2"><i class="fas fa-phone me-1" style="color: var(--text-main);"></i> <span style="color: var(--text-main);">{{ order.customer.phone }}</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <h6 class="fw-bold mb-3 px-1" style="color: var(--text-main);"><i class="fas fa-receipt me-2"></i>Payment Summary</h6>
+                                        <div class="rounded-3 p-3" style="background-color: var(--bg-card); border: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                            <div class="d-flex justify-content-between mb-2 small">
+                                                <span class="text-muted">Status:</span>
+                                                <span class="fw-bold {% if order.payment.status == 'completed' %}text-success-custom{% elif order.payment.status == 'failed' %}text-danger-custom{% else %}status-warning{% endif %}">
+                                                    <i class="fas {% if order.payment.status == 'completed' %}fa-check-circle{% elif order.payment.status == 'failed' %}fa-times-circle{% else %}fa-clock{% endif %} me-1"></i>
+                                                    {{ order.payment.get_status_display|default:"Pending"|upper }}
+                                                </span>
+                                            </div>
+                                            <div class="d-flex justify-content-between mb-2 small">
+                                                <span class="text-muted">Method:</span>
+                                                <span class="fw-bold" style="color: var(--text-main);">{{ order.payment.payment_method|title }}</span>
+                                            </div>
+                                            {% if order.payment.razorpay_payment_id %}
+                                            <div class="d-flex justify-content-between mb-2 small">
+                                                <span class="text-muted">Payment ID:</span>
+                                                <span class="font-monospace fw-bold" style="color: var(--text-main); font-size: 0.8rem;">{{ order.payment.razorpay_payment_id }}</span>
+                                            </div>
+                                            {% endif %}
+                                            <div class="d-flex justify-content-between mb-2 small">
+                                                <span class="text-muted">Bill Amount:</span>
+                                                <span class="fw-bold text-primary-custom" style="font-size: 1.1rem;">₹{{ order.total_amount }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="fw-bold mb-3 px-1" style="color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em;"><i class="fas fa-box-open me-2"></i>Order Items</h6>
+                                <div class="d-flex flex-column gap-2">
+                                    {% for item in order.all_items %}
+                                    <div class="rounded-3 p-3" style="background-color: var(--bg-card); border: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div style="width: 50px; height: 50px; background-color: var(--bg-light-custom); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                                                {% if item.product_variant.image %}
+                                                    <img src="{{ item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-0 fw-bold small" style="color: var(--text-main);">{{ item.product_variant.product.name }}</h6>
+                                                        <div class="text-muted small">
+                                                            Vendor: <span class="text-primary-custom">{{ item.product_variant.product.vendor.shopName }}</span><br>
+                                                            Size: <span style="color: var(--text-main);">{{ item.product_variant.size.size_label }}</span> • Color: <span style="color: var(--text-main);">{{ item.product_variant.color.name }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <div class="fw-bold text-primary-custom small">₹{{ item.price }}</div>
+                                                        <div class="small text-muted">Qty: <span style="color: var(--text-main);">{{ item.quantity }}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2 d-flex justify-content-between align-items-center">
+                                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                                        <div class="small fw-bold {% if item.shipment.status == 'delivered' %}text-success{% elif item.shipment.status == 'preparing' %}text-warning{% else %}text-primary-custom{% endif %}">
+                                                            <i class="fas {% if item.shipment.status == 'delivered' %}fa-check-circle{% elif item.shipment.status == 'preparing' %}fa-clock{% else %}fa-truck{% endif %} me-1"></i>
+                                                            {{ item.shipment.get_status_display|upper }}
+                                                        </div>
+                                                        {% if item.shipment.tracking_number %}
+                                                        <span class="font-monospace text-muted small"><i class="fas fa-barcode me-1 opacity-50"></i>{{ item.shipment.tracking_number }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <button class="btn btn-sm btn-icon-soft" 
+                                                        data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.pk }}" 
+                                                        title="Update Shipment" style="width: 28px; height: 28px;">
+                                                        <i class="fas fa-edit" style="font-size: 0.8rem;"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="modal-footer p-3" style="border-top: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Update Shipment Modals -->
+                {% for item in order.all_items %}
+                <div class="modal fade" id="updateStatusModal{{ item.pk }}" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content custom-card p-0 text-start" style="border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                            <div class="modal-header p-4" style="border-bottom: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                <h5 class="modal-title fw-bold" style="color: var(--text-main);">Update Item Shipment</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+                            </div>
+                            
+                            <form method="POST" action="{% url 'admin_update_shipment_status' item.shipment.pk %}">
+                                {% csrf_token %}
+                                <div class="modal-body p-4">
+                                    <div class="mb-3 d-flex align-items-center gap-2">
+                                        <div style="width: 40px; height: 40px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(var(--text-main-rgb), 0.1);">
+                                            {% if item.product_variant.image %}
+                                                <img src="{{ item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold small">{{ item.product_variant.product.name }}</div>
+                                            <div class="text-muted small">{{ item.product_variant.size.size_label }} / {{ item.product_variant.color.name }}</div>
+                                        </div>
+                                    </div>
+
+                                    {% if item.shipment.tracking_number %}
+                                    <div class="mb-3 p-3 rounded-3" style="background: rgba(var(--text-main-rgb), 0.03); border: 1px solid rgba(var(--text-main-rgb), 0.08);">
+                                        <p class="text-muted small mb-1">Active Tracking</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong style="color: var(--text-main);">{{ item.shipment.courier_name }}</strong>
+                                            <span class="font-monospace" style="color: var(--text-main);">{{ item.shipment.tracking_number }}</span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold small">New Status</label>
+                                        <select name="status" class="form-select form-select-custom" id="select-status-o{{ item.pk }}" onchange="toggleTracking('o{{ item.pk }}')">
+                                            {% if item.shipment.status == 'preparing' %}
+                                            <option value="preparing" selected>Preparing</option>
+                                            <option value="shipped">Shipped</option>
+                                            <option value="in_transit">In Transit</option>
+                                            <option value="delivered">Delivered</option>
+                                            {% elif item.shipment.status == 'shipped' %}
+                                            <option value="shipped" selected>Shipped</option>
+                                            <option value="in_transit">In Transit</option>
+                                            <option value="delivered">Delivered</option>
+                                            {% elif item.shipment.status == 'in_transit' %}
+                                            <option value="in_transit" selected>In Transit</option>
+                                            <option value="delivered">Delivered</option>
+                                            {% elif item.shipment.status == 'delivered' %}
+                                            <option value="delivered" selected>Delivered (Final)</option>
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div id="tracking-input-o{{ item.pk }}" style="display: {% if item.shipment.status == 'preparing' or item.shipment.status == 'delivered' %}none{% else %}block{% endif %};">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small">Courier Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="courier_name" class="form-control-custom w-100" id="courier-o{{ item.pk }}" 
+                                                value="{{ item.shipment.courier_name|default:'' }}" placeholder="e.g. BlueDart">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small">Tracking Number <span class="text-danger">*</span></label>
+                                            <input type="text" name="tracking_number" class="form-control-custom w-100" id="tracking-o{{ item.pk }}" 
+                                                value="{{ item.shipment.tracking_number|default:'' }}" placeholder="e.g. TRK123456789">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer p-3" style="border-top: 1px solid rgba(var(--text-main-rgb), 0.05);">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn-primary-custom">Update Status</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8" class="text-center p-5">No orders found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

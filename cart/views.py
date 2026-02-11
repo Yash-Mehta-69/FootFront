@@ -9,12 +9,14 @@ import razorpay
 from django.conf import settings
 from .models import Cart, CartItem, Wishlist, Order, OrderItem, Payment, Shipment, ShipmentStatusHistory
 from store.models import Product, ProductVariant, ShippingAddress
+from store.decorators import redirect_special_users
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 @login_required(login_url='login')
+@redirect_special_users
 def cart_detail(request):
     try:
         cart = Cart.objects.get(customer=request.user.customer_profile, is_deleted=False)
@@ -31,6 +33,7 @@ def cart_detail(request):
     }
     return render(request, 'cart.html', context)
 
+@redirect_special_users
 def add_to_cart_ajax(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'message': 'login_required'})
@@ -80,6 +83,7 @@ def add_to_cart_ajax(request):
     return JsonResponse({'success': False, 'message': 'Invalid request'})
 
 @login_required(login_url='login')
+@redirect_special_users
 def add_to_cart(request, product_id):
     # Simplified logic: just grab first variant for now or assume post data
     # Realistically needs size/color from POST
@@ -100,6 +104,7 @@ def add_to_cart(request, product_id):
     return redirect('cart_detail')
 
 @login_required(login_url='login')
+@redirect_special_users
 def remove_from_cart(request, item_id):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'POST request required.'})
@@ -120,6 +125,7 @@ def remove_from_cart(request, item_id):
     })
 
 @login_required(login_url='login')
+@redirect_special_users
 def update_cart_quantity(request):
     import json
     if request.method == 'POST':
@@ -168,6 +174,7 @@ def update_cart_quantity(request):
     return JsonResponse({'success': False, 'message': 'Invalid request'})
 
 @login_required(login_url='login')
+@redirect_special_users
 def wishlist_detail(request):
     wishlist_items = Wishlist.objects.filter(customer=request.user.customer_profile, is_deleted=False)
     wishlist_product_ids = list(wishlist_items.values_list('product_variant__product_id', flat=True).distinct())
@@ -177,6 +184,7 @@ def wishlist_detail(request):
     })
 
 @login_required(login_url='login')
+@redirect_special_users
 def checkout(request):
     customer = request.user.customer_profile
     try:
@@ -199,6 +207,7 @@ def checkout(request):
     return render(request, 'checkout.html', context)
 
 @login_required(login_url='login')
+@redirect_special_users
 def create_order(request):
     if request.method == 'POST':
         customer = request.user.customer_profile
@@ -288,6 +297,7 @@ def create_order(request):
     return JsonResponse({'success': False, 'message': 'Invalid request'})
 
 @login_required(login_url='login')
+@redirect_special_users
 def payment_callback(request):
     if request.method == "POST":
         data = request.POST

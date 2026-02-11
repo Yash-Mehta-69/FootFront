@@ -12,9 +12,14 @@
 <div class="custom-card">
     <div class="card-header-custom">
         <h5 class="card-title-custom">Product Categories</h5>
-        <a href="{% url 'add_category' %}" class="btn btn-primary-custom">
-            <i class="fas fa-plus me-2"></i> Add Category
-        </a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="?export=csv" class="btn-primary-custom btn-sm">
+                <i class="fas fa-file-export"></i> Export CSV
+            </a>
+            <a href="{% url 'add_category' %}" class="btn-primary-custom btn-sm">
+                <i class="fas fa-plus"></i> Add Category
+            </a>
+        </div>
     </div>
     
     <div class="table-responsive">

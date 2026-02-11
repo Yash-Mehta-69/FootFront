@@ -10,8 +10,33 @@
 
 {% block admin_content %}
 <div class="custom-card">
-    <div class="card-header-custom">
-        <h5 class="card-title-custom">Pending Attribute Requests</h5>
+    <div class="card-header-custom d-flex justify-content-between flex-wrap gap-2">
+        <h5 class="card-title-custom mb-0">Pending Attribute Requests</h5>
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" class="d-flex gap-2">
+                <select name="type" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="">All Types</option>
+                    {% for type_val, type_label in type_choices %}
+                    <option value="{{ type_val }}" {% if current_type == type_val %}selected{% endif %}>{{ type_label }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="vendor" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="">All Vendors</option>
+                    {% for v in vendors %}
+                    <option value="{{ v.pk }}" {% if current_vendor == v.pk %}selected{% endif %}>{{ v.shopName }}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="sort" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                    <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                </select>
+            </form>
+            <button type="button" onclick="exportData()" class="btn-primary-custom btn-sm">
+                <i class="fas fa-file-export"></i> Export CSV
+            </button>
+        </div>
     </div>
     
     <div class="table-responsive">

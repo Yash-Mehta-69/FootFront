@@ -1,0 +1,52 @@
+<table class="table-custom">
+    <thead>
+        <tr>
+            <th>Order ID</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total Price</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for order in orders %}
+        <tr>
+            <td><div class="fw-bold text-primary-custom">#ORD-{{ order.pk }}</div></td>
+            <td>
+                <div class="fw-bold">{{ order.customer.user.get_full_name }}</div>
+                <div class="small text-muted">{{ order.customer.user.email }}</div>
+            </td>
+            <td>
+                <div class="d-flex flex-column gap-1">
+                    {% for item in order.vendor_items|slice:":2" %}
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded bg-light" style="width: 32px; height: 32px; overflow: hidden; border: 1px solid var(--border-color);">
+                            {% if item.product_variant.image %}
+                                <img src="{{ item.product_variant.image.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        <div class="small text-truncate" style="max-width: 15ch;">{{ item.product_variant.product.name }}</div>
+                    </div>
+                    {% endfor %}
+                    {% if order.vendor_items|length > 2 %}
+                        <div class="text-primary-custom fw-bold" style="font-size: 10px;">+{{ order.vendor_items|length|add:"-2" }} MORE</div>
+                    {% endif %}
+                </div>
+            </td>
+            <td><div class="fw-bold text-primary-custom">₹{{ order.vendor_total|default:"0" }}</div></td>
+            <td>
+                <div class="small">{{ order.order_date|date:"d M, Y" }}</div>
+                <div class="text-muted small">{{ order.order_date|date:"H:i" }}</div>
+            </td>
+            <td>
+                <button class="btn-icon-soft" data-bs-toggle="modal" data-bs-target="#orderModal{{ order.pk }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center p-5">No orders found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

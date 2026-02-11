@@ -10,8 +10,10 @@ import firebase_admin
 from firebase_admin import auth
 from store.decorators import admin_required
 from django.core.paginator import Paginator
-from django.db.models import Q, Min, Count, Sum, Prefetch
+from django.db.models import Q, Min, Count, Sum, Prefetch, F, Value
+from django.db.models.functions import Concat
 from utils import panel_messages
+from utils.exports import export_to_csv
 from cart.models import Order, OrderItem, Shipment, ShipmentStatusHistory, Payment
 
 @admin_required
@@ -87,8 +89,43 @@ from vendor.models import Vendor
 
 @admin_required
 def manage_customers(request):
+    q = request.GET.get('q', '')
+    status = request.GET.get('status', '')
+    
     customers = Customer.objects.select_related('user').filter(is_deleted=False)
-    return render(request, 'dashboard/manage_customers.html', {'customers': customers})
+    
+    if q:
+        customers = customers.filter(
+            Q(user__first_name__icontains=q) |
+            Q(user__last_name__icontains=q) |
+            Q(user__email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+        
+    if status:
+        customers = customers.filter(is_blocked=(status == 'Blocked'))
+        
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('user.first_name', 'First Name'),
+            ('user.last_name', 'Last Name'),
+            ('user.email', 'Email'),
+            ('phone', 'Phone'),
+            ('is_blocked', 'Is Blocked'),
+            ('created_at', 'Joined Date')
+        ]
+        return export_to_csv(customers, 'customers', fields)
+
+    context = {
+        'customers': customers,
+        'search_query': q,
+        'current_status': status
+    }
+    
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/customer_table.html', context)
+        
+    return render(request, 'dashboard/manage_customers.html', context)
 
 @admin_required
 def add_customer(request):
@@ -96,13 +133,21 @@ def add_customer(request):
         form = CustomerAdminForm(request.POST)
         if form.is_valid():
             try:
-                user = User.objects.create_user(
-                    email=form.cleaned_data['email'],
-                    password=form.cleaned_data['password'],
-                    first_name=form.cleaned_data['first_name'],
-                    last_name=form.cleaned_data['last_name'],
-                    role='customer'
-                )
+                with transaction.atomic():
+                    # Clear any soft-deleted orphans to avoid collisions
+                    import time
+                    ts = int(time.time())
+                    User.objects.filter(email=form.cleaned_data['email'], is_deleted=True).update(
+                        email=Concat(Value(f"deleted_{ts}_"), F('email'))
+                    )
+                    
+                    user = User.objects.create_user(
+                        email=form.cleaned_data['email'],
+                        password=form.cleaned_data['password'],
+                        first_name=form.cleaned_data['first_name'],
+                        last_name=form.cleaned_data['last_name'],
+                        role='customer'
+                    )
                 Customer.objects.create(
                     user=user, 
                     phone=form.cleaned_data['phone'],
@@ -135,6 +180,13 @@ def edit_customer(request, pk):
         if form.is_valid():
             try:
                 with transaction.atomic():
+                    # Clear any soft-deleted orphans to avoid collisions
+                    import time
+                    ts = int(time.time())
+                    User.objects.filter(email=form.cleaned_data['email'], is_deleted=True).exclude(pk=customer.user.pk).update(
+                        email=Concat(Value(f"deleted_{ts}_"), F('email'))
+                    )
+                    
                     # Update User fields
                     customer.user.first_name = form.cleaned_data['first_name']
                     customer.user.last_name = form.cleaned_data['last_name']
@@ -186,10 +238,17 @@ def delete_customer(request, pk):
                 # We continue with local soft delete even if firebase fails
         
         customer.is_deleted = True
-        customer.firebase_uid = None # Clear UID so it can be reused or simply to detach
+        customer.firebase_uid = None
         customer.save()
+
+        # Rename user email to free it up
+        import time
+        ts = int(time.time())
+        customer.user.email = f"deleted_{ts}_{customer.user.email}"
+        customer.user.is_deleted = True
+        customer.user.save()
         
-        panel_messages.add_admin_message(request, 'success', "Customer deleted successfully (Firebase & Local).")
+        panel_messages.add_admin_message(request, 'success', "Customer deleted successfully.")
     except Customer.DoesNotExist:
         panel_messages.add_admin_message(request, 'error', "Customer not found.")
     except Exception as e:
@@ -208,11 +267,50 @@ from store.models import User
 
 @admin_required
 def manage_vendors(request):
+    q = request.GET.get('q', '')
+    status = request.GET.get('status', '')
+    
     vendors = Vendor.objects.select_related('user', 'bankdetail').filter(is_deleted=False)
-    # Map mock attributes for template compatibility if needed, or update template
-    # Template expects: vendor.pk, vendor.shopName, vendor.name (user.first_name + last), vendor.email, vendor.business_phone, vendor.status
-    # We will pass the queryset directly and update the template to access relational fields
-    return render(request, 'dashboard/manage_vendors.html', {'vendors': vendors})
+    
+    if q:
+        vendors = vendors.filter(
+            Q(shopName__icontains=q) |
+            Q(user__first_name__icontains=q) |
+            Q(user__last_name__icontains=q) |
+            Q(user__email__icontains=q) |
+            Q(business_phone__icontains=q)
+        ).distinct()
+        
+    if status:
+        vendors = vendors.filter(is_blocked=(status == 'Blocked'))
+
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('shopName', 'Shop Name'),
+            ('user.first_name', 'First Name'),
+            ('user.last_name', 'Last Name'),
+            ('user.email', 'Email'),
+            ('business_phone', 'Phone'),
+            ('shopAddress', 'Shop Address'),
+            ('description', 'Description'),
+            ('bankdetail.bank_name', 'Bank Name'),
+            ('bankdetail.account_number', 'Account Number'),
+            ('bankdetail.ifsc_code', 'IFSC Code'),
+            ('bankdetail.beneficiary_name', 'Beneficiary Name'),
+            ('is_blocked', 'Is Blocked')
+        ]
+        return export_to_csv(vendors, 'vendors', fields)
+
+    context = {
+        'vendors': vendors,
+        'search_query': q,
+        'current_status': status
+    }
+    
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/vendor_table.html', context)
+        
+    return render(request, 'dashboard/manage_vendors.html', context)
 
 @admin_required
 def add_vendor(request):
@@ -221,6 +319,18 @@ def add_vendor(request):
         if form.is_valid():
             try:
                 with transaction.atomic():
+                    # Clear any soft-deleted orphans to avoid collisions
+                    import time
+                    ts = int(time.time())
+                    
+                    User.objects.filter(email=form.cleaned_data['email'], is_deleted=True).update(
+                        email=Concat(Value(f"deleted_{ts}_"), F('email'))
+                    )
+                    
+                    Vendor.objects.filter(shopName=form.cleaned_data['shopName'], is_deleted=True).update(
+                        shopName=Concat(Value(f"deleted_{ts}_"), F('shopName'))
+                    )
+                    
                     # 1. Create User
                     user = User.objects.create_user(
                         email=form.cleaned_data['email'],
@@ -279,6 +389,18 @@ def edit_vendor(request, pk):
         if form.is_valid():
             try:
                 with transaction.atomic():
+                    # Clear any soft-deleted orphans to avoid collisions
+                    import time
+                    ts = int(time.time())
+                    
+                    User.objects.filter(email=form.cleaned_data['email'], is_deleted=True).exclude(pk=vendor.user.pk).update(
+                        email=Concat(Value(f"deleted_{ts}_"), F('email'))
+                    )
+                    
+                    Vendor.objects.filter(shopName=form.cleaned_data['shopName'], is_deleted=True).exclude(pk=vendor.pk).update(
+                        shopName=Concat(Value(f"deleted_{ts}_"), F('shopName'))
+                    )
+                    
                     # Update User
                     vendor.user.first_name = form.cleaned_data['first_name']
                     vendor.user.last_name = form.cleaned_data['last_name']
@@ -344,11 +466,19 @@ def edit_vendor(request, pk):
 def delete_vendor(request, pk):
     try:
         vendor = Vendor.objects.get(pk=pk)
+        
+        # Rename unique fields to free them up
+        import time
+        ts = int(time.time())
+        
+        vendor.shopName = f"deleted_{ts}_{vendor.shopName}"
         vendor.is_deleted = True
         vendor.save()
-        # Also soft delete user? Usually yes.
+        
+        vendor.user.email = f"deleted_{ts}_{vendor.user.email}"
         vendor.user.is_deleted = True
         vendor.user.save()
+        
         panel_messages.add_admin_message(request, 'success', "Vendor deleted successfully.")
     except Vendor.DoesNotExist:
         panel_messages.add_admin_message(request, 'error', "Vendor not found.")
@@ -364,6 +494,15 @@ def detail_vendor(request, pk):
 @admin_required
 def manage_categories(request):
     categories = Category.objects.filter(is_deleted=False).select_related('parent_category')
+    
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('name', 'Category Name'),
+            ('parent_category.name', 'Parent Category'),
+            ('description', 'Description')
+        ]
+        return export_to_csv(categories, 'categories', fields)
+        
     return render(request, 'dashboard/manage_categories.html', {'categories': categories})
 
 @admin_required
@@ -459,6 +598,26 @@ def manage_products(request):
     page_number = request.GET.get('page')
     products_page = paginator.get_page(page_number)
 
+    if request.GET.get('export') == 'csv':
+        # Enhanced export: One row per variant
+        variants = ProductVariant.objects.filter(product__in=products, is_deleted=False).select_related(
+            'product', 'product__vendor', 'product__category', 'size', 'color'
+        ).order_by('product__name', 'size__size_label')
+        
+        fields = [
+            ('product.name', 'Product Name'),
+            ('product.category.name', 'Category'),
+            ('product.vendor.shopName', 'Vendor'),
+            ('size.size_label', 'Size'),
+            ('color.name', 'Color'),
+            ('price', 'Price'),
+            ('stock', 'Stock'),
+            ('product.gender', 'Gender'),
+            ('product.is_trending', 'Is Trending'),
+            ('product.created_at', 'Date Created')
+        ]
+        return export_to_csv(variants, 'products', fields)
+
     context = {
         'products': products_page,
         'categories': Category.objects.filter(is_deleted=False),
@@ -468,6 +627,9 @@ def manage_products(request):
         'current_vendor': int(vendor_id) if vendor_id else None,
         'current_sort': sort_by,
     }
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/product_table.html', context)
+        
     return render(request, 'dashboard/manage_products.html', context)
 
 @admin_required
@@ -673,6 +835,24 @@ def manage_orders(request):
         orders = orders.order_by('-order_date')
     elif sort == 'date_oldest':
         orders = orders.order_by('order_date')
+
+    if request.GET.get('export') == 'csv':
+        # Need to realize for display logic if we want, but CSV usually needs flat data
+        fields = [
+            ('pk', 'Order ID'),
+            ('customer.user.first_name', 'Customer First Name'),
+            ('customer.user.last_name', 'Customer Last Name'),
+            ('customer.user.email', 'Customer Email'),
+            ('shipping_address.address_line1', 'Address Line 1'),
+            ('shipping_address.address_line2', 'Address Line 2'),
+            ('shipping_address.city', 'City'),
+            ('shipping_address.state', 'State'),
+            ('shipping_address.postal_code', 'Pincode'),
+            ('total_amount', 'Amount'),
+            ('payment.status', 'Payment Status'),
+            ('order_date', 'Date')
+        ]
+        return export_to_csv(orders, 'orders', fields)
     
     # Pagination
     paginator = Paginator(orders, 10)
@@ -702,6 +882,10 @@ def manage_orders(request):
         'current_vendor': int(vendor_id) if vendor_id and vendor_id.isdigit() else '',
         'current_sort': sort
     }
+    
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/order_table.html', context)
+        
     return render(request, 'dashboard/manage_orders.html', context)
 
 @admin_required
@@ -791,6 +975,19 @@ def manage_shipments(request):
     elif sort == 'delivery_oldest':
         shipments = shipments.order_by('expected_delivery')
         
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('order_item.order.pk', 'Order ID'),
+            ('order_item.order.customer.user.get_full_name', 'Customer'),
+            ('vendor.shopName', 'Vendor'),
+            ('tracking_number', 'Tracking #'),
+            ('courier_name', 'Courier'),
+            ('status', 'Status'),
+            ('shipped_at', 'Shipped Date'),
+            ('expected_delivery', 'Expected Delivery')
+        ]
+        return export_to_csv(shipments, 'shipments', fields)
+
     # Pagination
     paginator = Paginator(shipments, 10)
     page_number = request.GET.get('page')
@@ -900,6 +1097,19 @@ def manage_payments(request):
     else: # Default or date_newest
         payments = payments.order_by('-payment_date')
 
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('razorpay_payment_id', 'Transaction ID'),
+            ('order.pk', 'Order ID'),
+            ('order.customer.user.get_full_name', 'Customer'),
+            ('order.customer.user.email', 'Email'),
+            ('payment_method', 'Method'),
+            ('amount', 'Amount'),
+            ('status', 'Status'),
+            ('payment_date', 'Date')
+        ]
+        return export_to_csv(payments, 'payments', fields)
+
     status_choices = Payment.STATUS_CHOICES
 
     context = {
@@ -914,6 +1124,18 @@ def manage_payments(request):
 @admin_required
 def view_reviews(request):
     reviews = Review.objects.filter(is_deleted=False).select_related('product', 'customer__user').prefetch_related('media').order_by('-created_at')
+    
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('product.name', 'Product'),
+            ('customer.user.first_name', 'First Name'),
+            ('customer.user.last_name', 'Last Name'),
+            ('rating', 'Rating'),
+            ('comment', 'Comment'),
+            ('created_at', 'Date')
+        ]
+        return export_to_csv(reviews, 'reviews', fields)
+
     return render(request, 'dashboard/view_reviews.html', {'reviews': reviews})
 
 @admin_required
@@ -940,6 +1162,17 @@ def delete_review(request, pk):
 def view_complaints(request):
     complaints = Complaint.objects.filter(is_deleted=False).select_related('customer__user').order_by('-created_at')
     
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('pk', 'Ticket ID'),
+            ('customer.user.first_name', 'First Name'),
+            ('customer.user.last_name', 'Last Name'),
+            ('subject', 'Subject'),
+            ('status', 'Status'),
+            ('created_at', 'Date')
+        ]
+        return export_to_csv(complaints, 'complaints', fields)
+
     # Pagination
     paginator = Paginator(complaints, 10)
     page_number = request.GET.get('page')
@@ -1018,8 +1251,42 @@ def change_password(request):
 
 @admin_required
 def manage_requests(request):
-    requests = AttributeRequest.objects.filter(status='Pending').order_by('-created_at')
-    return render(request, 'dashboard/manage_requests.html', {'requests': requests})
+    type_filter = request.GET.get('type', '')
+    vendor_id = request.GET.get('vendor', '')
+    sort = request.GET.get('sort', 'newest')
+    
+    requests = AttributeRequest.objects.filter(status='Pending').select_related('vendor', 'vendor__user')
+    
+    if type_filter:
+        requests = requests.filter(attribute_type=type_filter)
+        
+    if vendor_id:
+        requests = requests.filter(vendor_id=vendor_id)
+        
+    if sort == 'oldest':
+        requests = requests.order_by('created_at')
+    else:
+        requests = requests.order_by('-created_at')
+
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('vendor.shopName', 'Vendor Shop'),
+            ('vendor.user.get_full_name', 'Vendor Name'),
+            ('attribute_type', 'Type'),
+            ('attribute_value', 'Requested Value'),
+            ('created_at', 'Date')
+        ]
+        return export_to_csv(requests, 'attribute_requests', fields)
+
+    context = {
+        'requests': requests,
+        'vendors': Vendor.objects.filter(is_deleted=False),
+        'current_type': type_filter,
+        'current_vendor': int(vendor_id) if vendor_id and vendor_id.isdigit() else '',
+        'current_sort': sort,
+        'type_choices': AttributeRequest.REQUEST_TYPES
+    }
+    return render(request, 'dashboard/manage_requests.html', context)
 
 @admin_required
 def approve_request(request, pk):
@@ -1063,6 +1330,13 @@ def manage_sizes(request):
         form = SizeForm()
     
     sizes = Size.objects.all().order_by('size_label')
+    
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('size_label', 'Size Label')
+        ]
+        return export_to_csv(sizes, 'sizes', fields)
+        
     return render(request, 'dashboard/manage_sizes.html', {'sizes': sizes, 'form': form})
 
 @admin_required
@@ -1089,6 +1363,14 @@ def manage_colors(request):
         form = ColorForm()
     
     colors = Color.objects.all().order_by('name')
+    
+    if request.GET.get('export') == 'csv':
+        fields = [
+            ('name', 'Color Name'),
+            ('hex_code', 'Hex Code')
+        ]
+        return export_to_csv(colors, 'colors', fields)
+        
     return render(request, 'dashboard/manage_colors.html', {'colors': colors, 'form': form})
 
 @admin_required

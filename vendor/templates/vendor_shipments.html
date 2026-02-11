@@ -7,34 +7,35 @@
 
 {% block vendor_content %}
 <div class="custom-card">
-    <div class="card-header-custom d-flex justify-content-between flex-wrap gap-2">
+    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
         <h5 class="card-title-custom mb-0">Shipment Tracking</h5>
-        <div class="d-flex align-items-center">
-            <form method="get" class="d-flex gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" class="d-flex gap-2" onsubmit="return false;">
                 <input type="text" name="order_id" list="orderIdsList" value="{{ order_id_filter|default:'' }}" 
-                    class="form-control-custom form-control-sm" placeholder="Order ID..." style="width: 140px;"
-                    onchange="this.form.submit()">
+                    class="form-control-custom" placeholder="Order ID..." style="width: 160px;">
                 <datalist id="orderIdsList">
                     {% for oid in vendor_order_ids %}
                     <option value="#ORD-{{ oid }}">
                     {% endfor %}
                 </datalist>
                 <input type="text" name="q" value="{{ search_query|default:'' }}" 
-                    class="form-control-custom form-control-sm" placeholder="Search tracking..." style="width: 160px;"
-                    onchange="this.form.submit()">
-                <select name="status" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    class="form-control-custom" placeholder="Search tracking..." style="width: 200px;">
+                <select name="status" class="form-select-custom" style="width: 160px;">
                     <option value="">All Statuses</option>
                     {% for status_val, status_label in status_choices %}
                     <option value="{{ status_val }}" {% if current_status == status_val %}selected{% endif %}>{{ status_label }}</option>
                     {% endfor %}
                 </select>
-                <select name="sort" class="form-select-custom form-select-sm" style="width: 160px;" onchange="this.form.submit()">
+                <select name="sort" class="form-select-custom" style="width: 180px;">
                     <option value="shipped_newest" {% if current_sort == 'shipped_newest' %}selected{% endif %}>Shipped: Newest</option>
                     <option value="shipped_oldest" {% if current_sort == 'shipped_oldest' %}selected{% endif %}>Shipped: Oldest</option>
                     <option value="delivery_newest" {% if current_sort == 'delivery_newest' %}selected{% endif %}>Delivery: Newest</option>
                     <option value="delivery_oldest" {% if current_sort == 'delivery_oldest' %}selected{% endif %}>Delivery: Oldest</option>
                 </select>
             </form>
+            <button onclick="exportData()" class="btn-primary-custom">
+                <i class="fas fa-file-export"></i> Export CSV
+            </button>
         </div>
     </div>
 

@@ -10,96 +10,28 @@
 
 {% block admin_content %}
 <div class="custom-card">
-    <div class="card-header-custom">
-        <h5 class="card-title-custom">All Vendors</h5>
-        <a href="{% url 'add_vendor' %}" class="btn btn-primary-custom">
-            <i class="fas fa-plus me-2"></i> Add Vendor
-        </a>
+    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <h5 class="card-title-custom mb-0">All Vendors</h5>
+        <div class="d-flex align-items-center gap-2">
+            <form method="get" class="d-flex gap-2" onsubmit="return false;">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control-custom" placeholder="Search vendors..." style="width: 200px;">
+                <select name="status" class="form-select-custom" style="width: 140px;">
+                    <option value="">All Status</option>
+                    <option value="Active" {% if current_status == 'Active' %}selected{% endif %}>Active</option>
+                    <option value="Blocked" {% if current_status == 'Blocked' %}selected{% endif %}>Blocked</option>
+                </select>
+            </form>
+            <button onclick="exportData()" class="btn-primary-custom">
+                <i class="fas fa-file-export"></i> Export CSV
+            </button>
+            <a href="{% url 'add_vendor' %}" class="btn-primary-custom">
+                <i class="fas fa-plus"></i> Add Vendor
+            </a>
+        </div>
     </div>
     
     <div class="table-responsive">
-        <table class="table-custom">
-            <thead>
-                <tr>
-                    <th>Shop / Owner</th>
-                    <th>Contact</th>
-                    <th>Bank Details</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-            <tbody>
-                {% for vendor in vendors %}
-                <tr>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            {% if vendor.profile_picture %}
-                                <div class="user-avatar me-3" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;">
-                                    <img src="{{ vendor.profile_picture.url }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
-                                </div>
-                            {% else %}
-                                <div class="user-avatar me-3" style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">
-                                    {{ vendor.shopName|make_list|first|upper|default:"V" }}
-                                </div>
-                            {% endif %}
-                            <div>
-                                <div class="fw-bold">{{ vendor.shopName }}</div>
-                                <div class="small text-muted">{{ vendor.user.first_name }} {{ vendor.user.last_name }}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td>
-                         <div><i class="fas fa-envelope me-1 text-muted"></i> {{ vendor.user.email }}</div>
-                         <div><i class="fas fa-phone me-1 text-muted"></i> {{ vendor.business_phone }}</div>
-                    </td>
-                    <td>
-                        {% if vendor.bankdetail %}
-                        <div class="small">
-                            <div class="fw-bold">{{ vendor.bankdetail.bank_name }}</div>
-                            <div>{{ vendor.bankdetail.account_number }}</div>
-                            <div class="text-muted">{{ vendor.bankdetail.ifsc_code }}</div>
-                        </div>
-                        {% else %}
-                        <span class="text-muted small">Not Added</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <span class="status-badge {% if not vendor.is_blocked %}status-active{% else %}status-inactive{% endif %}">
-                            <i class="fas {% if not vendor.is_blocked %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
-                            {% if not vendor.is_blocked %}Active{% else %}Blocked{% endif %}
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{% url 'detail_vendor' vendor.pk %}" class="btn-icon-soft me-1" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="{% url 'edit_vendor' vendor.pk %}" class="btn-icon-soft me-1" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{% url 'delete_vendor' vendor.pk %}" class="btn-icon-soft text-danger-custom" title="Delete" onclick="return confirm('Are you sure you want to delete this vendor?');">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6">
-                        <div class="empty-state">
-                            <div class="empty-state-icon">
-                                <i class="fas fa-store-slash"></i>
-                            </div>
-                            <h3 class="empty-state-title">No Vendors Found</h3>
-                            <p class="empty-state-text">There are currently no vendors registered. Click the button above to add a new vendor.</p>
-                            <a href="{% url 'add_vendor' %}" class="btn btn-primary-custom">
-                                <i class="fas fa-plus me-2"></i> Add First Vendor
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% include 'dashboard/partials/vendor_table.html' %}
     </div>
 </div>
 {% endblock %}

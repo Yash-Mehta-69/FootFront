@@ -423,15 +423,28 @@
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 500;
-            transition: 0.3s;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(67, 24, 255, 0.15);
         }
 
         .btn-primary-custom:hover {
             background-color: var(--primary-hover);
             color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(67, 24, 255, 0.25);
+        }
+
+        .btn-primary-custom:active {
+            transform: translateY(0);
         }
 
         /* Back Button Premium Styling */
@@ -538,15 +551,35 @@
         }
 
         /* Custom Form Controls */
-        .form-control-custom,
-        .form-select-custom {
-            border-radius: 10px;
+        .form-control-custom {
+            border-radius: 12px;
             border: 1px solid var(--border-color);
             background-color: var(--bg-body);
             color: var(--text-main);
-            padding: 10px 15px;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 500;
             width: 100%;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-select-custom {
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 12px 40px 12px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23a3aed0' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1.25rem center;
+            background-size: 16px 12px;
         }
 
         .form-control-custom::placeholder {
@@ -561,6 +594,17 @@
             color: var(--text-main);
             box-shadow: 0 0 0 0.2rem rgba(67, 24, 255, 0.25);
             outline: none;
+        }
+
+        /* Autofill Styles */
+        .form-control-custom:-webkit-autofill,
+        .form-control-custom:-webkit-autofill:hover,
+        .form-control-custom:-webkit-autofill:focus,
+        .form-control-custom:-webkit-autofill:active {
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: var(--text-main);
+            transition: background-color 5000s ease-in-out 0s;
+            box-shadow: inset 0 0 20px 20px var(--bg-body) !important;
         }
 
         .form-label {
@@ -881,6 +925,25 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Sidebar Toggle
+        // Instant Search & Ajax Filtering Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.querySelector('form[method="get"]');
+            // Handle Export Button
+            window.exportData = function() {
+                let searchParams;
+                const currentForm = document.querySelector('form[method="get"]');
+                if (currentForm) {
+                    searchParams = new URLSearchParams(new FormData(currentForm));
+                } else {
+                    searchParams = new URLSearchParams(window.location.search);
+                }
+                searchParams.set('export', 'csv');
+                window.location.href = `${window.location.pathname}?${searchParams.toString()}`;
+            };
+
+            if (!filterForm) return;
+        });
+
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
 
