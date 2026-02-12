@@ -57,8 +57,8 @@ def add_to_cart_ajax(request):
             # Ensure the item is not deleted (resurrection)
             if cart_item.is_deleted:
                 cart_item.is_deleted = False
-                
-            if not item_created:
+                cart_item.quantity = quantity # Reset to requested qty if resurrected
+            elif not item_created:
                 cart_item.quantity += quantity
             else:
                 cart_item.quantity = quantity
@@ -98,9 +98,15 @@ def add_to_cart(request, product_id):
     cart, created = Cart.objects.get_or_create(customer=request.user.customer_profile, is_deleted=False)
     cart_item, item_created = CartItem.objects.get_or_create(cart=cart, product_variant=variant)
     
-    if not item_created:
+    if cart_item.is_deleted:
+        cart_item.is_deleted = False
+        cart_item.quantity = 1
+    elif not item_created:
         cart_item.quantity += 1
-        cart_item.save()
+    else:
+        cart_item.quantity = 1
+    
+    cart_item.save()
         
     return redirect('cart_detail')
 
@@ -221,6 +227,7 @@ def create_order(request):
         except Cart.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Cart not found'})
 
+        # 1. Pre-validation (Address and Cart checking)
         address_id = request.POST.get('address_id')
         if address_id and address_id != 'new':
             shipping_address = get_object_or_404(ShippingAddress, id=address_id, customer=customer)
@@ -243,26 +250,10 @@ def create_order(request):
                 state=state,
                 postal_code=postal_code
             )
-
-        # 1. Create Order and OrderItems (Atomic)
-        try:
-            with transaction.atomic():
-                order = Order.objects.create(
-                    customer=customer,
-                    total_amount=total,
-                    shipping_address=shipping_address
-                )
-                
-                # 2. Create OrderItems
-                for item in items:
-                    OrderItem.objects.create(
-                        order=order,
-                        product_variant=item.product_variant,
-                        quantity=item.quantity,
-                        price=item.product_variant.price
-                    )
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': f'Order Creation Error: {str(e)}'})
+        
+        # Store shipping address and total in session for callback
+        request.session['checkout_shipping_address_id'] = shipping_address.id
+        request.session['checkout_total'] = float(total)
         
         # 3. Razorpay Integration
         client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), os.getenv('RAZORPAY_KEY_SECRET')))
@@ -277,20 +268,13 @@ def create_order(request):
             razorpay_order = client.order.create(data=razorpay_order_data)
             razorpay_order_id = razorpay_order['id']
             
-            # 4. Create Payment entry (pending)
-            Payment.objects.create(
-                order=order,
-                amount=total,
-                razorpay_order_id=razorpay_order_id,
-                status='pending'
-            )
-            
+            # 4. Return Razorpay Data (Note: No Order record created yet)
             return JsonResponse({
                 'success': True,
                 'razorpay_order_id': razorpay_order_id,
                 'amount': int(total * 100),
                 'currency': 'INR',
-                'order_id': order.id,
+                'order_id': 'NEW', # Temporary placeholder
                 'callback_url': request.build_absolute_uri(reverse('payment_callback')),
                 'prefill_name': request.user.get_full_name(),
                 'prefill_email': request.user.email,
@@ -321,10 +305,38 @@ def payment_callback(request):
             
             with transaction.atomic():
                 # Signature matches - Payment Success
-                payment = Payment.objects.get(razorpay_order_id=data.get('razorpay_order_id'))
-                payment.razorpay_payment_id = data.get('razorpay_payment_id')
-                payment.razorpay_signature = data.get('razorpay_signature')
-                payment.status = 'completed'
+                customer = request.user.customer_profile
+                cart = Cart.objects.get(customer=customer, is_deleted=False)
+                cart_items = cart.items.filter(is_deleted=False).select_related('product_variant')
+                
+                if not cart_items:
+                    return render(request, 'payment_failed.html', {'error': "Cart items disappeared."})
+                
+                total = float(sum(item.product_variant.price * item.quantity for item in cart_items))
+                shipping_address_id = request.session.get('checkout_shipping_address_id')
+                shipping_address = get_object_or_404(ShippingAddress, id=shipping_address_id)
+
+                # 1. Final Stock Validation
+                for item in cart_items:
+                    if item.product_variant.stock < item.quantity:
+                        return render(request, 'payment_failed.html', {'error': f"Sorry, {item.product_variant.product.name} just went out of stock."})
+
+                # 2. Create Order
+                order = Order.objects.create(
+                    customer=customer,
+                    total_amount=total,
+                    shipping_address=shipping_address
+                )
+
+                # 3. Create Payment record
+                payment = Payment.objects.create(
+                    order=order,
+                    amount=total,
+                    razorpay_order_id=data.get('razorpay_order_id'),
+                    razorpay_payment_id=data.get('razorpay_payment_id'),
+                    razorpay_signature=data.get('razorpay_signature'),
+                    status='completed'
+                )
                 
                 # Fetch payment details to get method (card, upi, etc.)
                 try:
@@ -336,21 +348,28 @@ def payment_callback(request):
                     
                 payment.save()
                 
-                # 1. Create Shipments, Update Stock, and Calculate Transfers
-                order = payment.order
+                # 4. Create OrderItems, Shipments, Update Stock, and Calculate Transfers
                 vendor_totals = {}
                 
-                for item in order.items.select_related('product_variant__product__vendor').all():
-                    vendor = item.product_variant.product.vendor
-                    item_total = item.price * item.quantity
+                for cart_item in cart_items:
+                    # Create OrderItem
+                    order_item = OrderItem.objects.create(
+                        order=order,
+                        product_variant=cart_item.product_variant,
+                        quantity=cart_item.quantity,
+                        price=cart_item.product_variant.price
+                    )
+                    
+                    vendor = order_item.product_variant.product.vendor
+                    item_total = order_item.price * order_item.quantity
                     vendor_totals[vendor] = vendor_totals.get(vendor, 0) + float(item_total)
                     
                     # Create Shipment for each order item
                     shipment = Shipment.objects.create(
-                        order_item=item,
+                        order_item=order_item,
                         vendor=vendor,
                         status='preparing',
-                        tracking_number=f"TRACK-{order.id}-{item.id}", 
+                        tracking_number=f"TRACK-{order.id}-{order_item.id}", 
                         courier_name="Processing"
                     )
                     
@@ -362,8 +381,8 @@ def payment_callback(request):
                     )
                     
                     # Update Stock
-                    variant = item.product_variant
-                    variant.stock -= item.quantity
+                    variant = order_item.product_variant
+                    variant.stock -= order_item.quantity
                     variant.save()
 
                 # 2. Create Transfer Logs for Vendors
@@ -382,6 +401,10 @@ def payment_callback(request):
                 # 3. Clear Cart
                 cart = Cart.objects.get(customer=request.user.customer_profile, is_deleted=False)
                 cart.items.filter(is_deleted=False).update(is_deleted=True)
+                
+                # 4. Send Order Confirmation Email
+                from utils.emails import send_order_confirmation_email
+                send_order_confirmation_email(order)
             
             return render(request, 'payment_success.html', {'payment_id': payment.razorpay_payment_id})
             

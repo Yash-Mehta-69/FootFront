@@ -671,6 +671,10 @@ def update_shipment_status(request, pk):
                 description=f"Shipment status updated to {status.replace('_', ' ').title()} by Vendor."
             )
             
+            # Send Shipment Update Email
+            from utils.emails import send_shipment_update_email
+            send_shipment_update_email(shipment)
+            
             panel_messages.add_vendor_message(request, 'success', f"Shipment updated successfully to {status.replace('_', ' ').title()}.")
             
     return redirect(request.META.get('HTTP_REFERER', 'vendor_orders'))

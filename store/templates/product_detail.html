@@ -224,7 +224,18 @@
     }
     .color-swatch:hover { transform: scale(1.1); }
     .color-swatch.active { transform: scale(1.1); box-shadow: 0 0 10px rgba(0,0,0,0.5); border-color: var(--color-accent); }
-    .color-swatch.disabled { opacity: 0.1; pointer-events: none; filter: grayscale(1); }
+    .color-swatch.disabled { opacity: 0.3; cursor: not-allowed; position: relative; }
+    .color-swatch.disabled::after {
+        content: '\f05e';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.2rem;
+        color: rgba(255, 77, 77, 0.8);
+    }
 
     /* Tech Sizes */
     .pd-sizes {
@@ -264,6 +275,8 @@
         cursor: not-allowed;
         background: rgba(0,0,0,0.2);
         border-style: dashed;
+        position: relative;
+        text-decoration: line-through;
     }
 
     /* Quantity & Actions */
@@ -1100,12 +1113,42 @@
             if (selectedSize && !isVariantAvailable(selectedColor, selectedSize)) {
                 selectedSize = null;
             }
+
+            // Trigger toast if the variant is out of stock
+            if (selectedColor && selectedSize) {
+                const variant = getVariant(selectedColor, selectedSize);
+                if (variant && variant.stock <= 0) {
+                    showToast(`Variant ${selectedColor} / ${selectedSize} is currently OUT OF STOCK.`, 'info');
+                }
+            } else if (selectedColor) {
+                // If only color selected, check if any size is available for this color
+                const hasStock = allVariants.some(v => v.color === selectedColor && v.stock > 0);
+                if (!hasStock) {
+                    showToast(`All units for color ${selectedColor} are OUT OF STOCK.`, 'info');
+                }
+            }
+
             updateUI();
         }
 
         window.selectSize = function(size) {
             if (selectedSize === size && sizeOpts.length === 1) return;
             selectedSize = (selectedSize === size) ? null : size;
+
+            // Trigger toast if the variant is out of stock
+            if (selectedColor && selectedSize) {
+                const variant = getVariant(selectedColor, selectedSize);
+                if (variant && variant.stock <= 0) {
+                    showToast(`Variant ${selectedColor} / ${selectedSize} is currently OUT OF STOCK.`, 'info');
+                }
+            } else if (selectedSize) {
+                // If only size selected, check if any color is available for this size
+                const hasStock = allVariants.some(v => v.size === selectedSize && v.stock > 0);
+                if (!hasStock) {
+                    showToast(`All units for size ${selectedSize} are OUT OF STOCK.`, 'info');
+                }
+            }
+
             updateUI();
         }
 

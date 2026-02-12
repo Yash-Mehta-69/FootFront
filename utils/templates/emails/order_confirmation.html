@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ccff00;
+            --bg-dark: #0a0a0a;
+            --card-bg: #151515;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --accent-rgb: 204, 255, 0;
+        }
+        body { 
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #ffffff; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #050505;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            padding: 40px; 
+            background-color: #0a0a0a; 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        .header { 
+            text-align: center; 
+            padding-bottom: 30px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        .header h1 { 
+            color: #ccff00; 
+            margin: 0; 
+            font-size: 28px; 
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .order-info { 
+            margin: 30px 0; 
+            padding: 24px; 
+            background-color: #111111; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+        .table th { 
+            text-align: left; 
+            padding: 15px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+            color: #888888; 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .table td { 
+            padding: 20px 15px; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02); 
+        }
+        .product-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-right: 15px;
+        }
+        .total-section { 
+            text-align: right; 
+            margin-top: 30px; 
+            padding: 20px;
+            border-top: 2px solid #ccff00;
+            background: linear-gradient(to bottom, rgba(204, 255, 0, 0.05), transparent);
+        }
+        .total-label { font-size: 14px; color: #888888; text-transform: uppercase; }
+        .total-amount { font-size: 32px; font-weight: 700; color: #ccff00; margin: 5px 0; }
+        .footer { margin-top: 40px; text-align: center; color: #666; font-size: 12px; }
+        .status-badge { 
+            display: inline-block; 
+            padding: 6px 16px; 
+            border-radius: 50px; 
+            background-color: rgba(204, 255, 0, 0.1); 
+            color: #ccff00; 
+            font-size: 11px; 
+            font-weight: 700; 
+            letter-spacing: 1px;
+            border: 1px solid rgba(204, 255, 0, 0.2);
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background-color: #ccff00;
+            color: #000000;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-top: 20px;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>FootFront</h1>
+            <p style="color: #888; font-size: 14px; margin-top: 10px;">ORDER_PROTOCOL_CONFIRMED</p>
+        </div>
+        
+        <div class="order-info">
+            <p style="margin-top: 0; font-weight: 700; font-size: 20px; color: #ffffff;">Hi {{ customer_name }},</p>
+            <p style="color: #bbb; font-size: 14px;">Your infiltration of our premium collection was successful. We've secured your items and they are being prepared for dispatch.</p>
+            <div style="margin-top: 20px;">
+                <span style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">ORDER_ID:</span>
+                <span style="color: #ccff00; font-family: monospace; font-size: 16px; margin-left: 10px;">#{{ order.id }}</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <span style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">TIMESTAMP:</span>
+                <span style="color: #fff; font-size: 14px; margin-left: 10px;">{{ order.order_date|date:"F d, Y" }}</span>
+            </div>
+            <div style="margin-top: 20px;">
+                <div class="status-badge">PAYMENT_SECURED</div>
+            </div>
+        </div>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th style="width: 70px;"></th>
+                    <th>Product</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td style="vertical-align: middle; padding: 15px 0 15px 15px;">
+                        <img src="{{ item.image_url }}" class="product-img" width="60" height="60" alt="{{ item.product_variant.product.name }}">
+                    </td>
+                    <td style="vertical-align: middle; padding: 15px;">
+                        <div style="font-weight: 600; color: #ffffff; font-size: 14px; margin-bottom: 4px;">{{ item.product_variant.product.name }}</div>
+                        <div style="color: #888888; font-size: 12px;">{{ item.product_variant.size }} | {{ item.product_variant.color }}</div>
+                    </td>
+                    <td style="text-align: center; color: #ffffff; vertical-align: middle;">{{ item.quantity }}</td>
+                    <td style="text-align: right; color: #ccff00; font-weight: 700; vertical-align: middle;">₹{{ item.price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-label">Grand Total</div>
+            <div class="total-amount">₹{{ order.total_amount }}</div>
+        </div>
+
+        <div class="order-info" style="border-left: 3px solid #ccff00;">
+            <div style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">SHIPPING_DESTINATION</div>
+            <div style="font-size: 14px; color: #fff; line-height: 1.8;">
+                {{ order.shipping_address.address_line1 }}<br>
+                {% if order.shipping_address.address_line2 %}{{ order.shipping_address.address_line2 }}<br>{% endif %}
+                <span style="color: #ccff00;">{{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="#" class="btn">Track Order Dashboard</a>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 FOOTFRONT TERMINAL. STYLED FOR THE FUTURE.</p>
+            <p style="margin-top: 10px;">Encryption Status: AES-256 | Secure Node: 0x7F2A</p>
+        </div>
+    </div>
+</body>
+</html>
