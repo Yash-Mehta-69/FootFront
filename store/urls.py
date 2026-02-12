@@ -41,5 +41,6 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'), name='password_reset_confirm'),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'), name='password_reset_complete'),
     path('test-404/', lambda request: django.shortcuts.render(request, '404.html')), # Temporary Test Route
+    path('order/invoice/<int:order_id>/', views.download_invoice, name='download_invoice'),
 ]
 

@@ -5,7 +5,13 @@
             <span class="text-accent glitch-text-small" style="letter-spacing: 4px; font-size: 0.65rem;">[//_LOGISTICS_PROTO_V9]</span>
             <h2 class="modal-title-hud">SECURE_ORDER_ID: #{{ order.id|stringformat:"06d" }}</h2>
         </div>
-        <button type="button" class="btn-close-tech" onclick="closeOrderModal()"><i class="fas fa-times"></i></button>
+        <div class="d-flex align-items-center">
+            <a href="{% url 'download_invoice' order.id %}" class="btn-tech-invoice me-4">
+                <i class="fas fa-file-invoice"></i> INVOICE_PDF
+            </a>
+            <div style="width: 1px; height: 24px; background: var(--glass-border); margin-right: 1.5rem;"></div>
+            <button type="button" class="btn-close-tech" onclick="closeOrderModal()"><i class="fas fa-times"></i></button>
+        </div>
     </div>
 </div>
 
@@ -346,19 +352,48 @@
     }
 
     .btn-close-tech:hover {
-        background: var(--color-accent);
-        color: var(--color-bg);
-        transform: rotate(90deg);
+        background: rgba(204, 255, 0, 0.1);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+        transform: rotate(90deg) scale(1.05);
+        box-shadow: 0 0 20px rgba(204, 255, 0, 0.2);
     }
-
-    .shipment-item-hud {
-        border: 1px solid var(--glass-border) !important;
-        transition: all 0.3s;
+    
+    .btn-close-tech:active {
+        background: rgba(204, 255, 0, 0.15);
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+        transform: rotate(90deg) scale(0.98);
+        box-shadow: 0 0 10px rgba(204, 255, 0, 0.3);
     }
 
     .shipment-item-hud:hover {
         background: var(--glass-hover-bg) !important;
         border-color: var(--color-accent) !important;
         transform: scale(1.005);
+    }
+
+    .btn-tech-invoice {
+        background: rgba(204, 255, 0, 0.05);
+        border: 1px solid rgba(204, 255, 0, 0.3);
+        color: var(--color-accent);
+        font-family: monospace;
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        border-radius: 2px;
+    }
+    
+    .btn-tech-invoice:hover {
+        background: var(--color-accent);
+        color: var(--color-bg);
+        box-shadow: 0 0 15px rgba(204, 255, 0, 0.4);
+        transform: translateY(-1px);
     }
 </style>

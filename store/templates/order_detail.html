@@ -141,6 +141,9 @@
         <div style="text-align: right;">
             <div style="font-size: 0.9rem; color: #888;">Placed on</div>
             <div style="font-family: monospace;">{{ order.order_date|date:"F d, Y" }}</div>
+            <a href="{% url 'download_invoice' order.id %}" class="btn-primary-custom mt-2" style="font-size: 0.8rem; padding: 0.5rem 1rem; display: inline-block;">
+                <i class="fas fa-file-invoice me-2"></i>Download Invoice
+            </a>
         </div>
     </div>
 

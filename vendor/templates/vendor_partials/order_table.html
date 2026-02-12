@@ -40,6 +40,9 @@
                 <div class="text-muted small">{{ order.order_date|date:"H:i" }}</div>
             </td>
             <td>
+                <a href="{% url 'download_invoice' order.pk %}" class="btn-icon-soft" title="Download Invoice">
+                    <i class="fas fa-file-download"></i>
+                </a>
                 <button class="btn-icon-soft" data-bs-toggle="modal" data-bs-target="#orderModal{{ order.pk }}">
                     <i class="fas fa-eye"></i>
                 </button>

@@ -95,6 +95,9 @@
                     <button class="btn-icon-soft" title="View Detail" data-bs-toggle="modal" data-bs-target="#orderDetailModal{{ order.pk }}">
                         <i class="fas fa-eye"></i>
                     </button>
+                    <a href="{% url 'download_invoice' order.pk %}" class="btn-icon-soft" title="Download Invoice">
+                        <i class="fas fa-file-download"></i>
+                    </a>
                     <button class="btn-icon-soft text-danger" title="Delete" onclick="if(confirm('Delete Order #{{ order.pk }}?')) window.location.href='#'">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -112,7 +115,12 @@
                                         <span class="text-muted small">• {{ order.order_date|date:"M d, Y" }}</span>
                                     </div>
                                 </div>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a href="{% url 'download_invoice' order.pk %}" class="btn-primary-custom btn-sm text-decoration-none">
+                                        <i class="fas fa-file-invoice me-1"></i> Invoice
+                                    </a>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(var(--invert-value));"></button>
+                                </div>
                             </div>
                             <div class="modal-body p-4">
                                 <div class="row g-3 mb-4">
