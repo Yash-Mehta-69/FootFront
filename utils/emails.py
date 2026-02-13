@@ -50,7 +50,8 @@ def send_order_confirmation_email(order):
     context = {
         'order': order,
         'items': processed_items,
-        'customer_name': customer_name
+        'customer_name': customer_name,
+        'logo_url': f"{getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000').rstrip('/')}/static/favicon.png"
     }
     
     html_content = render_to_string('emails/order_confirmation.html', context)
@@ -81,10 +82,15 @@ def send_shipment_update_email(shipment):
     variant = shipment.order_item.product_variant
     image_url = get_absolute_image_url(variant.image, variant.product.product_image)
     
+    # Logo URL
+    site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000')
+    logo_url = f"{site_url.rstrip('/')}/static/favicon.png"
+
     context = {
         'shipment': shipment,
         'customer_name': customer_name,
-        'image_url': image_url
+        'image_url': image_url,
+        'logo_url': logo_url
     }
     
     html_content = render_to_string('emails/shipment_update.html', context)
