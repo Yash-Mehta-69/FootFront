@@ -302,7 +302,12 @@
             </td>
         </tr>
         {% empty %}
-        <tr><td colspan="8" class="text-center p-5">No orders found.</td></tr>
+        <tr>
+            <td colspan="9" class="text-center p-5">
+                <i class="fas fa-box-open fa-3x text-muted mb-3 d-block"></i>
+                <h6 class="text-muted">No orders found matching your filters.</h6>
+            </td>
+        </tr>
         {% endfor %}
     </tbody>
 </table>

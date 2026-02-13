@@ -13,43 +13,26 @@
     <!-- List Column -->
     <div class="col-lg-8">
         <div class="custom-card">
-            <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <div class="card-header-custom d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <h5 class="card-title-custom mb-0">Color List</h5>
-                <a href="?export=csv" class="btn-primary-custom btn-sm">
-                    <i class="fas fa-file-export"></i> Export CSV
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="dropdown">
+                        <button class="btn-primary-custom dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-file-export"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                            <li><a class="dropdown-item py-2 px-3" href="?export=csv" style="color: var(--text-main); font-weight: 500;">
+                                <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                            </a></li>
+                            <li><a class="dropdown-item py-2 px-3" href="?export=pdf" style="color: var(--text-main); font-weight: 500;">
+                                <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class="table-responsive">
-                <table class="table-custom">
-                    <thead>
-                        <tr>
-                            <th>Color Name</th>
-                            <th>Code</th>
-                            <th>Preview</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for color in colors %}
-                        <tr>
-                            <td class="fw-bold">{{ color.name }}</td>
-                            <td>{{ color.hex_code }}</td>
-                            <td>
-                                <div class="rounded border" style="width: 30px; height: 30px; background-color: {{ color.hex_code }};"></div>
-                            </td>
-                            <td>
-                                <a href="{% url 'delete_color' color.pk %}" class="btn-icon-soft text-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this color?');">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">No colors found.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                {% include 'dashboard/partials/color_table.html' %}
             </div>
         </div>
     </div>

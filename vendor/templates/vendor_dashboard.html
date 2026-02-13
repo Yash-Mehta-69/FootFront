@@ -6,7 +6,6 @@
 {% block breadcrumb %}Dashboard{% endblock %}
 
 {% block vendor_content %}
-<!-- Analytics Stats Cards -->
 <div class="row g-4 mb-4">
     <!-- Stats Card 1 -->
     <div class="col-12 col-sm-6 col-md-3">
@@ -103,9 +102,9 @@
         <div class="custom-card h-100">
             <div class="card-header-custom d-flex justify-content-between align-items-center">
                 <h5 class="card-title-custom">Sales Overview</h5>
-                <select class="form-select-custom shadow-none" style="width: auto; padding: 5px 10px; font-size: 12px;">
-                    <option>This Year</option>
-                    <option>Last Year</option>
+                <select id="periodSelect" class="form-select-custom shadow-none" style="width: auto; padding: 5px 10px; font-size: 12px;">
+                    <option value="weekly" selected>Last 7 Days</option>
+                    <option value="yearly">This Year</option>
                 </select>
             </div>
             <div class="card-body" style="height: 300px; padding: 15px;">
@@ -114,6 +113,10 @@
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('salesChart').getContext('2d');
+                    const periodSelect = document.getElementById('periodSelect');
+                    
+                    // Graph data from backend
+                    const graphData = {{ graph_data|safe }};
                     
                     // Theme-aware colors
                     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -121,13 +124,13 @@
                     const textColor = isDark ? '#a3aed0' : '#2b3674';
                     const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
 
-                    new Chart(ctx, {
+                    const chart = new Chart(ctx, {
                         type: 'line',
                         data: {
-                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+                            labels: graphData.weekly.labels,
                             datasets: [{
                                 label: 'Monthly Sales',
-                                data: [15000, 18000, 22000, 19000, 28000, 24000, 31000, 27000],
+                                data: graphData.weekly.data,
                                 borderColor: primaryColor,
                                 backgroundColor: 'rgba(67, 24, 255, 0.1)',
                                 fill: true,
@@ -147,7 +150,13 @@
                                 y: {
                                     beginAtZero: true,
                                     grid: { color: gridColor },
-                                    ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+                                    ticks: { 
+                                        color: textColor, 
+                                        font: { family: 'Plus Jakarta Sans' },
+                                        callback: function(value) {
+                                            return '₹' + value.toLocaleString();
+                                        }
+                                    }
                                 },
                                 x: {
                                     grid: { display: false },
@@ -155,6 +164,15 @@
                                 }
                             }
                         }
+                    });
+
+                    periodSelect.addEventListener('change', function() {
+                        const period = this.value;
+                        const data = graphData[period];
+                        
+                        chart.data.labels = data.labels;
+                        chart.data.datasets[0].data = data.data;
+                        chart.update();
                     });
                 });
             </script>

@@ -5,29 +5,58 @@
 {% block header_title %}Orders{% endblock %}
 {% block breadcrumb %}Orders{% endblock %}
 
+{% load custom_filters %}
 {% block vendor_content %}
 <div class="custom-card">
     <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
         <h5 class="card-title-custom mb-0">Order Inventory</h5>
-        <div class="d-flex align-items-center gap-2">
-            <form method="get" class="d-flex gap-2" onsubmit="return false;">
-                <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control-custom" placeholder="Search orders..." style="width: 220px;">
-                <select name="status" class="form-select-custom" style="width: 160px;">
+        
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <form method="get" class="d-flex flex-wrap gap-2 justify-content-end" onsubmit="return false;">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" 
+                    class="form-control-custom" placeholder="Search orders..." style="width: 200px;">
+                
+                <select name="status" class="form-select-custom" style="width: 140px;">
                     <option value="">All Statuses</option>
                     {% for status_val, status_label in status_choices %}
                     <option value="{{ status_val }}" {% if current_status == status_val %}selected{% endif %}>{{ status_label }}</option>
                     {% endfor %}
                 </select>
-                <select name="sort" class="form-select-custom" style="width: 160px;">
+
+                <select name="date_filter" id="date_filter" class="form-select-custom" style="width: 140px;" onchange="toggleCustomDates(); this.form.submit()">
+                    <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Time</option>
+                    <option value="today" {% if current_filter == 'today' %}selected{% endif %}>Today</option>
+                    <option value="weekly" {% if current_filter == 'weekly' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="yearly" {% if current_filter == 'yearly' %}selected{% endif %}>Last Year</option>
+                    <option value="custom" {% if current_filter == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+
+                <div id="custom_date_range" class="gap-2" style="display: {% if current_filter == 'custom' %}flex{% else %}none{% endif %} !important;">
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-control-custom" style="width: 130px;" onchange="this.form.submit()">
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-control-custom" style="width: 130px;" onchange="this.form.submit()">
+                </div>
+
+                <select name="sort" class="form-select-custom" style="width: 150px;" onchange="this.form.submit()">
                     <option value="date_newest" {% if current_sort == 'date_newest' %}selected{% endif %}>Date: Newest</option>
                     <option value="date_oldest" {% if current_sort == 'date_oldest' %}selected{% endif %}>Date: Oldest</option>
                     <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
                     <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
                 </select>
+
+                <div class="dropdown">
+                    <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                        <li><a class="dropdown-item py-2 px-3" href="?export=csv{% if search_query %}&q={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_filter %}&date_filter={{ current_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                        </a></li>
+                        <li><a class="dropdown-item py-2 px-3" href="?export=pdf{% if search_query %}&q={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_filter %}&date_filter={{ current_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                        </a></li>
+                    </ul>
+                </div>
             </form>
-            <button onclick="exportData()" class="btn-primary-custom">
-                <i class="fas fa-file-export"></i> Export CSV
-            </button>
         </div>
     </div>
 
@@ -51,7 +80,7 @@
                     <td><span class="fw-bold text-primary-custom">#ORD-{{ order.pk }}</span></td>
                     <td>
                         <div class="fw-bold">{{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</div>
-                        <div class="small text-muted">{{ order.customer.user.email }}</div>
+                        <div class="small text-muted">{{ order.customer.user.email|mask_email }}</div>
                     </td>
                     <td>
                         <div class="d-flex flex-column gap-1">
@@ -100,9 +129,6 @@
                         <div class="text-muted" style="font-size: 10px;">{{ order.order_date|date:"H:i" }}</div>
                     </td>
                     <td style="text-align: right;">
-                        <a href="{% url 'download_invoice' order.pk %}" class="btn-icon-soft me-1" title="Download Invoice">
-                            <i class="fas fa-file-download"></i>
-                        </a>
                         <button class="btn-icon-soft me-1" title="View Detail" data-bs-toggle="modal" data-bs-target="#orderDetailModal{{ order.pk }}">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -190,7 +216,7 @@
                                                 {{ order.shipping_address.city }}, {{ order.shipping_address.state }} - {{ order.shipping_address.postal_code }}
                                             </div>
                                             <div class="small mt-2 pt-2" style="font-weight: 500; color: var(--text-main); border-top: 1px solid rgba(var(--text-main-rgb), 0.08);">
-                                                <i class="fas fa-phone me-2 opacity-50"></i> {{ order.customer.phone }}
+                                                <i class="fas fa-phone me-2 opacity-50"></i> {{ order.customer.phone|mask_phone }}
                                             </div>
                                         </div>
                                     </div>
@@ -341,6 +367,16 @@
 </div>
 
 <script>
+function toggleCustomDates() {
+    const filter = document.getElementById('date_filter').value;
+    const customRange = document.getElementById('custom_date_range');
+    if (filter === 'custom') {
+        customRange.style.setProperty('display', 'flex', 'important');
+    } else {
+        customRange.style.setProperty('display', 'none', 'important');
+    }
+}
+
 function toggleTracking(id) {
     const status = document.getElementById('select-status-' + id).value;
     const trackingDiv = document.getElementById('tracking-input-' + id);

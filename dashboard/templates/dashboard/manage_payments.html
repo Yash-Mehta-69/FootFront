@@ -10,88 +10,71 @@
 
 {% block admin_content %}
 <div class="custom-card">
-    <div class="card-header-custom d-flex justify-content-between flex-wrap gap-2">
+    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
         <h5 class="card-title-custom mb-0">Transaction History</h5>
-        <div class="d-flex align-items-center">
-            <form method="get" class="d-flex gap-2">
+        
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <form method="get" class="d-flex flex-wrap gap-2 justify-content-end">
                 <input type="text" name="q" value="{{ search_query|default:'' }}" 
-                    class="form-control-custom form-control-sm" placeholder="Search Trans ID, Order or User..." style="width: 220px;"
+                    class="form-control-custom form-control-sm" placeholder="Search Trans ID, Order or User..." style="width: 200px;"
                     onchange="this.form.submit()">
                 
-                <select name="status" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                <select name="status" class="form-select-custom form-select-sm" style="width: 130px;" onchange="this.form.submit()">
                     <option value="">All Statuses</option>
                     {% for status_val, status_label in status_choices %}
                     <option value="{{ status_val }}" {% if status_filter == status_val %}selected{% endif %}>{{ status_label }}</option>
                     {% endfor %}
                 </select>
 
+                <select name="date_filter" id="date_filter" class="form-select-custom form-select-sm" style="width: 130px;" onchange="toggleCustomDates(); this.form.submit()">
+                    <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Time</option>
+                    <option value="today" {% if current_filter == 'today' %}selected{% endif %}>Today</option>
+                    <option value="weekly" {% if current_filter == 'weekly' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="yearly" {% if current_filter == 'yearly' %}selected{% endif %}>Last Year</option>
+                    <option value="custom" {% if current_filter == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+
+                <div id="custom_date_range" class="gap-2" style="display: {% if current_filter == 'custom' %}flex{% else %}none{% endif %} !important;">
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-control-custom form-control-sm" style="width: 130px;" onchange="this.form.submit()">
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-control-custom form-control-sm" style="width: 130px;" onchange="this.form.submit()">
+                </div>
+
                 <select name="sort" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
                     <option value="date_newest" {% if current_sort == 'date_newest' or not current_sort %}selected{% endif %}>Newest First</option>
                     <option value="date_oldest" {% if current_sort == 'date_oldest' %}selected{% endif %}>Oldest First</option>
                 </select>
 
-                <button type="button" onclick="exportData()" class="btn-primary-custom btn-sm d-flex align-items-center gap-2">
-                    <i class="fas fa-file-export"></i> Export CSV
-                </button>
+                <div class="dropdown">
+                    <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                        <li><a class="dropdown-item py-2 px-3" href="?export=csv{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if current_filter %}&date_filter={{ current_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                        </a></li>
+                        <li><a class="dropdown-item py-2 px-3" href="?export=pdf{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if current_filter %}&date_filter={{ current_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                        </a></li>
+                    </ul>
+                </div>
             </form>
         </div>
     </div>
     
     <div class="table-responsive">
-        <table class="table-custom">
-            <thead>
-                <tr>
-                    <th class="text-nowrap">Transaction ID</th>
-                    <th class="text-nowrap">Order ID</th>
-                    <th>User</th>
-                    <th>Date</th>
-                    <th>Method</th>
-                    <th>Amount</th>
-                    <th>Earnings (7%)</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for payment in payments %}
-                <tr>
-                    <td>
-                        {% if payment.razorpay_payment_id %}
-                            <span class="fw-bold font-monospace text-primary-custom">{{ payment.razorpay_payment_id }}</span>
-                        {% else %}
-                            <span class="text-muted small">#PAY-{{ payment.pk }}</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{% url 'manage_orders' %}?q={{ payment.order.pk }}" class="fw-bold text-primary-custom text-decoration-none text-nowrap">#ORD-{{ payment.order.pk }}</a>
-                    </td>
-                    <td>
-                        <div class="fw-bold" style="color: var(--text-main);">{{ payment.order.customer.user.first_name }} {{ payment.order.customer.user.last_name }}</div>
-                        <div class="small text-muted">{{ payment.order.customer.user.email }}</div>
-                    </td>
-                    <td>
-                        <div class="small" style="color: var(--text-main);">{{ payment.payment_date|date:"d M, Y" }}</div>
-                        <div class="text-muted small">{{ payment.payment_date|date:"H:i" }}</div>
-                    </td>
-                    <td><i class="fas fa-credit-card me-2 text-primary-custom"></i>{{ payment.payment_method|upper }}</td>
-                    <td class="fw-bold text-primary-custom">₹{{ payment.amount }}</td>
-                    <td class="fw-bold text-success-custom">₹{{ payment.amount|multiply:0.07|floatformat:2 }}</td>
-                    <td>
-                        <div class="small fw-bold {% if payment.status == 'completed' %}text-success-custom{% elif payment.status == 'failed' %}text-danger-custom{% else %}status-warning{% endif %}">
-                            <i class="fas {% if payment.status == 'completed' %}fa-check-circle{% elif payment.status == 'failed' %}fa-times-circle{% else %}fa-exclamation-circle{% endif %} me-1"></i>
-                            {{ payment.get_status_display|upper }}
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-center p-5">
-                        <i class="fas fa-receipt fa-3x text-muted mb-3 d-block"></i>
-                        <h6 class="text-muted">No transactions found.</h6>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% include 'dashboard/partials/payment_table.html' %}
     </div>
 </div>
+
+<script>
+function toggleCustomDates() {
+    const filter = document.getElementById('date_filter').value;
+    const customRange = document.getElementById('custom_date_range');
+    if (filter === 'custom') {
+        customRange.style.setProperty('display', 'flex', 'important');
+    } else {
+        customRange.style.setProperty('display', 'none', 'important');
+    }
+}
+</script>
 {% endblock %}

@@ -10,11 +10,44 @@
 
 {% block admin_content %}
 <div class="custom-card">
-    <div class="card-header-custom">
-        <h5 class="card-title-custom">All Reviews</h5>
-        <a href="?export=csv" class="btn-primary-custom btn-sm">
-            <i class="fas fa-file-export"></i> Export CSV
-        </a>
+    <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <h5 class="card-title-custom mb-0">All Reviews</h5>
+        
+        <div class="d-flex align-items-center gap-2 ms-auto">
+            <form method="get" class="d-flex flex-wrap gap-2 justify-content-end">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" 
+                    class="form-control-custom" placeholder="Search product or customer..." style="width: 220px;"
+                    onchange="this.form.submit()">
+                
+                <select name="rating" class="form-select-custom" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="">All Ratings</option>
+                    {% for r in "54321"|make_list %}
+                    <option value="{{ r }}" {% if rating_filter == r %}selected{% endif %}>{{ r }} Stars</option>
+                    {% endfor %}
+                </select>
+
+                <select name="sort" class="form-select-custom" style="width: 160px;" onchange="this.form.submit()">
+                    <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                    <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                    <option value="rating_high" {% if current_sort == 'rating_high' %}selected{% endif %}>Rating: High to Low</option>
+                    <option value="rating_low" {% if current_sort == 'rating_low' %}selected{% endif %}>Rating: Low to High</option>
+                </select>
+
+                <div class="dropdown">
+                    <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                        <li><a class="dropdown-item py-2 px-3" href="?export=csv{% if search_query %}&q={{ search_query }}{% endif %}{% if rating_filter %}&rating={{ rating_filter }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                        </a></li>
+                        <li><a class="dropdown-item py-2 px-3" href="?export=pdf{% if search_query %}&q={{ search_query }}{% endif %}{% if rating_filter %}&rating={{ rating_filter }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                        </a></li>
+                    </ul>
+                </div>
+            </form>
+        </div>
     </div>
     
     <div class="table-responsive">

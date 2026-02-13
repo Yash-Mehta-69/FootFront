@@ -9,33 +9,61 @@
 <div class="custom-card">
     <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-3">
         <h5 class="card-title-custom mb-0">Shipment Tracking</h5>
-        <div class="d-flex align-items-center gap-2">
-            <form method="get" class="d-flex gap-2" onsubmit="return false;">
+        
+        <div class="d-flex align-items-center ms-auto">
+            <form method="get" class="d-flex flex-wrap gap-2 justify-content-end" onsubmit="return false;">
                 <input type="text" name="order_id" list="orderIdsList" value="{{ order_id_filter|default:'' }}" 
-                    class="form-control-custom" placeholder="Order ID..." style="width: 160px;">
+                    class="form-control-custom" placeholder="Order ID..." style="width: 140px;">
                 <datalist id="orderIdsList">
                     {% for oid in vendor_order_ids %}
                     <option value="#ORD-{{ oid }}">
                     {% endfor %}
                 </datalist>
+                
                 <input type="text" name="q" value="{{ search_query|default:'' }}" 
-                    class="form-control-custom" placeholder="Search tracking..." style="width: 200px;">
-                <select name="status" class="form-select-custom" style="width: 160px;">
+                    class="form-control-custom" placeholder="Search tracking..." style="width: 180px;">
+                
+                <select name="status" class="form-select-custom" style="width: 140px;" onchange="this.form.submit()">
                     <option value="">All Statuses</option>
                     {% for status_val, status_label in status_choices %}
                     <option value="{{ status_val }}" {% if current_status == status_val %}selected{% endif %}>{{ status_label }}</option>
                     {% endfor %}
                 </select>
-                <select name="sort" class="form-select-custom" style="width: 180px;">
+
+                <select name="date_filter" id="date_filter" class="form-select-custom" style="width: 130px;" onchange="toggleCustomDates(); this.form.submit()">
+                    <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Time</option>
+                    <option value="today" {% if current_filter == 'today' %}selected{% endif %}>Today</option>
+                    <option value="weekly" {% if current_filter == 'weekly' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="yearly" {% if current_filter == 'yearly' %}selected{% endif %}>Last Year</option>
+                    <option value="custom" {% if current_filter == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+
+                <div id="custom_date_range" class="gap-2" style="display: {% if current_filter == 'custom' %}flex{% else %}none{% endif %} !important;">
+                    <input type="date" name="start_date" value="{{ start_date }}" class="form-control-custom" style="width: 130px;" onchange="this.form.submit()">
+                    <input type="date" name="end_date" value="{{ end_date }}" class="form-control-custom" style="width: 130px;" onchange="this.form.submit()">
+                </div>
+
+                <select name="sort" class="form-select-custom" style="width: 160px;" onchange="this.form.submit()">
                     <option value="shipped_newest" {% if current_sort == 'shipped_newest' %}selected{% endif %}>Shipped: Newest</option>
                     <option value="shipped_oldest" {% if current_sort == 'shipped_oldest' %}selected{% endif %}>Shipped: Oldest</option>
                     <option value="delivery_newest" {% if current_sort == 'delivery_newest' %}selected{% endif %}>Delivery: Newest</option>
                     <option value="delivery_oldest" {% if current_sort == 'delivery_oldest' %}selected{% endif %}>Delivery: Oldest</option>
                 </select>
+
+                <div class="dropdown">
+                    <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                        <li><a class="dropdown-item py-2 px-3" href="?export=csv{% if search_query %}&q={{ search_query }}{% endif %}{% if order_id_filter %}&order_id={{ order_id_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if current_filter %}&date_filter={{ current_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                        </a></li>
+                        <li><a class="dropdown-item py-2 px-3" href="?export=pdf{% if search_query %}&q={{ search_query }}{% endif %}{% if order_id_filter %}&order_id={{ order_id_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if current_filter %}&date_filter={{ current_filter }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                        </a></li>
+                    </ul>
+                </div>
             </form>
-            <button onclick="exportData()" class="btn-primary-custom">
-                <i class="fas fa-file-export"></i> Export CSV
-            </button>
         </div>
     </div>
 
@@ -201,6 +229,16 @@
 </div>
 
 <script>
+function toggleCustomDates() {
+    const filter = document.getElementById('date_filter').value;
+    const customRange = document.getElementById('custom_date_range');
+    if (filter === 'custom') {
+        customRange.style.setProperty('display', 'flex', 'important');
+    } else {
+        customRange.style.setProperty('display', 'none', 'important');
+    }
+}
+
 function toggleTracking(id) {
     const selector = document.getElementById('select-status-' + id);
     if (!selector) return;

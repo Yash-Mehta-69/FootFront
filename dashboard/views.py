@@ -11,18 +11,25 @@ from firebase_admin import auth
 from store.decorators import admin_required
 from django.core.paginator import Paginator
 from django.db.models import Q, Min, Count, Sum, Prefetch, F, Value
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, ExtractMonth
+from utils.filters import get_date_range
 from utils import panel_messages
-from utils.exports import export_to_csv
+from utils.exports import export_to_csv, export_to_pdf
 from cart.models import Order, OrderItem, Shipment, ShipmentStatusHistory, Payment
 
 @admin_required
 def dashboard(request):
+    # Base Queries
+    customer_qs = Customer.objects.filter(is_deleted=False)
+    product_qs = Product.objects.filter(is_deleted=False)
+    order_qs = Order.objects.filter(is_deleted=False)
+    payment_qs = Order.objects.filter(is_deleted=False, payment__status='completed')
+
     # Real Stats
-    total_customers = Customer.objects.filter(is_deleted=False).count()
-    total_products = Product.objects.filter(is_deleted=False).count()
-    total_orders = Order.objects.filter(is_deleted=False).count()
-    total_revenue_val = Order.objects.filter(is_deleted=False, payment__status='completed').aggregate(total=Sum('total_amount'))['total'] or 0
+    total_customers = customer_qs.count()
+    total_products = product_qs.count()
+    total_orders = order_qs.count()
+    total_revenue_val = payment_qs.aggregate(total=Sum('total_amount'))['total'] or 0
 
     # Quick Growth Logic (Simplified: Current Month vs previous)
     now = timezone.now()
@@ -37,6 +44,31 @@ def dashboard(request):
     if prev_month_orders > 0:
         orders_growth = ((curr_month_orders - prev_month_orders) / prev_month_orders) * 100
 
+    # Graph Data: Weekly (Last 7 Days)
+    weekly_labels = []
+    weekly_data = []
+    for i in range(6, -1, -1):
+        day = now - timedelta(days=i)
+        weekly_labels.append(day.strftime('%a'))
+        day_revenue = Order.objects.filter(
+            order_date__date=day.date(),
+            payment__status='completed',
+            is_deleted=False
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        weekly_data.append(float(day_revenue))
+
+    # Graph Data: Yearly (current year)
+    yearly_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    yearly_data = []
+    for month in range(1, 13):
+        month_revenue = Order.objects.filter(
+            order_date__year=now.year,
+            order_date__month=month,
+            payment__status='completed',
+            is_deleted=False
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        yearly_data.append(float(month_revenue))
+
     stats = {
         'total_users': total_customers,
         'users_growth': 5.4, # Keep aesthetic growth for now or implement user growth
@@ -45,7 +77,11 @@ def dashboard(request):
         'total_orders': total_orders,
         'orders_growth': round(orders_growth, 1),
         'total_revenue': f"₹{int(total_revenue_val):,}",
-        'revenue_growth': 8.2
+        'revenue_growth': 8.2,
+        'graph_data': {
+            'weekly': {'labels': weekly_labels, 'data': weekly_data},
+            'yearly': {'labels': yearly_labels, 'data': yearly_data}
+        }
     }
     
     # Real Recent Orders
@@ -79,7 +115,7 @@ def dashboard(request):
     
     context = {
         'stats': stats,
-        'recent_orders': recent_orders_raw
+        'recent_orders': recent_orders_raw,
     }
     return render(request, 'dashboard/admin_dashboard.html', context)
 
@@ -105,16 +141,18 @@ def manage_customers(request):
     if status:
         customers = customers.filter(is_blocked=(status == 'Blocked'))
         
+    customer_fields = [
+        ('user.get_full_name', 'Full Name'),
+        ('user.email', 'Email'),
+        ('phone', 'Phone'),
+        ('is_blocked', 'Is Blocked'),
+        ('created_at', 'Joined Date')
+    ]
+
     if request.GET.get('export') == 'csv':
-        fields = [
-            ('user.first_name', 'First Name'),
-            ('user.last_name', 'Last Name'),
-            ('user.email', 'Email'),
-            ('phone', 'Phone'),
-            ('is_blocked', 'Is Blocked'),
-            ('created_at', 'Joined Date')
-        ]
-        return export_to_csv(customers, 'customers', fields)
+        return export_to_csv(customers, 'customers', customer_fields)
+    elif request.GET.get('export') == 'pdf':
+        return export_to_pdf(customers, 'customers', customer_fields)
 
     context = {
         'customers': customers,
@@ -284,22 +322,23 @@ def manage_vendors(request):
     if status:
         vendors = vendors.filter(is_blocked=(status == 'Blocked'))
 
+    vendor_fields = [
+        ('shopName', 'Shop Name'),
+        ('description', 'Shop Description'),
+        ('user.get_full_name', 'Vendor Name'),
+        ('user.email', 'Email'),
+        ('business_phone', 'Phone'),
+        ('bankdetail.bank_name', 'Bank Name'),
+        ('bankdetail.account_number', 'Account Number'),
+        ('bankdetail.ifsc_code', 'IFSC Code'),
+        ('is_blocked', 'Is Blocked'),
+        ('created_at', 'Joined At')
+    ]
+
     if request.GET.get('export') == 'csv':
-        fields = [
-            ('shopName', 'Shop Name'),
-            ('user.first_name', 'First Name'),
-            ('user.last_name', 'Last Name'),
-            ('user.email', 'Email'),
-            ('business_phone', 'Phone'),
-            ('shopAddress', 'Shop Address'),
-            ('description', 'Description'),
-            ('bankdetail.bank_name', 'Bank Name'),
-            ('bankdetail.account_number', 'Account Number'),
-            ('bankdetail.ifsc_code', 'IFSC Code'),
-            ('bankdetail.beneficiary_name', 'Beneficiary Name'),
-            ('is_blocked', 'Is Blocked')
-        ]
-        return export_to_csv(vendors, 'vendors', fields)
+        return export_to_csv(vendors, 'vendors', vendor_fields)
+    elif request.GET.get('export') == 'pdf':
+        return export_to_pdf(vendors, 'vendors', vendor_fields)
 
     context = {
         'vendors': vendors,
@@ -493,8 +532,18 @@ def detail_vendor(request, pk):
 
 @admin_required
 def manage_categories(request):
+    q = request.GET.get('q', '')
+    sort = request.GET.get('sort', 'name_asc')
+    
     categories = Category.objects.filter(is_deleted=False).select_related('parent_category')
     
+    if sort == 'name_desc':
+        categories = categories.order_by('-name')
+    elif sort == 'products_high':
+        categories = categories.annotate(product_count=Count('product')).order_by('-product_count')
+    else: # name_asc
+        categories = categories.order_by('name')
+
     if request.GET.get('export') == 'csv':
         fields = [
             ('name', 'Category Name'),
@@ -502,8 +551,24 @@ def manage_categories(request):
             ('description', 'Description')
         ]
         return export_to_csv(categories, 'categories', fields)
+    elif request.GET.get('export') == 'pdf':
+        fields = [
+            ('name', 'Category Name'),
+            ('parent_category.name', 'Parent Category'),
+            ('description', 'Description')
+        ]
+        return export_to_pdf(categories, 'categories', fields)
         
-    return render(request, 'dashboard/manage_categories.html', {'categories': categories})
+    context = {
+        'categories': categories,
+        'sort': sort,
+        'q': q, # Passed if we ever re-add it, but good for base script
+    }
+
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/category_table.html', context)
+        
+    return render(request, 'dashboard/manage_categories.html', context)
 
 @admin_required
 def add_category(request):
@@ -598,25 +663,30 @@ def manage_products(request):
     page_number = request.GET.get('page')
     products_page = paginator.get_page(page_number)
 
+    product_fields = [
+        ('product.name', 'Product Name'),
+        ('product.category.name', 'Category'),
+        ('product.vendor.shopName', 'Vendor'),
+        ('size.size_label', 'Size'),
+        ('color.name', 'Color'),
+        ('price', 'Price'),
+        ('stock', 'Stock'),
+        ('product.gender', 'Gender'),
+        ('product.is_trending', 'Is Trending'),
+        ('product.created_at', 'Date Created')
+    ]
+
     if request.GET.get('export') == 'csv':
         # Enhanced export: One row per variant
         variants = ProductVariant.objects.filter(product__in=products, is_deleted=False).select_related(
             'product', 'product__vendor', 'product__category', 'size', 'color'
         ).order_by('product__name', 'size__size_label')
-        
-        fields = [
-            ('product.name', 'Product Name'),
-            ('product.category.name', 'Category'),
-            ('product.vendor.shopName', 'Vendor'),
-            ('size.size_label', 'Size'),
-            ('color.name', 'Color'),
-            ('price', 'Price'),
-            ('stock', 'Stock'),
-            ('product.gender', 'Gender'),
-            ('product.is_trending', 'Is Trending'),
-            ('product.created_at', 'Date Created')
-        ]
-        return export_to_csv(variants, 'products', fields)
+        return export_to_csv(variants, 'products', product_fields)
+    elif request.GET.get('export') == 'pdf':
+        variants = ProductVariant.objects.filter(product__in=products, is_deleted=False).select_related(
+            'product', 'product__vendor', 'product__category', 'size', 'color'
+        ).order_by('product__name', 'size__size_label')
+        return export_to_pdf(variants, 'products', product_fields)
 
     context = {
         'products': products_page,
@@ -799,6 +869,11 @@ def manage_orders(request):
     q = request.GET.get('q', '')
     vendor_id = request.GET.get('vendor', '')
     sort = request.GET.get('sort', 'date_newest')
+    date_filter = request.GET.get('date_filter', 'all')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
+    
+    start_date, end_date = get_date_range(date_filter, start_date_str, end_date_str)
     
     # Base queryset
     orders = Order.objects.filter(is_deleted=False).select_related(
@@ -813,6 +888,12 @@ def manage_orders(request):
             to_attr='all_items'
         )
     )
+
+    # Date Filtering
+    if start_date:
+        orders = orders.filter(order_date__gte=start_date)
+    if end_date:
+        orders = orders.filter(order_date__lte=end_date)
 
     # Searching
     if q:
@@ -836,23 +917,26 @@ def manage_orders(request):
     elif sort == 'date_oldest':
         orders = orders.order_by('order_date')
 
+    order_fields = [
+        ('pk', 'Order ID'),
+        ('customer.user.get_full_name', 'Customer'),
+        ('customer.user.email', 'Email'),
+        ('get_items_display', 'Items'),
+        ('total_amount', 'Amount'),
+        ('admin_earnings', 'Earnings (7%)'),
+        ('payment_info', 'Payment Details'),
+        ('order_date', 'Date'),
+        ('shipping_address.address_line1', 'Address Line 1'),
+        ('shipping_address.address_line2', 'Address Line 2'),
+        ('shipping_address.city', 'City'),
+        ('shipping_address.state', 'State'),
+        ('shipping_address.postal_code', 'Pin Code')
+    ]
+
     if request.GET.get('export') == 'csv':
-        # Need to realize for display logic if we want, but CSV usually needs flat data
-        fields = [
-            ('pk', 'Order ID'),
-            ('customer.user.first_name', 'Customer First Name'),
-            ('customer.user.last_name', 'Customer Last Name'),
-            ('customer.user.email', 'Customer Email'),
-            ('shipping_address.address_line1', 'Address Line 1'),
-            ('shipping_address.address_line2', 'Address Line 2'),
-            ('shipping_address.city', 'City'),
-            ('shipping_address.state', 'State'),
-            ('shipping_address.postal_code', 'Pincode'),
-            ('total_amount', 'Amount'),
-            ('payment.status', 'Payment Status'),
-            ('order_date', 'Date')
-        ]
-        return export_to_csv(orders, 'orders', fields)
+        return export_to_csv(orders, 'orders', order_fields)
+    elif request.GET.get('export') == 'pdf':
+        return export_to_pdf(orders, 'orders', order_fields)
     
     # Pagination
     paginator = Paginator(orders, 10)
@@ -880,7 +964,10 @@ def manage_orders(request):
         'vendors': Vendor.objects.filter(is_deleted=False),
         'search_query': q,
         'current_vendor': int(vendor_id) if vendor_id and vendor_id.isdigit() else '',
-        'current_sort': sort
+        'current_sort': sort,
+        'current_filter': date_filter,
+        'start_date': start_date_str,
+        'end_date': end_date_str
     }
     
     if request.GET.get('ajax') == '1':
@@ -932,12 +1019,23 @@ def manage_shipments(request):
     vendor_id = request.GET.get('vendor', '')
     order_id = request.GET.get('order_id', '')
     sort = request.GET.get('sort', 'shipped_newest')
+    date_filter = request.GET.get('date_filter', 'all')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
+    
+    start_date, end_date = get_date_range(date_filter, start_date_str, end_date_str)
     
     # Base queryset
     shipments = Shipment.objects.filter(is_deleted=False).select_related(
         'order_item', 'order_item__order', 'vendor',
         'order_item__product_variant', 'order_item__product_variant__product'
     )
+
+    # Date Filtering
+    if start_date:
+        shipments = shipments.filter(order_item__order__order_date__gte=start_date)
+    if end_date:
+        shipments = shipments.filter(order_item__order__order_date__lte=end_date)
     
     # Searching
     if q:
@@ -975,18 +1073,31 @@ def manage_shipments(request):
     elif sort == 'delivery_oldest':
         shipments = shipments.order_by('expected_delivery')
         
-    if request.GET.get('export') == 'csv':
-        fields = [
+    if request.GET.get('export'):
+        # Prepare data for export with merged item details
+        # MUST convert to list to persist runtime attributes like item_display
+        shipments_list = list(shipments)
+        for shipment in shipments_list:
+            item = shipment.order_item
+            variant = item.product_variant
+            shipment.item_display = f"{item.quantity} x {variant.product.name} ({variant.size.size_label}/{variant.color.name})"
+
+        shipment_fields = [
             ('order_item.order.pk', 'Order ID'),
             ('order_item.order.customer.user.get_full_name', 'Customer'),
             ('vendor.shopName', 'Vendor'),
             ('tracking_number', 'Tracking #'),
             ('courier_name', 'Courier'),
+            ('item_display', 'Items'),
             ('status', 'Status'),
             ('shipped_at', 'Shipped Date'),
             ('expected_delivery', 'Expected Delivery')
         ]
-        return export_to_csv(shipments, 'shipments', fields)
+
+        if request.GET.get('export') == 'csv':
+            return export_to_csv(shipments_list, 'shipments', shipment_fields)
+        elif request.GET.get('export') == 'pdf':
+            return export_to_pdf(shipments_list, 'shipments', shipment_fields)
 
     # Pagination
     paginator = Paginator(shipments, 10)
@@ -1005,8 +1116,15 @@ def manage_shipments(request):
         'current_status': status,
         'current_vendor': int(vendor_id) if vendor_id and vendor_id.isdigit() else '',
         'current_sort': sort,
+        'current_filter': date_filter,
+        'start_date': start_date_str,
+        'end_date': end_date_str,
         'status_choices': Shipment.STATUS_CHOICES
     }
+
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/shipment_table.html', context)
+        
     return render(request, 'dashboard/manage_shipments.html', context)
 
 @admin_required
@@ -1076,10 +1194,21 @@ def manage_payments(request):
     search_query = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
     sort_by = request.GET.get('sort', 'date_newest')
+    date_filter = request.GET.get('date_filter', 'all')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
+    
+    start_date, end_date = get_date_range(date_filter, start_date_str, end_date_str)
 
     payments = Payment.objects.filter(is_deleted=False).select_related(
         'order', 'order__customer', 'order__customer__user'
     )
+
+    # Date Filtering
+    if start_date:
+        payments = payments.filter(payment_date__gte=start_date)
+    if end_date:
+        payments = payments.filter(payment_date__lte=end_date)
 
     if search_query:
         payments = payments.filter(
@@ -1097,18 +1226,22 @@ def manage_payments(request):
     else: # Default or date_newest
         payments = payments.order_by('-payment_date')
 
+    payment_fields = [
+        ('razorpay_payment_id', 'Transaction ID'),
+        ('order.pk', 'Order ID'),
+        ('order.customer.user.get_full_name', 'Customer'),
+        ('order.customer.user.email', 'Email'),
+        ('payment_method', 'Method'),
+        ('amount', 'Amount'),
+        ('order.admin_earnings', 'Earnings (7%)'),
+        ('status', 'Status'),
+        ('payment_date', 'Date')
+    ]
+
     if request.GET.get('export') == 'csv':
-        fields = [
-            ('razorpay_payment_id', 'Transaction ID'),
-            ('order.pk', 'Order ID'),
-            ('order.customer.user.get_full_name', 'Customer'),
-            ('order.customer.user.email', 'Email'),
-            ('payment_method', 'Method'),
-            ('amount', 'Amount'),
-            ('status', 'Status'),
-            ('payment_date', 'Date')
-        ]
-        return export_to_csv(payments, 'payments', fields)
+        return export_to_csv(payments, 'payments', payment_fields)
+    elif request.GET.get('export') == 'pdf':
+        return export_to_pdf(payments, 'payments', payment_fields)
 
     status_choices = Payment.STATUS_CHOICES
 
@@ -1116,27 +1249,66 @@ def manage_payments(request):
         'payments': payments,
         'search_query': search_query,
         'status_filter': status_filter,
+        'current_status': status_filter,
         'current_sort': sort_by,
         'status_choices': status_choices,
+        'current_filter': date_filter,
+        'start_date': start_date_str,
+        'end_date': end_date_str
     }
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/payment_table.html', context)
+
     return render(request, 'dashboard/manage_payments.html', context)
 
 @admin_required
 def view_reviews(request):
-    reviews = Review.objects.filter(is_deleted=False).select_related('product', 'customer__user').prefetch_related('media').order_by('-created_at')
+    search_query = request.GET.get('q', '')
+    rating_filter = request.GET.get('rating', '')
+    sort = request.GET.get('sort', 'newest')
     
-    if request.GET.get('export') == 'csv':
-        fields = [
-            ('product.name', 'Product'),
-            ('customer.user.first_name', 'First Name'),
-            ('customer.user.last_name', 'Last Name'),
-            ('rating', 'Rating'),
-            ('comment', 'Comment'),
-            ('created_at', 'Date')
-        ]
-        return export_to_csv(reviews, 'reviews', fields)
+    reviews = Review.objects.filter(is_deleted=False).select_related('product', 'customer__user').prefetch_related('media')
+    
+    if search_query:
+        reviews = reviews.filter(
+            Q(product__name__icontains=search_query) |
+            Q(customer__user__first_name__icontains=search_query) |
+            Q(customer__user__last_name__icontains=search_query)
+        )
+        
+    if rating_filter:
+        reviews = reviews.filter(rating=rating_filter)
+        
+    if sort == 'oldest':
+        reviews = reviews.order_by('created_at')
+    elif sort == 'rating_high':
+        reviews = reviews.order_by('-rating', '-created_at')
+    elif sort == 'rating_low':
+        reviews = reviews.order_by('rating', '-created_at')
+    else:
+        reviews = reviews.order_by('-created_at')
+    
+    review_fields = [
+        ('product.name', 'Product'),
+        ('customer.user.get_full_name', 'Customer'),
+        ('customer.user.email', 'Email'),
+        ('rating', 'Rating'),
+        ('comment', 'Comment'),
+        ('created_at', 'Date')
+    ]
 
-    return render(request, 'dashboard/view_reviews.html', {'reviews': reviews})
+    if request.GET.get('export') == 'csv':
+        return export_to_csv(reviews, 'reviews', review_fields)
+    elif request.GET.get('export') == 'pdf':
+        return export_to_pdf(reviews, 'reviews', review_fields)
+
+    context = {
+        'reviews': reviews,
+        'search_query': search_query,
+        'rating_filter': rating_filter,
+        'current_sort': sort
+    }
+    return render(request, 'dashboard/view_reviews.html', context)
 
 @admin_required
 def detail_review(request, pk):
@@ -1160,25 +1332,61 @@ def delete_review(request, pk):
 
 @admin_required
 def view_complaints(request):
-    complaints = Complaint.objects.filter(is_deleted=False).select_related('customer__user').order_by('-created_at')
+    search_query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    sort = request.GET.get('sort', 'newest')
     
+    complaints = Complaint.objects.filter(is_deleted=False).select_related('customer__user')
+    
+    if search_query:
+        if search_query.startswith('#'):
+            ticket_id = search_query[1:]
+            if ticket_id.isdigit():
+                complaints = complaints.filter(pk=ticket_id)
+        else:
+            complaints = complaints.filter(
+                Q(subject__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(customer__user__first_name__icontains=search_query) |
+                Q(customer__user__last_name__icontains=search_query)
+            )
+            
+    if status_filter:
+        complaints = complaints.filter(status=status_filter)
+        
+    if sort == 'oldest':
+        complaints = complaints.order_by('created_at')
+    else:
+        complaints = complaints.order_by('-created_at')
+    
+    complaint_fields = [
+        ('pk', 'Ticket ID'),
+        ('customer.user.get_full_name', 'Customer'),
+        ('customer.user.email', 'Email'),
+        ('subject', 'Subject'),
+        ('description', 'Description'),
+        ('status', 'Status'),
+        ('created_at', 'Date')
+    ]
+
     if request.GET.get('export') == 'csv':
-        fields = [
-            ('pk', 'Ticket ID'),
-            ('customer.user.first_name', 'First Name'),
-            ('customer.user.last_name', 'Last Name'),
-            ('subject', 'Subject'),
-            ('status', 'Status'),
-            ('created_at', 'Date')
-        ]
-        return export_to_csv(complaints, 'complaints', fields)
+        return export_to_csv(complaints, 'complaints', complaint_fields)
+    elif request.GET.get('export') == 'pdf':
+        return export_to_pdf(complaints, 'complaints', complaint_fields)
 
     # Pagination
     paginator = Paginator(complaints, 10)
     page_number = request.GET.get('page')
     complaints_page = paginator.get_page(page_number)
     
-    return render(request, 'dashboard/view_complaints.html', {'complaints': complaints_page})
+    context = {
+        'complaints': complaints_page,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'current_sort': sort,
+        'status_choices': Complaint.STATUS_CHOICES
+    }
+    return render(request, 'dashboard/view_complaints.html', context)
 
 @admin_required
 def admin_update_complaint_status(request, pk):
@@ -1268,15 +1476,18 @@ def manage_requests(request):
     else:
         requests = requests.order_by('-created_at')
 
+    request_fields = [
+        ('vendor.shopName', 'Vendor Shop'),
+        ('vendor.user.get_full_name', 'Vendor Name'),
+        ('attribute_type', 'Type'),
+        ('attribute_value', 'Requested Value'),
+        ('created_at', 'Date')
+    ]
+
     if request.GET.get('export') == 'csv':
-        fields = [
-            ('vendor.shopName', 'Vendor Shop'),
-            ('vendor.user.get_full_name', 'Vendor Name'),
-            ('attribute_type', 'Type'),
-            ('attribute_value', 'Requested Value'),
-            ('created_at', 'Date')
-        ]
-        return export_to_csv(requests, 'attribute_requests', fields)
+        return export_to_csv(requests, 'attribute_requests', request_fields)
+    elif request.GET.get('export') == 'pdf':
+        return export_to_pdf(requests, 'attribute_requests', request_fields)
 
     context = {
         'requests': requests,
@@ -1329,15 +1540,32 @@ def manage_sizes(request):
     else:
         form = SizeForm()
     
-    sizes = Size.objects.all().order_by('size_label')
+    q = request.GET.get('q', '')
+    sizes = Size.objects.all()
+    
+    sizes = sizes.order_by('size_label')
     
     if request.GET.get('export') == 'csv':
         fields = [
             ('size_label', 'Size Label')
         ]
         return export_to_csv(sizes, 'sizes', fields)
+    elif request.GET.get('export') == 'pdf':
+        fields = [
+            ('size_label', 'Size Label')
+        ]
+        return export_to_pdf(sizes, 'sizes', fields)
         
-    return render(request, 'dashboard/manage_sizes.html', {'sizes': sizes, 'form': form})
+    context = {
+        'sizes': sizes,
+        'form': form,
+        'q': q,
+    }
+
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/size_table.html', context) # Need to check if this exists or if I should create it
+        
+    return render(request, 'dashboard/manage_sizes.html', context)
 
 @admin_required
 def delete_size(request, pk):
@@ -1362,7 +1590,10 @@ def manage_colors(request):
     else:
         form = ColorForm()
     
-    colors = Color.objects.all().order_by('name')
+    q = request.GET.get('q', '')
+    colors = Color.objects.all()
+    
+    colors = colors.order_by('name')
     
     if request.GET.get('export') == 'csv':
         fields = [
@@ -1370,8 +1601,23 @@ def manage_colors(request):
             ('hex_code', 'Hex Code')
         ]
         return export_to_csv(colors, 'colors', fields)
+    elif request.GET.get('export') == 'pdf':
+        fields = [
+            ('name', 'Color Name'),
+            ('hex_code', 'Hex Code')
+        ]
+        return export_to_pdf(colors, 'colors', fields)
         
-    return render(request, 'dashboard/manage_colors.html', {'colors': colors, 'form': form})
+    context = {
+        'colors': colors,
+        'form': form,
+        'q': q,
+    }
+
+    if request.GET.get('ajax') == '1':
+        return render(request, 'dashboard/partials/color_table.html', context) # Need to check if this exists or create it
+        
+    return render(request, 'dashboard/manage_colors.html', context)
 
 @admin_required
 def delete_color(request, pk):

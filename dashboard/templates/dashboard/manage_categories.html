@@ -10,12 +10,29 @@
 
 {% block admin_content %}
 <div class="custom-card">
-    <div class="card-header-custom">
-        <h5 class="card-title-custom">Product Categories</h5>
+    <div class="card-header-custom d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <h5 class="card-title-custom mb-0">Product Categories</h5>
         <div class="d-flex align-items-center gap-2">
-            <a href="?export=csv" class="btn-primary-custom btn-sm">
-                <i class="fas fa-file-export"></i> Export CSV
-            </a>
+            <form method="get" class="d-flex gap-2">
+                <select name="sort" class="form-select-custom form-select-sm" style="width: 140px;" onchange="this.form.submit()">
+                    <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                    <option value="name_desc" {% if sort == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                    <option value="products_high" {% if sort == 'products_high' %}selected{% endif %}>Most Products</option>
+                </select>
+            </form>
+            <div class="dropdown">
+                <button class="btn-primary-custom dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-file-export"></i> Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                    <li><a class="dropdown-item py-2 px-3" href="?export=csv{% if sort %}&sort={{ sort }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                        <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                    </a></li>
+                    <li><a class="dropdown-item py-2 px-3" href="?export=pdf{% if sort %}&sort={{ sort }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                        <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                    </a></li>
+                </ul>
+            </div>
             <a href="{% url 'add_category' %}" class="btn-primary-custom btn-sm">
                 <i class="fas fa-plus"></i> Add Category
             </a>
@@ -23,74 +40,7 @@
     </div>
     
     <div class="table-responsive">
-        <table class="table-custom">
-            <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Parent Category</th>
-                    <th>Description</th>
-                    <th>Products</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for category in categories %}
-                <tr>
-                    <td>
-                        {% if category.cat_image %}
-                        <div class="rounded d-flex align-items-center justify-content-center overflow-hidden" style="width: 40px; height: 40px; border: 1px solid var(--border-color);">
-                            <img src="{{ category.cat_image.url }}" alt="{{ category.name }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
-                        {% else %}
-                        <div class="rounded d-flex align-items-center justify-content-center overflow-hidden" style="width: 40px; height: 40px; background-color: var(--card-bg); border: 1px dashed var(--border-color);">
-                            <i class="fas fa-layer-group text-muted"></i>
-                        </div>
-                        {% endif %}
-                    </td>
-                    <td class="fw-bold">{{ category.name }}</td>
-                    <td>
-                        {% if category.parent_category %}
-                        <span class="badge" style="background-color: var(--primary-light); color: var(--primary-color);">{{ category.parent_category.name }}</span>
-                        {% else %}
-                        <span class="text-muted small">Top Level</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ category.description|truncatechars:50 }}</td>
-                    <td><span class="badge bg-secondary rounded-pill">{{ category.product_set.count }}</span></td>
-                    <td>
-                        <span class="status-badge status-active">
-                            <i class="fas fa-check-circle"></i> Active
-                        </span>
-                    </td>
-                    <td>
-                        <a href="{% url 'detail_category' category.pk %}" class="btn-icon-soft me-1" title="View Details">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="{% url 'edit_category' category.pk %}" class="btn-icon-soft text-primary-custom me-1" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <a href="{% url 'delete_category' category.pk %}" class="btn-icon-soft text-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this category?');">
-                            <i class="fas fa-trash"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center py-5">
-                        <div class="d-flex flex-column align-items-center">
-                            <div class="mb-3" style="font-size: 3rem; color: var(--text-muted);">
-                                <i class="fas fa-folder-open"></i>
-                            </div>
-                            <h6 class="text-muted">No categories found</h6>
-                            <p class="small text-muted mb-0">Add a new category to get started</p>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% include 'dashboard/partials/category_table.html' %}
     </div>
 </div>
 {% endblock %}

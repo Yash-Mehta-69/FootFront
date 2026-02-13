@@ -21,9 +21,19 @@
                     <option value="Blocked" {% if current_status == 'Blocked' %}selected{% endif %}>Blocked</option>
                 </select>
             </form>
-            <button onclick="exportData()" class="btn-primary-custom">
-                <i class="fas fa-file-export"></i> Export CSV
-            </button>
+                <div class="dropdown">
+                    <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card);">
+                        <li><a class="dropdown-item py-2 px-3" href="?export=csv{% if search_query %}&q={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                        </a></li>
+                        <li><a class="dropdown-item py-2 px-3" href="?export=pdf{% if search_query %}&q={{ search_query }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                        </a></li>
+                    </ul>
+                </div>
         </div>
     </div>
     

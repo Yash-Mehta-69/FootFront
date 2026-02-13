@@ -10,8 +10,9 @@ from store.forms import VendorProductForm
 from cart.models import Order, Shipment, OrderItem, ShipmentStatusHistory
 from django.utils import timezone
 from datetime import timedelta, datetime
+from utils.filters import get_date_range
 from utils import panel_messages
-from utils.exports import export_to_csv
+from utils.exports import export_to_csv, export_to_pdf
 from django.db.models import Prefetch
 
 
@@ -34,20 +35,21 @@ def vendor_dashboard(request):
 
     # Base Queryset
     base_qs = OrderItem.objects.filter(product_variant__product__vendor=vendor, order__payment__status='completed', is_deleted=False)
-    vendor_order_items = base_qs
-
+    
     # Current Month Data
     current_month_items = base_qs.filter(order__order_date__gte=first_day_current)
     current_sales = current_month_items.aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
     current_orders = current_month_items.values('order').distinct().count()
     current_qty = current_month_items.aggregate(total=Sum('quantity'))['total'] or 0
-    current_aov = current_sales / current_orders if current_orders > 0 else 0
-
+    
     # Previous Month Data
     prev_month_items = base_qs.filter(order__order_date__gte=first_day_prev, order__order_date__lt=first_day_current)
     prev_sales = prev_month_items.aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
     prev_orders = prev_month_items.values('order').distinct().count()
     prev_qty = prev_month_items.aggregate(total=Sum('quantity'))['total'] or 0
+
+    # Calculate current and previous periods for growth
+    current_aov = current_sales / current_orders if current_orders > 0 else 0
     prev_aov = prev_sales / prev_orders if prev_orders > 0 else 0
 
     def calc_growth(current, prev):
@@ -55,34 +57,34 @@ def vendor_dashboard(request):
             return 100.0 if current > 0 else 0.0
         return ((current - prev) / prev) * 100
 
-    # Overall Totals (Lifetime)
+    # Growth Calculations
+    sales_growth = calc_growth(current_sales, prev_sales)
+    orders_growth = calc_growth(current_orders, prev_orders)
+    qty_growth = calc_growth(current_qty, prev_qty)
+    aov_growth = calc_growth(current_aov, prev_aov)
+
+    # Lifetime Totals
     total_sales = base_qs.aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
     total_orders = base_qs.values('order').distinct().count()
     products_sold = base_qs.aggregate(total=Sum('quantity'))['total'] or 0
     avg_order_val = total_sales / total_orders if total_orders > 0 else 0
     
-    # Growth Calculations
-    sales_growth_val = calc_growth(current_sales, prev_sales)
-    orders_growth_val = calc_growth(current_orders, prev_orders)
-    aov_growth_val = calc_growth(current_aov, prev_aov)
-    products_sold_growth_val = calc_growth(current_qty, prev_qty)
-
     analytics = MockObj(
         total_sales=f"₹{total_sales:,.2f}",
-        sales_growth=f"{abs(sales_growth_val):.1f}",
-        sales_growth_pos=sales_growth_val >= 0,
+        sales_growth=f"{sales_growth:+.1f}",
+        sales_growth_pos=sales_growth >= 0,
         
         total_orders=str(total_orders),
-        orders_growth=f"{abs(orders_growth_val):.1f}",
-        orders_growth_pos=orders_growth_val >= 0,
+        orders_growth=f"{orders_growth:+.1f}",
+        orders_growth_pos=orders_growth >= 0,
 
         avg_order_value=f"₹{avg_order_val:,.2f}",
-        aov_growth=f"{abs(aov_growth_val):.1f}",
-        aov_growth_pos=aov_growth_val >= 0,
+        aov_growth=f"{aov_growth:+.1f}",
+        aov_growth_pos=aov_growth >= 0,
 
         products_sold=str(products_sold),
-        products_sold_growth=f"{abs(products_sold_growth_val):.1f}",
-        products_sold_growth_pos=products_sold_growth_val >= 0
+        products_sold_growth=f"{qty_growth:+.1f}",
+        products_sold_growth_pos=qty_growth >= 0,
     )
 
     # Top Products (Real)
@@ -117,10 +119,35 @@ def vendor_dashboard(request):
         )
     ).order_by('-order_date')
 
+    # Graph Data: Weekly (Last 7 Days)
+    weekly_labels = []
+    weekly_data = []
+    for i in range(6, -1, -1):
+        day = now - timedelta(days=i)
+        weekly_labels.append(day.strftime('%a'))
+        day_revenue = base_qs.filter(
+            order__order_date__date=day.date()
+        ).aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        weekly_data.append(float(day_revenue))
+
+    # Graph Data: Yearly (current year)
+    yearly_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    yearly_data = []
+    for month in range(1, 13):
+        month_revenue = base_qs.filter(
+            order__order_date__year=now.year,
+            order__order_date__month=month
+        ).aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        yearly_data.append(float(month_revenue))
+
     context = {
         'analytics': analytics,
         'top_products': top_products,
         'recent_orders': recent_orders,
+        'graph_data': {
+            'weekly': {'labels': weekly_labels, 'data': weekly_data},
+            'yearly': {'labels': yearly_labels, 'data': yearly_data}
+        }
     }
     return render(request, 'vendor_dashboard.html', context)
 
@@ -176,6 +203,23 @@ def vendor_products(request):
             ('product.created_at', 'Date Created')
         ]
         return export_to_csv(variants, 'vendor_products', fields)
+    elif request.GET.get('export') == 'pdf':
+        variants = ProductVariant.objects.filter(product__in=products, is_deleted=False).select_related(
+            'product', 'product__category', 'size', 'color'
+        ).order_by('product__name', 'size__size_label')
+        
+        fields = [
+            ('product.name', 'Product Name'),
+            ('product.category.name', 'Category'),
+            ('size.size_label', 'Size'),
+            ('color.name', 'Color'),
+            ('price', 'Price'),
+            ('stock', 'Stock'),
+            ('product.gender', 'Gender'),
+            ('product.is_trending', 'Is Trending'),
+            ('product.created_at', 'Date Created')
+        ]
+        return export_to_pdf(variants, 'vendor_products', fields)
 
     # Pagination
     paginator = Paginator(products, 10)
@@ -203,12 +247,24 @@ def vendor_orders(request):
     q = request.GET.get('q', '')
     status = request.GET.get('status', '')
     sort = request.GET.get('sort', 'date_newest')
+    date_filter = request.GET.get('date_filter', 'all')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
+    
+    start_date, end_date = get_date_range(date_filter, start_date_str, end_date_str)
     
     # Get IDs of orders that contain at least one item from this vendor
-    vendor_order_ids = OrderItem.objects.filter(
+    vendor_order_item_qs = OrderItem.objects.filter(
         product_variant__product__vendor=vendor,
         is_deleted=False
-    ).values_list('order_id', flat=True).distinct()
+    )
+    
+    if start_date:
+        vendor_order_item_qs = vendor_order_item_qs.filter(order__order_date__gte=start_date)
+    if end_date:
+        vendor_order_item_qs = vendor_order_item_qs.filter(order__order_date__lte=end_date)
+        
+    vendor_order_ids = vendor_order_item_qs.values_list('order_id', flat=True).distinct()
     
     # Base queryset for Orders
     orders = Order.objects.filter(
@@ -269,12 +325,15 @@ def vendor_orders(request):
     page_number = request.GET.get('page')
     orders_page = paginator.get_page(page_number)
     
-    if request.GET.get('export') == 'csv':
+    if request.GET.get('export') == 'csv' or request.GET.get('export') == 'pdf':
+        for order in orders:
+            items = getattr(order, 'vendor_items', order.items.filter(product_variant__product__vendor=vendor))
+            order.vendor_items_display = ", ".join([f"{item.quantity}x {item.product_variant.product.name} ({item.product_variant.size.size_label}/{item.product_variant.color.name})" for item in items])
+
         fields = [
             ('pk', 'Order ID'),
-            ('customer.user.first_name', 'Customer First Name'),
-            ('customer.user.last_name', 'Customer Last Name'),
-            ('customer.user.email', 'Customer Email'),
+            ('customer.user.get_full_name', 'Customer'),
+            ('vendor_items_display', 'Items'),
             ('shipping_address.address_line1', 'Address Line 1'),
             ('shipping_address.address_line2', 'Address Line 2'),
             ('shipping_address.city', 'City'),
@@ -283,13 +342,18 @@ def vendor_orders(request):
             ('vendor_total', 'Amount'),
             ('order_date', 'Date')
         ]
-        return export_to_csv(orders, 'vendor_orders', fields)
+        if request.GET.get('export') == 'csv':
+            return export_to_csv(orders, 'vendor_orders', fields)
+        return export_to_pdf(orders, 'vendor_orders', fields)
     
     context = {
         'orders': orders_page,
         'search_query': q,
         'current_status': status,
         'current_sort': sort,
+        'current_filter': date_filter,
+        'start_date': start_date_str,
+        'end_date': end_date_str,
         'status_choices': Shipment.STATUS_CHOICES
     }
     
@@ -511,16 +575,23 @@ def vendor_shipment_detail(request, pk):
 
 @vendor_required
 def vendor_categories(request):
+    q = request.GET.get('q', '')
     categories = Category.objects.filter(is_deleted=False).select_related('parent_category')
     
     if request.GET.get('export') == 'csv':
         fields = [
             ('name', 'Category Name'),
             ('parent_category.name', 'Parent Category'),
-            ('description', 'Description'),
-            ('cat_image', 'Image Path')
+            ('description', 'Description')
         ]
         return export_to_csv(categories, 'vendor_categories', fields)
+    elif request.GET.get('export') == 'pdf':
+        fields = [
+            ('name', 'Category Name'),
+            ('parent_category.name', 'Parent Category'),
+            ('description', 'Description')
+        ]
+        return export_to_pdf(categories, 'vendor_categories', fields)
         
     return render(request, 'vendor_categories.html', {'categories': categories})
 
@@ -533,6 +604,11 @@ def vendor_shipments(request):
     status = request.GET.get('status', '')
     order_id = request.GET.get('order_id', '')
     sort = request.GET.get('sort', 'shipped_newest')
+    date_filter = request.GET.get('date_filter', 'all')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
+    
+    start_date, end_date = get_date_range(date_filter, start_date_str, end_date_str)
     
     # Fetch real shipments for this vendor
     shipments = Shipment.objects.filter(
@@ -543,6 +619,12 @@ def vendor_shipments(request):
         'order_item__product_variant__product', 'order_item__product_variant__size',
         'order_item__product_variant__color'
     )
+
+    # Date Filtering
+    if start_date:
+        shipments = shipments.filter(order_item__order__order_date__gte=start_date)
+    if end_date:
+        shipments = shipments.filter(order_item__order__order_date__lte=end_date)
     
     # Searching
     if q:
@@ -589,19 +671,30 @@ def vendor_shipments(request):
     page_number = request.GET.get('page')
     shipments_page = paginator.get_page(page_number)
     
-    if request.GET.get('export') == 'csv':
+    if request.GET.get('export'):
+        # Prepare data for export with merged item details
+        # MUST convert to list to persist runtime attributes like item_display
+        shipments_list = list(shipments)
+        for shipment in shipments_list:
+            item = shipment.order_item
+            variant = item.product_variant
+            shipment.item_display = f"{item.quantity} x {variant.product.name} ({variant.size.size_label}/{variant.color.name})"
+
         fields = [
+            ('order_item.order.pk', 'Order ID'),
+            ('order_item.order.customer.user.get_full_name', 'Customer'),
             ('tracking_number', 'Tracking Number'),
             ('courier_name', 'Courier'),
-            ('order_item.order.pk', 'Order ID'),
-            ('order_item.product_variant.product.name', 'Product'),
-            ('order_item.product_variant.size.size_label', 'Size'),
-            ('order_item.product_variant.color.name', 'Color'),
+            ('item_display', 'Items'),
             ('status', 'Status'),
             ('shipped_at', 'Shipped At'),
             ('expected_delivery', 'Expected Delivery')
         ]
-        return export_to_csv(shipments, 'vendor_shipments', fields)
+        
+        if request.GET.get('export') == 'csv':
+            return export_to_csv(shipments_list, 'vendor_shipments', fields)
+        elif request.GET.get('export') == 'pdf':
+            return export_to_pdf(shipments_list, 'vendor_shipments', fields)
     
     context = {
         'shipments': shipments_page,
@@ -610,6 +703,9 @@ def vendor_shipments(request):
         'vendor_order_ids': vendor_order_ids,
         'current_status': status,
         'current_sort': sort,
+        'current_filter': date_filter,
+        'start_date': start_date_str,
+        'end_date': end_date_str,
         'status_choices': Shipment.STATUS_CHOICES
     }
     
@@ -706,18 +802,48 @@ def vendor_profile(request):
 
 @vendor_required
 def vendor_analytics(request):
-    # Mock Data
+    vendor = request.user.vendor_profile
+    
     analytics = MockObj(
-        total_sales="$25,430",
-        sales_growth="12.5",
-        total_orders="1,245",
-        orders_growth="5.8",
-        avg_order_value="$125",
-        aov_growth="1.2",
-        products_sold="850",
-        products_sold_growth="10.4"
+        total_sales=f"₹{total_sales:,.2f}",
+        sales_growth="N/A",  # Growth calculation requires prev period comparison
+        total_orders=str(total_orders),
+        orders_growth="N/A",
+        avg_order_value=f"₹{avg_order_val:,.2f}",
+        aov_growth="N/A",
+        products_sold=str(products_sold),
+        products_sold_growth="N/A"
     )
-    return render(request, 'vendor_analytics.html', {'analytics': analytics})
+    
+    # Graph Data: Weekly (Last 7 Days)
+    weekly_labels = []
+    weekly_data = []
+    for i in range(6, -1, -1):
+        day = now - timedelta(days=i)
+        weekly_labels.append(day.strftime('%a'))
+        day_revenue = base_qs.filter(
+            order__order_date__date=day.date()
+        ).aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        weekly_data.append(float(day_revenue))
+
+    # Graph Data: Yearly (current year)
+    yearly_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    yearly_data = []
+    for month in range(1, 13):
+        month_revenue = base_qs.filter(
+            order__order_date__year=now.year,
+            order__order_date__month=month
+        ).aggregate(total=Sum(F('price') * F('quantity')))['total'] or 0
+        yearly_data.append(float(month_revenue))
+
+    context = {
+        'analytics': analytics,
+        'graph_data': {
+            'weekly': {'labels': weekly_labels, 'data': weekly_data},
+            'yearly': {'labels': yearly_labels, 'data': yearly_data}
+        }
+    }
+    return render(request, 'vendor_analytics.html', context)
 
 @vendor_required
 def vendor_help(request):
@@ -727,43 +853,92 @@ from store.models import Review
 
 @vendor_required
 def vendor_reviews(request):
+    search_query = request.GET.get('q', '')
+    rating_filter = request.GET.get('rating', '')
+    sort = request.GET.get('sort', 'newest')
+    
     # Fetch Reviews for Products belonging to this Vendor
     reviews = Review.objects.filter(
         product__vendor=request.user.vendor_profile,
         is_deleted=False
-    ).order_by('-created_at')
+    ).select_related('product', 'customer__user').prefetch_related('media')
+    
+    if search_query:
+        reviews = reviews.filter(
+            Q(product__name__icontains=search_query) |
+            Q(customer__user__first_name__icontains=search_query) |
+            Q(customer__user__last_name__icontains=search_query)
+        )
+        
+    if rating_filter:
+        reviews = reviews.filter(rating=rating_filter)
+        
+    if sort == 'oldest':
+        reviews = reviews.order_by('created_at')
+    elif sort == 'rating_high':
+        reviews = reviews.order_by('-rating', '-created_at')
+    elif sort == 'rating_low':
+        reviews = reviews.order_by('rating', '-created_at')
+    else:
+        reviews = reviews.order_by('-created_at')
     
     if request.GET.get('export') == 'csv':
         fields = [
             ('product.name', 'Product'),
-            ('customer.user.first_name', 'Customer First Name'),
-            ('customer.user.last_name', 'Customer Last Name'),
+            ('customer.user.get_full_name', 'Customer'),
             ('rating', 'Rating'),
             ('comment', 'Comment'),
             ('created_at', 'Date')
         ]
         return export_to_csv(reviews, 'vendor_reviews', fields)
+    elif request.GET.get('export') == 'pdf':
+        fields = [
+            ('product.name', 'Product'),
+            ('customer.user.get_full_name', 'Customer'),
+            ('rating', 'Rating'),
+            ('comment', 'Comment'),
+            ('created_at', 'Date')
+        ]
+        return export_to_pdf(reviews, 'vendor_reviews', fields)
     
-    return render(request, 'vendor_reviews.html', {'reviews': reviews})
+    context = {
+        'reviews': reviews,
+        'search_query': search_query,
+        'rating_filter': rating_filter,
+        'current_sort': sort
+    }
+    return render(request, 'vendor_reviews.html', context)
 
 
 @vendor_required
 def vendor_sizes(request):
+    q = request.GET.get('q', '')
     sizes = Size.objects.all()
+    
+    sizes = sizes.order_by('size_label')
     
     if request.GET.get('export') == 'csv':
         fields = [('size_label', 'Size Label')]
         return export_to_csv(sizes, 'vendor_sizes', fields)
+    elif request.GET.get('export') == 'pdf':
+        fields = [('size_label', 'Size Label')]
+        return export_to_pdf(sizes, 'vendor_sizes', fields)
         
     return render(request, 'vendor_sizes.html', {'sizes': sizes})
 
 @vendor_required
 def vendor_colors(request):
+    q = request.GET.get('q', '')
     colors = Color.objects.all()
+    
+    colors = colors.order_by('name')
     
     if request.GET.get('export') == 'csv':
         fields = [('name', 'Color Name'), ('hex_code', 'Hex Code')]
         return export_to_csv(colors, 'vendor_colors', fields)
+    elif request.GET.get('export') == 'pdf':
+        fields = [('name', 'Color Name'), ('hex_code', 'Hex Code')]
+        return export_to_pdf(colors, 'vendor_colors', fields)
         
     return render(request, 'vendor_colors.html', {'colors': colors})
 

@@ -40,6 +40,23 @@ class Order(SoftDeleteModel):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_address = models.ForeignKey(ShippingAddress, on_delete=models.SET_NULL, null=True)
 
+    @property
+    def admin_earnings(self):
+        from decimal import Decimal
+        return self.total_amount * Decimal('0.07')
+
+    @property
+    def get_items_display(self):
+        items = self.items.all()
+        return ", ".join([f"{item.quantity}x {item.product_variant.product.name} ({item.product_variant.size.size_label}/{item.product_variant.color.name})" for item in items])
+
+    @property
+    def payment_info(self):
+        if hasattr(self, 'payment'):
+            p = self.payment
+            return f"{p.get_status_display()} ({p.get_payment_method_display()}) - ID: {p.razorpay_payment_id}"
+        return "Not Paid"
+
     def __str__(self):
         return f"Order #{self.pk} by {self.customer.user.email}"
 

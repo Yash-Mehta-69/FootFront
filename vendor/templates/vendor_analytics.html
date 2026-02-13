@@ -6,7 +6,6 @@
 {% block breadcrumb %}Analytics{% endblock %}
 
 {% block vendor_content %}
-<!-- Analytics Stats Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="custom-card h-100">
@@ -80,48 +79,77 @@
         <div class="custom-card h-100">
             <div class="card-header-custom d-flex justify-content-between align-items-center">
                 <h5 class="card-title-custom">Sales Overview</h5>
-                <select class="form-select form-select-sm" style="width: auto; background-color: var(--bg-main); color: var(--text-main); border-color: var(--border-color);">
-                    <option>This Year</option>
-                    <option>Last Year</option>
+                <select id="periodSelect" class="form-select-custom shadow-none" style="width: auto; padding: 5px 10px; font-size: 12px;">
+                    <option value="weekly" selected>Last 7 Days</option>
+                    <option value="yearly">This Year</option>
                 </select>
             </div>
-            <div class="card-body d-flex align-items-end justify-content-center" style="height: 300px;">
-                 <!-- Visual Placeholder for a Chart -->
-                 <div class="w-100 h-100 d-flex align-items-end justify-content-around px-3 pb-3">
-                    <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 40%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">Jan</small>
-                    </div>
-                    <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 55%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">Feb</small>
-                    </div>
-                    <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 70%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">Mar</small>
-                    </div>
-                    <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 60%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">Apr</small>
-                    </div>
-                    <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 85%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">May</small>
-                    </div>
-                    <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 75%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">Jun</small>
-                    </div>
-                     <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 90%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">Jul</small>
-                    </div>
-                    <div class="d-flex flex-column align-items-center w-100 mx-1">
-                        <div class="bg-primary rounded-top w-50" style="height: 65%; opacity: 0.8;"></div>
-                        <small class="mt-2 text-muted" style="font-size: 10px;">Aug</small>
-                    </div>
-                 </div>
+            <div class="card-body" style="height: 300px; padding: 15px;">
+                  <canvas id="vendorSalesChart"></canvas>
             </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const ctx = document.getElementById('vendorSalesChart').getContext('2d');
+                    const periodSelect = document.getElementById('periodSelect');
+                    
+                    // Graph data from backend
+                    const graphData = {{ graph_data|safe }};
+                    
+                    // Theme-aware colors
+                    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                    const primaryColor = isDark ? '#7551ff' : '#4318ff';
+                    const textColor = isDark ? '#a3aed0' : '#2b3674';
+                    const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+
+                    const chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: graphData.weekly.labels,
+                            datasets: [{
+                                label: 'Monthly Revenue',
+                                data: graphData.weekly.data,
+                                backgroundColor: primaryColor,
+                                borderRadius: 5,
+                                barThickness: 40
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: gridColor },
+                                    ticks: { 
+                                        color: textColor, 
+                                        font: { family: 'Plus Jakarta Sans' },
+                                        callback: function(value) {
+                                            return '₹' + value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: { display: false },
+                                    ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+                                }
+                            }
+                        }
+                    });
+
+                    periodSelect.addEventListener('change', function() {
+                        const period = this.value;
+                        const data = graphData[period];
+                        
+                        chart.data.labels = data.labels;
+                        chart.data.datasets[0].data = data.data;
+                        chart.data.datasets[0].barThickness = period === 'weekly' ? 40 : 20;
+                        chart.update();
+                    });
+                });
+            </script>
         </div>
     </div>
     <div class="col-lg-4 mb-4">

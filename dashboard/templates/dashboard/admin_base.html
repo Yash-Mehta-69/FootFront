@@ -974,6 +974,19 @@
                 const newUrl = `${window.location.pathname}?${cleanParams.toString()}`;
                 window.history.replaceState({path: newUrl}, '', newUrl);
 
+                // Update all export links dynamically
+                const exportLinks = document.querySelectorAll('a[href*="export="]');
+                exportLinks.forEach(link => {
+                    const url = new URL(link.href, window.location.origin);
+                    const linkParams = new URLSearchParams(url.search);
+                    const exportType = linkParams.get('export');
+                    
+                    // Start fresh with current filters
+                    const newLinkParams = new URLSearchParams(cleanParams);
+                    newLinkParams.set('export', exportType);
+                    link.href = `?${newLinkParams.toString()}`;
+                });
+
                 fetch(`${window.location.pathname}?${searchParams.toString()}`)
                     .then(response => response.text())
                     .then(html => {

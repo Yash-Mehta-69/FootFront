@@ -1,4 +1,6 @@
 {% extends 'vendor_base.html' %}
+{% load custom_filters %}
+
 
 {% block title %}Shipment Details | Vendor Panel{% endblock %}
 
@@ -364,8 +366,8 @@
                                         </div>
                                     </div>
                                     <div class="ms-5 mt-2">
-                                        <p class="text-secondary small mb-2 d-flex align-items-center"><i class="far fa-envelope me-3 text-muted"></i>{{ shipment.order_item.order.customer.user.email }}</p>
-                                        <p class="text-secondary small mb-0 d-flex align-items-center"><i class="fas fa-phone-alt me-3 text-muted"></i>{{ shipment.order_item.order.customer.phone }}</p>
+                                        <p class="text-secondary small mb-2 d-flex align-items-center"><i class="far fa-envelope me-3 text-muted"></i>{{ shipment.order_item.order.customer.user.email|mask_email }}</p>
+                                        <p class="text-secondary small mb-0 d-flex align-items-center"><i class="fas fa-phone-alt me-3 text-muted"></i>{{ shipment.order_item.order.customer.phone|mask_phone }}</p>
                                     </div>
                                 </div>
                             </div>

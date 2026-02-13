@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page {
+            size: a4 landscape;
+            margin: 1cm;
+        }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .title {
+            font-size: 18pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .meta {
+            font-size: 9pt;
+            color: #666;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+        th {
+            background-color: #f2f2f2;
+            text-align: left;
+            padding: 4px;
+            border: 1px solid #ccc;
+            font-weight: bold;
+            font-size: 8.5pt;
+            word-wrap: break-word;
+        }
+        td {
+            padding: 4px;
+            border: 1px solid #ccc;
+            font-size: 7.5pt;
+            vertical-align: top;
+        }
+        .cell-wrap {
+            word-wrap: break-word;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 8pt;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">FootFront - {{ title }}</div>
+        <div class="meta">Generated on: {{ timestamp }}</div>
+    </div>
+
+    <table>
+        <colgroup>
+            {% for _ in headers %}
+            <col width="{{ col_width }}%">
+            {% endfor %}
+        </colgroup>
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                {% for cell in row %}
+                <td><div class="cell-wrap">{{ cell|default:"-"|safe }}</div></td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        &copy; {{ current_year }} FootFront Multi-Vendor Platform. Page <pdf:pagenumber> of <pdf:pagecount>
+    </div>
+</body>
+</html>

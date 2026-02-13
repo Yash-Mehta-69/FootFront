@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block admin_content %}
-<!-- Analytics Stats Cards -->
+
 <div class="row g-4 mb-4">
     <!-- Stats Card 1: Users -->
     <div class="col-12 col-sm-6 col-md-3">
@@ -94,9 +94,9 @@
         <div class="custom-card h-100">
             <div class="card-header-custom d-flex justify-content-between align-items-center">
                 <h5 class="card-title-custom">Platform Overview</h5>
-                <select class="form-select-custom shadow-none" style="width: auto; padding: 5px 10px; font-size: 12px;">
-                    <option>This Year</option>
-                    <option>Last Year</option>
+                <select id="periodSelect" class="form-select-custom shadow-none" style="width: auto; padding: 5px 10px; font-size: 12px;">
+                    <option value="weekly" selected>Last 7 Days</option>
+                    <option value="yearly">This Year</option>
                 </select>
             </div>
             <div class="card-body" style="height: 300px; padding: 15px;">
@@ -105,6 +105,10 @@
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('salesChart').getContext('2d');
+                    const periodSelect = document.getElementById('periodSelect');
+                    
+                    // Graph data from backend
+                    const graphData = {{ stats.graph_data|safe }};
                     
                     // Theme-aware colors
                     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -112,16 +116,16 @@
                     const textColor = isDark ? '#a3aed0' : '#2b3674';
                     const gridColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
 
-                    new Chart(ctx, {
+                    const chart = new Chart(ctx, {
                         type: 'bar',
                         data: {
-                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                            labels: graphData.weekly.labels,
                             datasets: [{
                                 label: 'Total Revenue',
-                                data: [12000, 19000, 3000, 5000, 2000, 3000, 15000, 21000, 25000, 28000, 35000, 42000],
+                                data: graphData.weekly.data,
                                 backgroundColor: primaryColor,
                                 borderRadius: 5,
-                                barThickness: 20
+                                barThickness: 40
                             }]
                         },
                         options: {
@@ -134,7 +138,13 @@
                                 y: {
                                     beginAtZero: true,
                                     grid: { color: gridColor },
-                                    ticks: { color: textColor, font: { family: 'Plus Jakarta Sans' } }
+                                    ticks: { 
+                                        color: textColor, 
+                                        font: { family: 'Plus Jakarta Sans' },
+                                        callback: function(value) {
+                                            return '₹' + value.toLocaleString();
+                                        }
+                                    }
                                 },
                                 x: {
                                     grid: { display: false },
@@ -142,6 +152,16 @@
                                 }
                             }
                         }
+                    });
+
+                    periodSelect.addEventListener('change', function() {
+                        const period = this.value;
+                        const data = graphData[period];
+                        
+                        chart.data.labels = data.labels;
+                        chart.data.datasets[0].data = data.data;
+                        chart.data.datasets[0].barThickness = period === 'weekly' ? 40 : 20;
+                        chart.update();
                     });
                 });
             </script>
