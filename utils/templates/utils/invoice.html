@@ -1,279 +1,388 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+{% load static %}
+<!DOCTYPE html>
 <html>
+
 <head>
-    <title>Invoice #{{ order.id }}</title>
+    <meta charset="UTF-8">
+    <title>Tax Invoice #{{ order.id }}</title>
     <style type="text/css">
         @page {
             size: a4 portrait;
             margin: 1.5cm;
         }
-        
+
+        @font-face {
+            font-family: "DejaVu Sans";
+            src: url("{{ request.scheme }}://{{ request.get_host }}{% static 'fonts/DejaVuSans.ttf' %}") format("truetype");
+
+        }
+
         body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 11px;
-            color: #222222;
-            line-height: 1.5;
-            background-color: #ffffff;
+            font-family: "DejaVu Sans", sans-serif;
+            font-size: 10pt;
+            color: #333;
+            line-height: 1.4;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
         }
 
-        /* Generic Layout Helpers */
-        .w-100 { width: 100%; }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .bold { font-weight: bold; }
-        
-        /* Professional Basic Header - Compact */
-        .header-section {
+        /* Layout Helpers */
+        .w-100 {
             width: 100%;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 15px;
         }
 
-        .brand-name {
-            font-size: 26px;
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .uppercase {
+            text-transform: uppercase;
+        }
+
+        /* Header Section */
+        .header-table {
+            width: 100%;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .brand-logo {
+            font-size: 22pt;
             font-weight: bold;
             color: #000;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            margin: 0;
+            line-height: 1;
         }
 
-        .invoice-title {
-            font-size: 20px;
-            color: #999;
+        .header-table img {
+            max-height: 28px !important;
+            max-width: 120px !important;
+            height: auto !important;
+            width: auto !important;
+            display: block;
+        }
+
+
+        .tagline {
+            font-size: 8pt;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .invoice-title-box {
             text-align: right;
-            padding-top: 5px;
         }
 
-        /* Metadata Grid */
-        .meta-table {
+        .tax-invoice-label {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .order-meta {
+            font-size: 9pt;
+            color: #444;
+        }
+
+
+
+        .tagline {
+            font-size: 8pt;
+            color: #666;
+            margin-top: 2px;
+        }
+
+
+        /* Customer & Order Info */
+        .info-table {
             width: 100%;
             margin-bottom: 25px;
         }
 
-        .meta-label {
-            font-size: 8px;
-            color: #888;
-            text-transform: uppercase;
-            margin-bottom: 1px;
-        }
-
-        .meta-value {
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        /* Address Section - Compact */
-        .address-table {
-            width: 100%;
-            margin-bottom: 30px;
-        }
-
-        .address-box-container {
+        .info-box {
             border: 1px solid #ddd;
-            background-color: #fcfcfc;
+            padding: 10px;
+            height: 100px;
         }
 
-        .address-header {
-            background-color: #eeeeee;
-            padding: 6px 10px;
-            font-size: 9px;
+        .info-box-header {
+            font-size: 8pt;
             font-weight: bold;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 0px;
+            background-color: #3a3a3a;
+            color: #ffffff;
+            border-bottom: 1px solid #333;
+            margin-bottom: 8px;
+            padding: 4px 8px;
         }
 
-        .address-content {
-            padding: 8px 10px;
-            font-size: 10.5px;
-            line-height: 1.4;
+        .info-content {
+            font-size: 9.5pt;
         }
 
-        /* Inventory Table - Tight Spacing */
-        .item-table {
+        /* Product Table */
+        .product-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
-            border: 1px solid #ddd;
+            margin-bottom: 20px;
         }
 
-        .item-table th {
-            background-color: #333333;
+        .product-table th {
+            background-color: #3a3a3a;
             color: #ffffff;
-            padding: 10px;
-            border-bottom: 1px solid #000;
-            font-size: 9px;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+            padding: 8px 10px;
+            font-size: 9pt;
             text-align: left;
             text-transform: uppercase;
         }
 
-        .item-table td {
-            padding: 10px;
-            border-bottom: 1px solid #eeeeee;
-            vertical-align: middle;
+        .product-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
         }
 
-        .product-name {
+        .product-img {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #eee;
+        }
+
+        .item-name {
             font-weight: bold;
-            font-size: 11.5px;
-            margin-bottom: 0px;
-            padding-bottom: 0px;
-            line-height: 1.1;
+            font-size: 10pt;
+            display: block;
+            margin-bottom: 2px !important;
+            line-height: 1.1 !important;
         }
 
-        .product-variant {
-            font-size: 8.5px;
+        .item-variant {
+            font-size: 8pt;
+            color: #777;
+            display: block;
+            margin-top: 0 !important;
+            line-height: 1.1 !important;
+        }
+
+        /* Totals Section */
+        .totals-table {
+            width: 250px;
+        }
+
+        .totals-table td {
+            padding: 4px 0;
+        }
+
+        .label-cell {
+            text-align: left;
+            font-size: 9pt;
             color: #666;
-            margin-top: 1px;
-            padding-top: 0px;
-            line-height: 1.1;
+            width: 120px;
         }
 
-        /* Financial Totals */
-        .totals-layout {
-            width: 100%;
-            margin-top: 20px;
+        .value-cell {
+            text-align: right;
+            font-size: 10pt;
+            font-weight: bold;
+            white-space: nowrap;
         }
 
-        .totals-box {
-            width: 100%;
-            border-top: 2px solid #000;
-            margin-top: 10px;
-            padding-top: 10px;
+        .grand-total-separator td {
+            height: 12px;
+            border-top: 2px solid #333;
+            padding: 0;
+        }
+
+
+        .grand-total-row td {
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+
+
+
+        .grand-total-label {
+            font-size: 11pt;
+            color: #000;
+        }
+
+        .grand-total-value {
+            font-size: 14pt;
+            color: #000;
         }
 
         /* Footer */
         .footer {
-            margin-top: 80px;
-            border-top: 1px solid #eee;
-            padding-top: 30px;
+            margin-top: 50px;
             text-align: center;
+            border-top: 2px solid #333;
+            padding-top: 20px;
             color: #999;
-            font-size: 9px;
+            font-size: 8pt;
+
         }
     </style>
 </head>
+
 <body>
     <div class="content">
-        <!-- Header -->
-        <table class="header-section">
+        <!-- Header Section -->
+        <table class="header-table">
             <tr>
-                <td width="60%">
-                    <img src="d:\MAIN\PROJECTS\FootFront\static\favicon.png" style="height: 60px; vertical-align: middle; margin-right: 15px;" alt="FootFront">
-                    <div style="display: inline-block; vertical-align: middle;">
-                        <div style="font-size: 10px; color: #666; margin-top: 3px;">AUTHORITY IN PREMIUM FOOTWEAR</div>
+                <td width="55%" valign="middle">
+                    <table cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <!-- <td valign="middle" style="padding-left: 6px;">
+                                <div class="brand-wrap">
+                                    <img src="static/favicon.png" alt="Logo" width="36" height="36" class="invoice-logo">
+                                    <div class="brand-text">
+                                        <div class="brand-logo">FOOTFRONT</div>
+                                        <div class="tagline uppercase">Authority in Premium Footwear</div>
+                                    </div>
+                                </div>
+                            </td> -->
+                            <td valign="middle" style="padding-left: 6px;">
+                                <table cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <!-- LOGO -->
+                                        <td valign="middle" style="padding-right: 4px;">
+                                            <img src="static/favicon.png" alt="Logo" width="56" height="56">
+                                        </td>
+
+                                        <!-- BRAND TEXT -->
+                                        <td valign="middle">
+                                            <div class="brand-logo">FOOTFRONT</div>
+                                            <div class="tagline uppercase" style="padding-top:4px;">Authority in Premium
+                                                Footwear</div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+
+                        </tr>
+                    </table>
+                </td>
+                <td width="45%" class="invoice-title-box" valign="middle">
+                    <div class="tax-invoice-label">TAX INVOICE</div>
+                    <div class="order-meta">
+                        <strong>Invoice No:</strong> #ORD-{{ order.id|stringformat:"06d" }}<br>
+                        <strong>Date:</strong> {{ order.order_date|date:"d F Y" }}<br>
+                        <strong>Payment Status:</strong> {% if order.payment%}{{order.payment.get_status_display|upper}}{% else %}PENDING{% endif %}
                     </div>
                 </td>
-                <td width="50%" class="invoice-title">
-                    TAX INVOICE
-                    <div style="font-size: 12px; color: #333; margin-top: 5px;">#ORD-{{ order.id|stringformat:"06d" }}</div>
-                </td>
             </tr>
         </table>
 
-        <!-- Metadata -->
-        <table class="meta-table">
-            <tr>
-                <td width="25%">
-                    <div class="meta-label">DATE_ISSUED</div>
-                    <div class="meta-value">{{ order.order_date|date:"d M Y"|upper }}</div>
-                </td>
-                <td width="25%">
-                    <div class="meta-label">SETTLEMENT</div>
-                    <div class="meta-value">ONLINE_PREPAID</div>
-                </td>
-                <td width="25%">
-                    <div class="meta-label">PAYMENT_ID</div>
-                    <div class="meta-value">#{{ order.payment.razorpay_payment_id|default:"N/A"|upper }}</div>
-                </td>
-                <td width="25%" align="right">
-                    <div class="meta-label">STATUS</div>
-                    <div class="meta-value" style="color: #00aa00;">{{ order.payment.get_status_display|upper }}</div>
-                </td>
-            </tr>
-        </table>
-
-        <!-- Logistics -->
-        <table class="address-table">
+        <!-- Customer & Order Info -->
+        <table class="info-table">
             <tr>
                 <td width="48%" valign="top">
-                    <div class="address-box-container">
-                        <div class="address-header">BILLING_INFORMATION</div>
-                        <div class="address-content">
-                            <strong>{{ order.customer.user.get_full_name|upper }}</strong><br>
+                    <div class="info-box">
+                        <div class="info-box-header uppercase">Billing Information</div>
+                        <div class="info-content">
+                            {% if order.customer %}
+                            <strong>{{ order.customer.user.get_full_name }}</strong><br>
                             {{ order.customer.user.email }}<br>
-                            {% if order.customer.phone %}TEL: {{ order.customer.phone }}{% endif %}
+                            {% if order.customer.phone %}{{ order.customer.phone }}{% endif %}
+                            {% else %}
+                            NO CUSTOMER DATA FOUND
+                            {% endif %}
                         </div>
                     </div>
                 </td>
                 <td width="4%"></td>
                 <td width="48%" valign="top">
-                    <div class="address-box-container">
-                        <div class="address-header">SHIPPING_DESTINATION</div>
-                        <div class="address-content">
-                            {{ order.shipping_address.address_line1|upper }}<br>
-                            {% if order.shipping_address.address_line2 %}{{ order.shipping_address.address_line2|upper }}<br>{% endif %}
-                            {{ order.shipping_address.city|upper }}, {{ order.shipping_address.state|upper }}<br>
-                            POSTAL_CODE: {{ order.shipping_address.postal_code }}
+                    <div class="info-box">
+                        <div class="info-box-header uppercase">Shipping Destination</div>
+                        <div class="info-content">
+                            {% if order.shipping_address %}
+                            {{ order.shipping_address.address_line1 }}<br>
+                            {% if order.shipping_address.address_line2%}{{order.shipping_address.address_line2}}<br>{%endif %}
+                            {{ order.shipping_address.city }}, {{ order.shipping_address.state }}<br>
+                            {{ order.shipping_address.postal_code }}
+                            {% else %}
+                            NO SHIPPING ADDRESS PROVIDED
+                            {% endif %}
                         </div>
                     </div>
                 </td>
             </tr>
         </table>
 
-        <!-- Manifest -->
-        <table class="item-table">
+        <!-- Product Manifest -->
+        <table class="product-table">
             <thead>
                 <tr>
-                    <th width="10%">PHOTO</th>
-                    <th width="45%">PRODUCT_DESCRIPTION</th>
+                    <th width="10%">ITEM</th>
+                    <th width="50%">DESCRIPTION</th>
                     <th width="10%" class="text-center">QTY</th>
-                    <th width="15%" class="text-right">PRICE (RS.)</th>
-                    <th width="20%" class="text-right">VALUATION (RS.)</th>
+                    <th width="15%" class="text-right">PRICE</th>
+                    <th width="15%" class="text-right">TOTAL</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in items %}
                 <tr>
-                    <td align="center">
+                    <td>
                         {% if item.product_variant.image %}
-                            <img src="{{ item.product_variant.image.url }}" width="45" height="45" style="border: 1px solid #eee;">
+                        <img src="{{ item.product_variant.image.url }}" class="product-img">
                         {% else %}
-                            <div style="width: 45px; height: 45px; background: #f9f9f9; border: 1px solid #eee;"></div>
+                        <div style="width: 50px; height: 50px; background: #f0f0f0;"></div>
                         {% endif %}
                     </td>
-                    <td valign="middle">
-                        <div class="product-name">{{ item.product_variant.product.name|upper }}</div>
-                        <div class="product-variant">SIZE: {{ item.product_variant.size.size_label }} | COLOR: {{ item.product_variant.color.name|upper }}</div>
+                    <td>
+                        <span class="item-name">
+                            {% if item.product_variant.product.name %}
+                            {{ item.product_variant.product.name|upper }}
+                            {% else %}
+                            UNKNOWN PRODUCT
+                            {% endif %}
+                        </span>
+                        <span class="item-variant">
+                            Size: {% if item.product_variant.size.size_label%}{{item.product_variant.size.size_label}}{%else %}N/A{% endif %} |
+                            Color: {% if item.product_variant.color %}{{ item.product_variant.color.name}}{%else%}N/A{%endif %}
+                        </span>
                     </td>
-                    <td class="text-center bold">{{ item.quantity|stringformat:"02d" }}</td>
-                    <td class="text-right">RS.{{ item.price }}</td>
-                    <td class="text-right bold">RS.{{ item.total_price }}</td>
+                    <td class="text-center">{{ item.quantity }}</td>
+                    <td class="text-right">₹{{ item.price|floatformat:2 }}</td>
+                    <td class="text-right bold">₹{{ item.total_price }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <!-- Summary -->
-        <table class="w-100">
+        <!-- Totals Section -->
+        <table class="w-100" style="margin-top: 20px;">
             <tr>
                 <td width="60%"></td>
                 <td width="40%">
-                    <table class="w-100">
+                    <table class="totals-table">
                         <tr>
-                            <td class="text-right" style="color: #888; padding: 5px 0;">MANIFEST_SUBTOTAL:</td>
-                            <td class="text-right bold" style="width: 90px; padding: 5px 0;">RS.{{ order.total_amount }}</td>
+                            <td class="label-cell">Subtotal</td>
+                            <td class="value-cell">₹{{ order.total_amount|floatformat:2 }}</td>
                         </tr>
                         <tr>
-                            <td class="text-right" style="color: #888; padding: 5px 0;">TAX_CHARGES (0%):</td>
-                            <td class="text-right bold" style="padding: 5px 0;">RS.0.00</td>
+                            <td class="label-cell">Tax (GST 0%)</td>
+                            <td class="value-cell">₹0.00</td>
                         </tr>
-                        <tr>
-                            <td colspan="2"><div class="totals-box"></div></td>
+                        <tr class="grand-total-separator">
+                            <td colspan="2"></td>
                         </tr>
-                        <tr>
-                            <td class="text-right" style="font-size: 14px; font-weight: bold; padding-top: 5px;">GRAND_TOTAL</td>
-                            <td class="text-right" style="font-size: 18px; font-weight: bold; padding-top: 5px;">RS.{{ order.total_amount }}</td>
+                        <tr class="grand-total-row">
+                            <td class="label-cell grand-total-label">GRAND TOTAL</td>
+                            <td class="value-cell grand-total-value">₹{{ order.total_amount|floatformat:2 }}</td>
                         </tr>
                     </table>
                 </td>
@@ -282,10 +391,15 @@
 
         <!-- Footer -->
         <div class="footer">
-            <div style="font-weight: bold; letter-spacing: 2px; color: #666; margin-bottom: 10px;">FOOTFRONT LOGISTICS</div>
-            <div>THIS IS A SYSTEM-GENERATED DIGITAL INVOICE. NO PHYSICAL SIGNATURE IS REQUIRED.</div>
-            <div style="margin-top: 15px; color: #ddd; font-family: monospace;">AUTH_TRACK_ID: {{ order.id }}{{ order.order_date|date:"YmdHis" }}</div>
+            <div style="color: #333; font-weight: bold; margin-bottom: 24px;">
+                <p>FootFront Logistics<br><br><br>
+                    This is a system-generated invoice, no signature required.<br>
+                    Order Auth ID: {% if order.id %}{{ order.id }}{% endif %}{% if order.order_date%}{{order.order_date|date:"Ymd" }}{% endif %}</p>
+            </div>
         </div>
     </div>
 </body>
+
+
+
 </html>
