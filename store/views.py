@@ -133,7 +133,8 @@ def vendor_forgot_password(request):
 
 def initialize_firebase():
     try:
-        firebase_admin.get_app()
+        app = firebase_admin.get_app()
+        print(f"DEBUG: Firebase already initialized for project: {app.project_id}")
     except ValueError:
         # Check for environment variable first
         firebase_config_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
@@ -146,7 +147,8 @@ def initialize_firebase():
             # Fallback to file (will fail in production if file missing)
             cred = credentials.Certificate(settings.FIREBASE_ADMIN_CONFIG)
             
-        firebase_admin.initialize_app(cred)
+        app = firebase_admin.initialize_app(cred)
+        print(f"DEBUG: Firebase initialized for project: {app.project_id}")
 
 # Create your views here.
 @redirect_special_users
@@ -191,8 +193,8 @@ def login_view(request):
             if not id_token:
                 return JsonResponse({'status': 'error', 'message': 'ID token is required.'}, status=400)
 
-            # Verify the ID token
-            decoded_token = auth.verify_id_token(id_token)
+            # Verify the ID token with leeway for clock skew
+            decoded_token = auth.verify_id_token(id_token, clock_skew_seconds=60)
             uid = decoded_token['uid']
             email = decoded_token['email']
 
@@ -229,8 +231,9 @@ def login_view(request):
             return JsonResponse({'status': 'error', 'message': 'Session expired. Please try logging in again.'}, status=401)
         except auth.RevokedIdTokenError:
             return JsonResponse({'status': 'error', 'message': 'Session revoked. Please login again.'}, status=401)
-        except auth.InvalidIdTokenError:
-            print(f"DEBUG: InvalidIdTokenError during login.") # Log for admin
+        except auth.InvalidIdTokenError as e:
+            print(f"DEBUG: InvalidIdTokenError during login: {e}") # Log for admin
+            print(f"DEBUG: Token starts with: {id_token[:10]}... ends with: {id_token[-10:] if id_token else 'None'}")
             return JsonResponse({'status': 'error', 'message': 'Authentication failed (Invalid Token). Please refresh and try again.'}, status=401)
         except Exception as e:
             print(f"DEBUG: Login Error: {e}") # Log full error
@@ -260,9 +263,10 @@ def registration_view(request):
             # print(f"DEBUG: Verifying token for registration...") 
             
             try:
-                decoded_token = auth.verify_id_token(id_token)
+                decoded_token = auth.verify_id_token(id_token, clock_skew_seconds=60)
             except Exception as token_error:
                 print(f"DEBUG: Token Verification Failed: {token_error}")
+                print(f"DEBUG: Token snippet: {id_token[:10]}...{id_token[-10:] if id_token else 'None'}")
                 raise token_error # Re-raise to be caught below
 
             uid = decoded_token['uid']
@@ -301,7 +305,7 @@ def registration_view(request):
             if Customer.objects.filter(firebase_uid=uid).exists():
                  return JsonResponse({'status': 'error', 'message': 'Account already exists.'}, status=409)
 
-            user = User.objects.create_user(email=email, first_name=first_name, last_name=last_name, role='user')
+            user = User.objects.create_user(email=email, first_name=first_name, last_name=last_name, role='customer')
             Customer.objects.create(user=user, phone=phone, firebase_uid=uid)
             login(request, user)
 
@@ -309,8 +313,8 @@ def registration_view(request):
 
         except auth.ExpiredIdTokenError:
             return JsonResponse({'status': 'error', 'message': 'Registration session expired. Please try again.'}, status=401)
-        except auth.InvalidIdTokenError:
-             print(f"DEBUG: InvalidIdTokenError during registration.")
+        except auth.InvalidIdTokenError as e:
+             print(f"DEBUG: InvalidIdTokenError during registration: {e}")
              return JsonResponse({'status': 'error', 'message': 'Invalid authentication token. Please refresh the page.'}, status=401)
         except Exception as e:
             print(f"DEBUG: Registration Error: {e}")
@@ -736,15 +740,14 @@ def product_detail(request, slug):
                 from django.utils import timezone
                 from datetime import timedelta
 
-                # 1. Purchase Check
-                delivered_order_items = OrderItem.objects.filter(
+                # 1. Check all order items for this product
+                all_order_items = OrderItem.objects.filter(
                     order__customer=customer,
                     product_variant__product=product,
-                    shipment__status='delivered',
                     is_deleted=False
-                ).select_related('shipment')
+                ).select_related('shipment', 'order').order_by('-order__order_date')
 
-                if not delivered_order_items.exists():
+                if not all_order_items.exists():
                     can_review = False
                     eligibility_message = "Only verified buyers who have received the product can leave a review."
                 else:
@@ -753,30 +756,33 @@ def product_detail(request, slug):
                         can_review = False
                         eligibility_message = "You have already reviewed this product."
                     else:
-                        # 3. Time Window Check (30 Days)
-                        # We'll check if any delivered order for this product is within 30 days
+                        # 3. Check latest order state and 30-day window
+                        latest_item = all_order_items.first()
                         window_days = 30
                         eligible_with_window = False
-                        
-                        for item in delivered_order_items:
-                            shipment = item.shipment
-                            # Check status history if shipped_at/delivered_at is missing or for exact delivery time
-                            # For simplicity, if status is 'delivered', we check time since it reached that status
-                            # If shipped_at is used as a fallback or status history
-                            last_status = shipment.history.filter(status='delivered').first()
-                            delivery_time = last_status.created_at if last_status else shipment.shipped_at
-                            
-                            if delivery_time and (timezone.now() - delivery_time) <= timedelta(days=window_days):
-                                eligible_with_window = True
-                                break
-                            elif not delivery_time:
-                                # If no timestamp found but status is delivered, we'll allow it (fallback)
-                                eligible_with_window = True
-                                break
+                        has_undelivered = False
+
+                        for item in all_order_items:
+                            if hasattr(item, 'shipment') and item.shipment.status == 'delivered':
+                                shipment = item.shipment
+                                last_status = shipment.history.filter(status='delivered').first()
+                                delivery_time = last_status.created_at if last_status else shipment.shipped_at
+                                
+                                if delivery_time and (timezone.now() - delivery_time) <= timedelta(days=window_days):
+                                    eligible_with_window = True
+                                    break
+                                elif not delivery_time:
+                                    eligible_with_window = True
+                                    break
+                            else:
+                                has_undelivered = True
                         
                         if eligible_with_window:
                             can_review = True
                             eligibility_message = ""
+                        elif has_undelivered:
+                            can_review = False
+                            eligibility_message = "Only verified buyers who have received the product can leave a review. Please wait for your recent order to be delivered."
                         else:
                             can_review = False
                             eligibility_message = f"The review window for this purchase has expired ({window_days} days post-delivery)."
@@ -846,14 +852,13 @@ def add_review(request, product_id):
                 from datetime import timedelta
 
                 # 1. Purchase & Delivery Check
-                delivered_order_items = OrderItem.objects.filter(
+                all_order_items = OrderItem.objects.filter(
                     order__customer=customer,
                     product_variant__product=product,
-                    shipment__status='delivered',
                     is_deleted=False
-                ).select_related('shipment')
+                ).select_related('shipment', 'order').order_by('-order__order_date')
 
-                if not delivered_order_items.exists():
+                if not all_order_items.exists():
                     messages.error(request, "Only verified buyers who have received the product can leave a review.")
                     return redirect('product_detail', slug=product.slug)
 
@@ -865,20 +870,28 @@ def add_review(request, product_id):
                 # 3. Time Window Check (30 Days)
                 window_days = 30
                 eligible_with_window = False
-                for item in delivered_order_items:
-                    shipment = item.shipment
-                    last_status = shipment.history.filter(status='delivered').first()
-                    delivery_time = last_status.created_at if last_status else shipment.shipped_at
-                    
-                    if delivery_time and (timezone.now() - delivery_time) <= timedelta(days=window_days):
-                        eligible_with_window = True
-                        break
-                    elif not delivery_time:
-                        eligible_with_window = True
-                        break
+                has_undelivered = False
+                
+                for item in all_order_items:
+                    if hasattr(item, 'shipment') and item.shipment.status == 'delivered':
+                        shipment = item.shipment
+                        last_status = shipment.history.filter(status='delivered').first()
+                        delivery_time = last_status.created_at if last_status else shipment.shipped_at
+                        
+                        if delivery_time and (timezone.now() - delivery_time) <= timedelta(days=window_days):
+                            eligible_with_window = True
+                            break
+                        elif not delivery_time:
+                            eligible_with_window = True
+                            break
+                    else:
+                        has_undelivered = True
                 
                 if not eligible_with_window:
-                    messages.error(request, f"The review window for this purchase has expired ({window_days} days post-delivery).")
+                    if has_undelivered:
+                        messages.error(request, "Please wait for your recent order to be delivered before reviewing.")
+                    else:
+                        messages.error(request, f"The review window for this purchase has expired ({window_days} days post-delivery).")
                     return redirect('product_detail', slug=product.slug)
                 # --- End Constraints ---
 
