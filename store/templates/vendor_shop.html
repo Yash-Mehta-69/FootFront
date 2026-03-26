@@ -356,20 +356,29 @@
                     {{ vendor.description|default:"Discover an exclusive curation of premium footwear. Our store is dedicated to bringing authentic, high-heat drops to the community." }}
                 </p>
                 <div class="contact-details-grid">
-                    <div class="contact-item">
+                    <div class="contact-item" style="grid-column: 1 / -1;">
                         <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
                         <div class="contact-text">
                             <div>Headquarters</div>
-                            <div>{{ vendor.shopAddress }}</div>
+                            <div>{{ masked_address }}</div>
                         </div>
                     </div>
                     <div class="contact-item">
                         <div class="contact-icon"><i class="fas fa-phone-alt"></i></div>
                         <div class="contact-text">
                             <div>Direct Line</div>
-                            <div>+91 {{ vendor.business_phone }}</div>
+                            <div>+91 {{ masked_phone }}</div>
                         </div>
                     </div>
+                    {% if masked_email %}
+                    <div class="contact-item">
+                        <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+                        <div class="contact-text">
+                            <div>Email</div>
+                            <div>{{ masked_email }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

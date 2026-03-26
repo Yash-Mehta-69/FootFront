@@ -1075,12 +1075,39 @@ def vendor_shop(request):
     except EmptyPage:
         products = paginator.page(paginator.num_pages)
 
+    # Mask vendor details for customer
+    masked_phone = vendor.business_phone
+    if masked_phone and len(masked_phone) >= 4:
+        masked_phone = '*' * (len(masked_phone) - 4) + masked_phone[-4:]
+
+    masked_email = vendor.user.email if vendor.user and vendor.user.email else ''
+    if masked_email and '@' in masked_email:
+        name_part, domain_part = masked_email.split('@', 1)
+        if len(name_part) > 2:
+            name_part = name_part[:2] + '*' * (len(name_part) - 2)
+        else:
+            name_part = '*' * len(name_part)
+        masked_email = f"{name_part}@{domain_part}"
+
+    masked_address = vendor.shopAddress
+    if masked_address:
+        parts = masked_address.split(',')
+        if len(parts) > 1:
+            first_part = parts[0]
+            masked_address = '*' * len(first_part) + ',' + ','.join(parts[1:])
+        else:
+            half = len(masked_address) // 2
+            masked_address = '*' * half + masked_address[half:]
+
     context = {
         'vendor': vendor,
         'products': products,
         'products_count': products_count,
         'sold_count': sold_count,
         'rating_avg': rating_avg,
+        'masked_phone': masked_phone,
+        'masked_email': masked_email,
+        'masked_address': masked_address,
     }
     return render(request, 'vendor_shop.html', context)
 
