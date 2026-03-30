@@ -19,7 +19,7 @@
                     class="form-control-custom" placeholder="Subject, ID or Customer..." style="width: 220px;"
                     onchange="this.form.submit()">
                 
-                <select name="status" class="form-select-custom" style="width: 140px;" onchange="this.form.submit()">
+                <!-- <select name="status" class="form-select-custom" style="width: 140px;" onchange="this.form.submit()">
                     <option value="">All Statuses</option>
                     {% for status_val, status_label in status_choices %}
                     <option value="{{ status_val }}" {% if status_filter == status_val %}selected{% endif %}>{{ status_label }}</option>
@@ -29,9 +29,9 @@
                 <select name="sort" class="form-select-custom" style="width: 150px;" onchange="this.form.submit()">
                     <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>Newest First</option>
                     <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
-                </select>
+                </select> -->
 
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-file-export"></i> Export
                     </button>
@@ -43,7 +43,7 @@
                             <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
                         </a></li>
                     </ul>
-                </div>
+                </div> -->
             </form>
         </div>
     </div>

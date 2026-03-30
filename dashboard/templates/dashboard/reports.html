@@ -1,0 +1,319 @@
+{% extends "dashboard/admin_base.html" %}
+{% load static %}
+
+{% block breadcrumb %}
+    <a href="{% url 'admin_dashboard' %}" class="breadcrumb-item-custom"><i class="fas fa-home me-2"></i> Admin</a>
+    <span class="breadcrumb-separator"><i class="fas fa-chevron-right"></i></span>
+    <span class="breadcrumb-current">Reports</span>
+{% endblock %}
+
+{% block header_title %}Enterprise Intelligence & Reporting{% endblock %}
+
+{% block admin_content %}
+<div class="row g-4 h-100">
+    <!-- Filter Sidebar -->
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm sticky-top" style="top: 15px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border-color) !important; align-self: start;">
+            <div class="card-body p-4">
+                <h5 class="fw-bold mb-4" style="color: var(--text-main);"><i class="fas fa-filter me-2 text-primary"></i> Report Filters</h5>
+                
+                <form id="reportForm">
+                    <!-- Dimension Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small" style="color: var(--text-secondary);">Market Dimension</label>
+                        <select name="report_type" id="reportType" class="form-select-custom">
+                            <option value="" disabled selected>Select... </option>
+                            {% for key, name in available_reports.items %}
+                            <option value="{{ key }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Market Filters (Dynamic) -->
+                    <div id="dynamicFilters" class="mb-4">
+                        <div class="text-center py-3 opacity-50">
+                            <i class="fas fa-sliders-h mb-2"></i>
+                            <p class="small mb-0">Select a dimension to view local filters</p>
+                        </div>
+                    </div>
+
+                    <hr style="opacity: 0.05;">
+
+                    <!-- Time Horizon -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small" style="color: var(--text-secondary);">Time Horizon</label>
+                        <select name="date_filter" id="dateFilter" class="form-select-custom">
+                            <option value="all">All Available</option>
+                            <option value="today">Today</option>
+                            <option value="this_week">This Week</option>
+                            <option value="this_month">This Month</option>
+                            <option value="custom">Selection...</option>
+                        </select>
+                    </div>
+
+                    <div id="customDateRange" class="mb-4 d-none" style="transition: all 0.3s ease;">
+                        <div class="card p-3 shadow-none" style="background: rgba(var(--primary-rgb), 0.03); border: 1px dashed var(--primary-color); border-radius: 12px;">
+                            <div class="mb-2">
+                                <label class="small text-muted">From</label>
+                                <input type="date" name="start_date" class="form-control-custom">
+                            </div>
+                            <div>
+                                <label class="small text-muted">To</label>
+                                <input type="date" name="end_date" class="form-control-custom">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" id="clearFiltersBtn" class="btn btn-light-custom btn-sm py-2" style="border-radius: 10px; font-weight: 500; display: none;">
+                            <i class="fas fa-undo me-2 small"></i> Clear Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 id="reportTitleHeader" class="fw-bold mb-1" style="color: var(--text-main);">Market Analytics</h2>
+                <p id="reportSubHeader" class="text-secondary mb-0 small">Cross-platform data aggregation and intelligence.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="dropdown">
+                    <button class="btn btn-primary px-4 py-2 dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 12px; font-weight: 600;">
+                        <i class="fas fa-file-export me-2"></i> Export
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="exportDropdown" style="border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); overflow: hidden;">
+                        <li><a class="dropdown-item py-2 px-3" href="#" id="exportCsv" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-csv me-2 text-success"></i> Export CSV
+                        </a></li>
+                        <li><a class="dropdown-item py-2 px-3" href="#" id="exportPdf" style="color: var(--text-main); font-weight: 500;">
+                            <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="custom-card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table-custom" id="reportTable">
+                    <thead>
+                        <tr id="tableHeader">
+                            <th class="px-2 py-2 text-center text-muted small">Select a dimension...</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td class="text-center py-4">
+                                <div class="py-3 opacity-75">
+                                    <div class="mb-4">
+                                        <i class="fas fa-chart-line fa-4x text-primary" style="opacity: 0.2;"></i>
+                                    </div>
+                                    <h5 class="fw-bold" style="color: var(--text-main);">Enterprise Intelligence</h5>
+                                    <p class="text-secondary small">Filter columns and extract high-level market data across all modules.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const reportType = document.getElementById('reportType');
+    const dynamicFilters = document.getElementById('dynamicFilters');
+    const dateFilter = document.getElementById('dateFilter');
+    const customDateRange = document.getElementById('customDateRange');
+    const reportForm = document.getElementById('reportForm');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const tableHeader = document.getElementById('tableHeader');
+    const tableBody = document.getElementById('tableBody');
+    const exportCsv = document.getElementById('exportCsv');
+    const exportPdf = document.getElementById('exportPdf');
+    const reportTitleHeader = document.getElementById('reportTitleHeader');
+    const reportSubHeader = document.getElementById('reportSubHeader');
+
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    reportType.addEventListener('change', function() {
+        const type = this.value;
+        const selectedText = this.options[this.selectedIndex].text;
+        if (!type) return;
+
+        reportTitleHeader.innerText = selectedText;
+        reportSubHeader.innerText = `Detailed metrics and logs for ${selectedText.toLowerCase()}.`;
+
+        fetch(`{% url 'admin_reports_data' %}?report_type=${type}&get_filters=1`)
+            .then(res => res.json())
+            .then(data => {
+                dynamicFilters.innerHTML = '';
+                if (data.filters.length === 0) {
+                    dynamicFilters.innerHTML = `<p class="small text-muted py-2">No additional filters for this view.</p>`;
+                }
+                
+                data.filters.forEach(f => {
+                    const row = document.createElement('div');
+                    row.className = 'mb-3';
+                    
+                    if (f.type === 'select') {
+                        let optionsHtml = `<option value="all">All ${f.label}s</option>`;
+                        f.options.forEach(opt => {
+                            optionsHtml += `<option value="${opt.id}">${opt.name}</option>`;
+                        });
+                        
+                        row.innerHTML = `
+                            <label class="form-label fw-bold small" style="color: var(--text-secondary);">${f.label}</label>
+                            <select name="${f.name}" class="form-select-custom">
+                                ${optionsHtml}
+                            </select>
+                        `;
+                    } else if (f.type === 'text') {
+                        row.innerHTML = `
+                            <label class="form-label fw-bold small" style="color: var(--text-secondary);">${f.label}</label>
+                            <input type="text" name="${f.name}" class="form-control-custom" placeholder="${f.placeholder || ''}">
+                        `;
+                    }
+                    
+                    dynamicFilters.appendChild(row);
+                });
+                
+                // Add listeners
+                dynamicFilters.querySelectorAll('select, input').forEach(el => {
+                    const eventType = el.tagName === 'SELECT' ? 'change' : 'input';
+                    if (eventType === 'input') el.addEventListener('input', debounce(fetchReportData, 500));
+                    else el.addEventListener('change', fetchReportData);
+                });
+                
+                fetchReportData();
+            });
+    });
+
+    dateFilter.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customDateRange.classList.remove('d-none');
+        } else {
+            customDateRange.classList.add('d-none');
+        }
+        fetchReportData();
+    });
+
+    reportForm.querySelectorAll('input[type="date"]').forEach(i => {
+        i.addEventListener('change', fetchReportData);
+    });
+
+    function fetchReportData() {
+        const type = reportType.value;
+        if (!type) return;
+
+        const formData = new FormData(reportForm);
+        const params = new URLSearchParams(formData).toString();
+        
+        tableBody.innerHTML = `<tr><td colspan="100" class="text-center py-5">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p class="text-muted small">Synchronizing Market Data...</p>
+        </td></tr>`;
+
+        fetch(`{% url 'admin_reports_data' %}?${params}`)
+            .then(res => res.json())
+            .then(res => {
+                const data = res.data;
+                const cols = res.columns || [];
+                
+                tableHeader.innerHTML = cols.map(k => `
+                    <th class="px-2 py-2 text-nowrap" style="background: rgba(var(--primary-rgb), 0.05); color: var(--text-main); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">${k}</th>
+                `).join('');
+
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="${cols.length}" class="text-center py-5 text-muted">No records found matching current criteria</td></tr>`;
+                    clearFiltersBtn.style.display = 'block';
+                    return;
+                }
+
+                clearFiltersBtn.style.display = 'block';
+                tableBody.innerHTML = data.map(row => `
+                    <tr class="align-middle" style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                        ${cols.map(k => `<td class="px-2 py-2" style="color: var(--text-main); font-size: 0.8rem;">${row[k] || '-'}</td>`).join('')}
+                    </tr>
+                `).join('');
+            });
+    }
+
+    clearFiltersBtn.addEventListener('click', function() {
+        const currentType = reportType.value;
+        reportForm.reset();
+        reportType.value = currentType;
+        customDateRange.classList.add('d-none');
+        clearFiltersBtn.style.display = 'none';
+        reportType.dispatchEvent(new Event('change'));
+    });
+
+    function updateExportLinks() {
+        const type = reportType.value;
+        if (!type) return;
+        const formData = new FormData(reportForm);
+        const params = new URLSearchParams(formData).toString();
+        exportCsv.href = `{% url 'admin_reports_data' %}?${params}&export=csv`;
+        exportPdf.href = `{% url 'admin_reports_data' %}?${params}&export=pdf`;
+    }
+
+    [exportCsv, exportPdf].forEach(el => {
+        el.addEventListener('click', function(e) {
+            if (!reportType.value) {
+                e.preventDefault();
+                alert('Please select a market dimension first.');
+            } else {
+                updateExportLinks();
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.sticky-top { 
+    z-index: 10;
+}
+.form-select:focus, .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1) !important;
+    border-color: var(--primary-color) !important;
+}
+#customDateRange {
+    overflow: hidden;
+    animation: slideDown 0.3s ease-out;
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.table-custom tr:hover {
+    background-color: rgba(var(--primary-rgb), 0.02) !important;
+}
+.table-custom {
+    table-layout: fixed;
+    width: 100%;
+}
+.table-custom td, .table-custom th {
+    white-space: normal !important;
+    word-break: break-all;
+    font-size: 0.75rem !important;
+    padding: 10px 8px !important;
+}
+.table-responsive {
+    overflow-x: hidden !important;
+}
+</style>
+{% endblock %}

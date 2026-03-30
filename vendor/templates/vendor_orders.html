@@ -16,7 +16,7 @@
                 <input type="text" name="q" value="{{ search_query|default:'' }}" 
                     class="form-control-custom" placeholder="Search orders..." style="width: 200px;">
                 
-                <select name="status" class="form-select-custom" style="width: 140px;">
+                <!-- <select name="status" class="form-select-custom" style="width: 140px;">
                     <option value="">All Statuses</option>
                     {% for status_val, status_label in status_choices %}
                     <option value="{{ status_val }}" {% if current_status == status_val %}selected{% endif %}>{{ status_label }}</option>
@@ -41,9 +41,9 @@
                     <option value="date_oldest" {% if current_sort == 'date_oldest' %}selected{% endif %}>Date: Oldest</option>
                     <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
                     <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
-                </select>
+                </select> -->
 
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-file-export"></i> Export
                     </button>
@@ -55,7 +55,7 @@
                             <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
                         </a></li>
                     </ul>
-                </div>
+                </div> -->
             </form>
         </div>
     </div>
@@ -67,7 +67,7 @@
                     <th>Order ID</th>
                     <th>Customer</th>
                     <th>Items</th>
-                    <th>Price</th>
+                    <th>Amount</th>
                     <th>Payment</th>
                     <th>Fulfillment Status</th>
                     <th>Date</th>

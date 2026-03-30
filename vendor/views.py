@@ -9,11 +9,14 @@ from store.models import Category, Product, ProductVariant, Size, Color
 from store.forms import VendorProductForm
 from cart.models import Order, Shipment, OrderItem, ShipmentStatusHistory
 from django.utils import timezone
+from django.utils.html import strip_tags
 from datetime import timedelta, datetime
 from utils.filters import get_date_range
 from utils import panel_messages
 from utils.exports import export_to_csv, export_to_pdf
 from django.db.models import Prefetch
+from django.http import JsonResponse
+from utils.reports import REPORT_CONFIG
 
 
 class MockObj:
@@ -961,3 +964,77 @@ def vendor_change_password(request):
             return redirect('vendor_profile')
     
     return render(request, 'vendor_change_password.html')
+@vendor_required
+def vendor_reports(request):
+    reports = {k: v['name'] for k, v in REPORT_CONFIG.items() if not v.get('admin_only')}
+    return render(request, 'vendor_reports.html', {'available_reports': reports})
+
+@vendor_required
+def vendor_reports_data(request):
+    report_type = request.GET.get('report_type')
+    config = REPORT_CONFIG.get(report_type)
+    
+    if not config or config.get('admin_only'):
+        return JsonResponse({'error': 'Invalid report type'}, status=400)
+    
+    if 'get_filters' in request.GET:
+        filters = []
+        for f in config['filters']:
+            if f.get('admin_only'): continue
+            filters.append({
+                'name': f['name'],
+                'type': f['type'],
+                'label': f.get('label') or f['name'].replace('_', ' ').title(),
+                'placeholder': f.get('placeholder', ''),
+                'options': f['options']() if callable(f.get('options')) else f.get('options', [])
+            })
+        return JsonResponse({'filters': filters})
+    
+    # Process filters from GET
+    params = {}
+    for f in config['filters']:
+        val = request.GET.get(f['name'])
+        if val and val != 'all':
+            params[f['name']] = val
+            
+    # Add date range
+    start_date, end_date = get_date_range(
+        request.GET.get('date_filter', 'all'),
+        request.GET.get('start_date'),
+        request.GET.get('end_date')
+    )
+    if start_date: params['start_date'] = start_date
+    if end_date: params['end_date'] = end_date
+    
+    is_export = request.GET.get('export') in ['csv', 'pdf']
+    res = config['func'](vendor=request.user.vendor_profile, is_export=is_export, **params)
+    data = res['data'] if isinstance(res, dict) else res
+    columns = res['columns'] if isinstance(res, dict) else []
+    
+    if request.GET.get('export') in ['csv', 'pdf']:
+        if not data: return HttpResponse("No data to export", status=400)
+        
+        # Sanitize data: Strip HTML tags for clean CSV/PDF export
+        sanitized_data = []
+        for row in data:
+            clean_row = {}
+            for k, v in row.items():
+                if isinstance(v, str) and '<' in v and '>' in v:
+                    clean_row[k] = strip_tags(v).strip()
+                else:
+                    clean_row[k] = v
+            sanitized_data.append(clean_row)
+            
+        fields = [(k, k) for k in sanitized_data[0].keys()]
+        class DataObj:
+            def __init__(self, d):
+                for k, v in d.items(): setattr(self, k, v)
+        export_data = [DataObj(d) for d in sanitized_data]
+        if request.GET.get('export') == 'pdf':
+            return export_to_pdf(export_data, f'vendor_{report_type}_report', fields)
+        return export_to_csv(export_data, f'vendor_{report_type}_report', fields)
+        
+    return JsonResponse({
+        'data': data,
+        'columns': columns
+    })

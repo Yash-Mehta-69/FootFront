@@ -19,7 +19,7 @@
                     class="form-control-custom form-control-sm" placeholder="Search tracking..." style="width: 160px;"
                     onchange="this.form.submit()">
                 
-                <input type="text" name="order_id" list="adminOrderIdsList" value="{{ order_id_filter|default:'' }}" 
+                <!-- <input type="text" name="order_id" list="adminOrderIdsList" value="{{ order_id_filter|default:'' }}" 
                     class="form-control-custom form-control-sm" placeholder="Order ID..." style="width: 120px;"
                     onchange="this.form.submit()">
                 <datalist id="adminOrderIdsList">
@@ -53,9 +53,9 @@
                 <div id="custom_date_range" class="gap-2" style="display: {% if current_filter == 'custom' %}flex{% else %}none{% endif %} !important;">
                     <input type="date" name="start_date" value="{{ start_date }}" class="form-control-custom form-control-sm" style="width: 130px;" onchange="this.form.submit()">
                     <input type="date" name="end_date" value="{{ end_date }}" class="form-control-custom form-control-sm" style="width: 130px;" onchange="this.form.submit()">
-                </div>
+                </div> -->
 
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-file-export"></i> Export
                     </button>
@@ -67,7 +67,7 @@
                             <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
                         </a></li>
                     </ul>
-                </div>
+                </div> -->
             </form>
         </div>
     </div>

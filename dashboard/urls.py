@@ -45,4 +45,6 @@ urlpatterns = [
     path('sizes/delete/<int:pk>/', views.delete_size, name='delete_size'),
     path('colors/', views.manage_colors, name='manage_colors'),
     path('colors/delete/<int:pk>/', views.delete_color, name='delete_color'),
+    path("reports/", views.admin_reports, name='admin_reports'),
+    path("reports/data/", views.admin_reports_data, name='admin_reports_data'),
 ]

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
+from django.utils.html import strip_tags
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
@@ -16,6 +17,8 @@ from utils.filters import get_date_range
 from utils import panel_messages
 from utils.exports import export_to_csv, export_to_pdf
 from cart.models import Order, OrderItem, Shipment, ShipmentStatusHistory, Payment
+from django.http import JsonResponse, HttpResponse
+from utils.reports import REPORT_CONFIG
 
 @admin_required
 def dashboard(request):
@@ -1628,3 +1631,77 @@ def delete_color(request, pk):
     except Exception as e:
         messages.error(request, "Cannot delete this color as it is being used by products.")
     return redirect('manage_colors')
+
+@admin_required
+def admin_reports(request):
+    reports = {k: v['name'] for k, v in REPORT_CONFIG.items()}
+    return render(request, 'dashboard/reports.html', {'available_reports': reports})
+
+@admin_required
+def admin_reports_data(request):
+    report_type = request.GET.get('report_type')
+    config = REPORT_CONFIG.get(report_type)
+    
+    if not config:
+        return JsonResponse({'error': 'Invalid report type'}, status=400)
+    
+    if 'get_filters' in request.GET:
+        filters = []
+        for f in config['filters']:
+            filters.append({
+                'name': f['name'],
+                'type': f['type'],
+                'label': f.get('label') or f['name'].replace('_', ' ').title(),
+                'placeholder': f.get('placeholder', ''),
+                'options': f['options']() if callable(f.get('options')) else f.get('options', [])
+            })
+        return JsonResponse({'filters': filters})
+    
+    # Process filters from GET
+    params = {}
+    for f in config['filters']:
+        val = request.GET.get(f['name'])
+        if val and val != 'all':
+            params[f['name']] = val
+            
+    # Add date range
+    start_date, end_date = get_date_range(
+        request.GET.get('date_filter', 'all'),
+        request.GET.get('start_date'),
+        request.GET.get('end_date')
+    )
+    if start_date: params['start_date'] = start_date
+    if end_date: params['end_date'] = end_date
+    
+    is_export = request.GET.get('export') in ['csv', 'pdf']
+    res = config['func'](vendor=None, is_export=is_export, **params)
+    data = res['data'] if isinstance(res, dict) else res
+    columns = res['columns'] if isinstance(res, dict) else []
+    
+    if request.GET.get('export') in ['csv', 'pdf']:
+        if not data: return HttpResponse("No data to export", status=400)
+        
+        # Sanitize data: Strip HTML tags for clean CSV/PDF export
+        sanitized_data = []
+        for row in data:
+            clean_row = {}
+            for k, v in row.items():
+                if isinstance(v, str) and '<' in v and '>' in v:
+                    clean_row[k] = strip_tags(v).strip()
+                else:
+                    clean_row[k] = v
+            sanitized_data.append(clean_row)
+            
+        fields = [(k, k) for k in sanitized_data[0].keys()]
+        class DataObj:
+            def __init__(self, d):
+                for k, v in d.items(): setattr(self, k, v)
+        export_data = [DataObj(d) for d in sanitized_data]
+        if request.GET.get('export') == 'pdf':
+            return export_to_pdf(export_data, f'admin_{report_type}_report', fields)
+        return export_to_csv(export_data, f'admin_{report_type}_report', fields)
+        
+    return JsonResponse({
+        'data': data,
+        'columns': columns
+    })

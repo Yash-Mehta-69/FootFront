@@ -24,4 +24,6 @@ urlpatterns = [
     path("analytics/",views.vendor_analytics,name='vendor_analytics'),
     path("help/",views.vendor_help,name='vendor_help'),
     path("change-password/",views.vendor_change_password,name='vendor_change_password'),
+    path("reports/", views.vendor_reports, name='vendor_reports'),
+    path("reports/data/", views.vendor_reports_data, name='vendor_reports_data'),
 ]

@@ -16,7 +16,7 @@
                     class="form-control-custom" placeholder="Search product or customer..." style="width: 220px;"
                     onchange="this.form.submit()">
                 
-                <select name="rating" class="form-select-custom" style="width: 140px;" onchange="this.form.submit()">
+                <!-- <select name="rating" class="form-select-custom" style="width: 140px;" onchange="this.form.submit()">
                     <option value="">All Ratings</option>
                     {% for r in "54321"|make_list %}
                     <option value="{{ r }}" {% if rating_filter == r %}selected{% endif %}>{{ r }} Stars</option>
@@ -28,9 +28,9 @@
                     <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
                     <option value="rating_high" {% if current_sort == 'rating_high' %}selected{% endif %}>Rating: High to Low</option>
                     <option value="rating_low" {% if current_sort == 'rating_low' %}selected{% endif %}>Rating: Low to High</option>
-                </select>
+                </select> -->
 
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-file-export"></i> Export
                     </button>
@@ -42,7 +42,7 @@
                             <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
                         </a></li>
                     </ul>
-                </div>
+                </div> -->
             </form>
         </div>
     </div>

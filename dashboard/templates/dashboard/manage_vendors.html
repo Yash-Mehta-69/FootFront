@@ -15,13 +15,13 @@
         <div class="d-flex align-items-center gap-2">
             <form method="get" class="d-flex gap-2" onsubmit="return false;">
                 <input type="text" name="q" value="{{ search_query|default:'' }}" class="form-control-custom" placeholder="Search vendors..." style="width: 200px;">
-                <select name="status" class="form-select-custom" style="width: 140px;">
+                <!-- <select name="status" class="form-select-custom" style="width: 140px;">
                     <option value="">All Status</option>
                     <option value="Active" {% if current_status == 'Active' %}selected{% endif %}>Active</option>
                     <option value="Blocked" {% if current_status == 'Blocked' %}selected{% endif %}>Blocked</option>
-                </select>
+                </select> -->
             </form>
-                <div class="dropdown">
+                <!-- <div class="dropdown">
                     <button class="btn-primary-custom dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-file-export"></i> Export
                     </button>
@@ -33,7 +33,7 @@
                             <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF
                         </a></li>
                     </ul>
-                </div>
+                </div> -->
             <a href="{% url 'add_vendor' %}" class="btn-primary-custom">
                 <i class="fas fa-plus"></i> Add Vendor
             </a>
